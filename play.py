@@ -7,55 +7,54 @@ import math
 
 import random
 import queue
-
+import time
+import threading
 sd.default.samplerate = 44100
 sd.default.channels = 2
 
 
 class RawSample():
     def __init__(self, file):
+        print("loading %s" % file)
         (data, ignore) = sf.read(file, dtype="float32")
         self.data = data
 
-
 class Sample():
     def __init__(self, data):
-        self.data = data
-        self.pan = random.random()
         self.pos = 0
+        pan = random.random()
+        
         self.sampleCount = len(data)
-        self.ramp = math.floor(self.sampleCount / (6.0 * random.random()))
-        self.rampDown = self.sampleCount - self.ramp
+        ramp = math.floor(self.sampleCount / (6.0 * random.random()))
+        rampDown = self.sampleCount - ramp
+        
+        self.buffer = []
+        for p in range(self.sampleCount):
+            sample = data[p]
+            if (p < ramp):
+                sample *= (1.0 * p / ramp)
+
+            if (p > rampDown):
+                sample *= (1.0 - ((p - rampDown) / (1.0 * ramp)))
+
+            left = sample * pan
+            right = sample * (1.0 - pan)
+            self.buffer.append([left, right])
 
     def hasData(self):
         return self.pos < self.sampleCount
         
     def readOne(self):
-        if not self.hasData():
-            return [0.0, 0.0]
-        
-        sample = self.data[self.pos]
-        if (self.pos < self.ramp):
-            sample *= (1.0 * self.pos / self.ramp)
-
-        if (self.hasData() and (self.pos > self.rampDown)):
-            sample *= (1.0 - ((self.pos - self.rampDown) / (1.0 * self.ramp)))
-
-        left = sample * self.pan
-        right = sample * (1.0 - self.pan)
         self.pos += 1
-        return [left, right]
-        
-    def read(self, n):
-        out = []
-        for _ in range(n):
-            out.append(readOne())
-
-        return out
+        return self.buffer[self.pos - 1]
     
 file = RawSample(sys.argv[1])
+print("loading samples")
 sample1 = Sample(file.data)
 sample2 = Sample(file.data)
+sample3 = Sample(file.data)
+sample4 = Sample(file.data)
+print("samples loaded")
 
 
 class SampleMix():
@@ -96,24 +95,29 @@ mix.add(sample1)
 
 reads = 0
 
-
 q = queue.Queue()
 
 def callback(outdata, frames, time, status):
     outdata[:] = q.get()
     
-def finishedPlaying():
-    print("finished")
-
 blocksize = 4410
 q.put(mix.read(blocksize))
-stream = sd.OutputStream(blocksize=blocksize, latency=5.0, dtype="float32", callback=callback, finished_callback=finishedPlaying)
+try:
+    stream = sd.OutputStream(blocksize=blocksize, dtype="float32", callback=callback)
+    with stream:
 
+        while mix.hasData():
+            q.put(mix.read(blocksize))
+            reads += 1
+            if (reads == 5):
+                mix.add(sample2)
+            if (reads == 15):
+                mix.add(sample3)
+            if (reads == 30):
+                mix.add(sample4)
+        print("finished reading after %d reads" % reads)
+        time.sleep(60)
+except KeyboardInterrupt:
+    print("stopping")
+print("done")
 
-with stream:
-    while mix.hasData():
-        q.put(mix.read(blocksize))
-        reads += 1
-        if (reads == 5):
-            mix.add(sample2)
-    print("finished reading")
