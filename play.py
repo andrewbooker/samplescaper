@@ -44,19 +44,32 @@ class Sample():
     def hasData(self):
         return self.pos < self.sampleCount
         
+    def reset(self):
+        self.pos = 0
+        
+    def canStart(self):
+        return self.pos == 0
+        
     def readOne(self):
         self.pos += 1
         return self.buffer[self.pos - 1]
     
-file = RawSample(sys.argv[1])
+files = []
+files.append(RawSample(sys.argv[1]))
 print("loading samples")
-sample1 = Sample(file.data)
-sample2 = Sample(file.data)
-sample3 = Sample(file.data)
-sample4 = Sample(file.data)
-print("samples loaded")
+samples = []
+for file in files:
+    for _ in range(4):
+        samples.append(Sample(file.data))
+print("%d samples loaded" % len(samples))
 
 
+def nextSample():
+    s = samples[random.randint(0, len(samples) - 1)]
+    if not s.canStart():
+        return nextSample()
+    return s
+    
 class SampleMix():
     def __init__(self):
         self.samples = []
@@ -85,15 +98,14 @@ class SampleMix():
                     stereoPair[1] += p[1]
 
             for s in toRemove:
+                s.reset()
                 self.samples.remove(s)
                 
             out.append(stereoPair)
         return out
 
 mix = SampleMix()
-mix.add(sample1)
-
-reads = 0
+mix.add(nextSample())
 
 q = queue.Queue()
 
@@ -102,22 +114,25 @@ def callback(outdata, frames, time, status):
     
 blocksize = 4410
 q.put(mix.read(blocksize))
+t = time.time()
+oneHour = t + 3600
+interval = t + 2
+stream = None
 try:
     stream = sd.OutputStream(blocksize=blocksize, dtype="float32", callback=callback)
-    with stream:
-
-        while mix.hasData():
-            q.put(mix.read(blocksize))
-            reads += 1
-            if (reads == 5):
-                mix.add(sample2)
-            if (reads == 15):
-                mix.add(sample3)
-            if (reads == 30):
-                mix.add(sample4)
-        print("finished reading after %d reads" % reads)
-        time.sleep(60)
+    stream.start()
+    while time.time() < oneHour:
+        q.put(mix.read(blocksize))
+        now = time.time()
+        if (now > t):
+            mix.add(nextSample())
+            t = now + 0.5 + random.random()
+        time.sleep(0.02)
+            
 except KeyboardInterrupt:
     print("stopping")
+    
+stream.stop()
+stream.close()
 print("done")
 
