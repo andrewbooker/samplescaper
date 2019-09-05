@@ -5,6 +5,7 @@ import time
 import random
 import math
 import sys
+import threading
 
 pg.mixer.init()
 pg.init()
@@ -29,21 +30,35 @@ def fractionLen(note, f):
 pg.mixer.set_num_channels(30)
 
 def playNote(n, t):
-	end = time.time() + t
-	while time.time() < end:
-		channel = pg.mixer.find_channel()
-		if channel is not None:
-			pan = random.random()
-			note = notes[n][random.randint(0, len(notes[n]) - 1)]
-			channel.set_volume(1.0 - pan, pan)
-			channel.play(note, fade_ms = fractionLen(note, 0.4))
-			time.sleep(note.get_length() * 0.45)
-			channel.fadeout(fractionLen(note, 0.5))
-		else:
-			time.sleep(0.3)
+    end = time.time() + t
+    while time.time() < end:
+        channel = pg.mixer.find_channel()
+        if channel is not None:
+            pan = random.random()
+            note = notes[n][random.randint(0, len(notes[n]) - 1)]
+            channel.set_volume(1.0 - pan, pan)
+            channel.play(note, fade_ms = fractionLen(note, 0.4))
+            time.sleep(note.get_length() * 0.45)
+            channel.fadeout(fractionLen(note, 0.5))
+        else:
+            time.sleep(0.3)
 
-for s in scale:
-    playNote(s, 6)
+noteThreads = []
+
+def launchNote(n, t):
+    nt = threading.Thread(target = playNote, args = (n, t), daemon=True)
+    nt.start()
+    noteThreads.append(nt)
+
+def playAll(t):
+    end = time.time() + t
+    while time.time() < end:
+        launchNote(scale[random.randint(0, len(scale) - 1)], random.randint(5, 30))
+        time.sleep(random.randint(2, 10))
+
+playAll(120)
+for nt in noteThreads:
+    nt.join()
 
 pg.mixer.fadeout(5000)
 time.sleep(5)
