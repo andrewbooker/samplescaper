@@ -27,23 +27,42 @@ notes = {n: [pg.mixer.Sound(f) for f in files[n]] for n in files.keys()}
 def fractionLen(note, f):
     return math.floor(note.get_length() * 1000.0 * f)
 
-pg.mixer.set_num_channels(30)
+pg.mixer.set_num_channels(42)
 
-def playNote(n, t):
-    end = time.time() + t
-    while time.time() < end:
-        channel = pg.mixer.find_channel()
-        if channel is not None:
-            pan = random.random()
-            note = notes[n][random.randint(0, len(notes[n]) - 1)]
-            channel.set_volume(1.0 - pan, pan)
-            channel.play(note, fade_ms = fractionLen(note, 0.4))
-            time.sleep(note.get_length() * 0.45)
-            channel.fadeout(fractionLen(note, 0.5))
-        else:
+
+class NotePlayer():
+    def __init__(self, number):
+        self.stock = notes[number]
+
+    def play(self, minDurationSecs):
+        end = time.time() + minDurationSecs
+        inFlight = []
+        while time.time() < end:
+            if len(inFlight) < 6:
+                channel = pg.mixer.find_channel()
+                if channel is not None:
+                    inFlight.append(channel)
+                    pan = random.random()
+                    note = self.stock[random.randint(0, len(self.stock) - 1)]
+                    channel.set_volume(1.0 - pan, pan)
+                    channel.play(note, fade_ms = fractionLen(note, 0.4))
+                    time.sleep(note.get_length() * 0.45)
+                    channel.fadeout(fractionLen(note, 0.5))
+            else:
+                for c in inFlight:
+                    if not c.get_busy():
+                        inFlight.remove(c)
             time.sleep(0.3)
 
 noteThreads = []
+
+allNotes = [NotePlayer(n) for n in scale]
+print("%d note players available" % len(allNotes))
+
+
+def playNote(n, t):
+	allNotes[n].play(t)
+
 
 def launchNote(n, t):
     nt = threading.Thread(target = playNote, args = (n, t), daemon=True)
@@ -53,7 +72,7 @@ def launchNote(n, t):
 def playAll(t):
     end = time.time() + t
     while time.time() < end:
-        launchNote(scale[random.randint(0, len(scale) - 1)], random.randint(5, 30))
+        launchNote(random.randint(0, 6), random.randint(5, 30))
         time.sleep(random.randint(2, 10))
 
 playAll(120)
