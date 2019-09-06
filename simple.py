@@ -22,32 +22,31 @@ for s in scale:
     notePath = join(path, str(s))
     files[s] = [join(notePath, f) for f in listdir(notePath) if isfile(join(notePath, f))]
 
-notes = {n: [pg.mixer.Sound(f) for f in files[n]] for n in files.keys()}
-
-def fractionLen(note, f):
-    return math.floor(note.get_length() * 1000.0 * f)
-
-pg.mixer.set_num_channels(42)
+maxInflightPerNote = 6
+pg.mixer.set_num_channels(maxInflightPerNote * len(scale))
 
 
 class NotePlayer():
     def __init__(self, number):
-        self.stock = notes[number]
+        self.stock = [pg.mixer.Sound(f) for f in files[number]]
+
+    def _fractionLen(self, note, f):
+        return math.floor(note.get_length() * 1000.0 * f)
 
     def play(self, minDurationSecs):
         end = time.time() + minDurationSecs
         inFlight = []
         while time.time() < end:
-            if len(inFlight) < 6:
+            if len(inFlight) < maxInflightPerNote:
                 channel = pg.mixer.find_channel()
                 if channel is not None:
                     inFlight.append(channel)
                     pan = random.random()
                     note = self.stock[random.randint(0, len(self.stock) - 1)]
                     channel.set_volume(1.0 - pan, pan)
-                    channel.play(note, fade_ms = fractionLen(note, 0.4))
+                    channel.play(note, fade_ms = self._fractionLen(note, 0.4))
                     time.sleep(note.get_length() * 0.45)
-                    channel.fadeout(fractionLen(note, 0.5))
+                    channel.fadeout(self._fractionLen(note, 0.5))
             else:
                 for c in inFlight:
                     if not c.get_busy():
@@ -61,7 +60,7 @@ print("%d note players available" % len(allNotes))
 
 
 def playNote(n, t):
-	allNotes[n].play(t)
+    allNotes[n].play(t)
 
 
 def launchNote(n, t):
