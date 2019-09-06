@@ -7,7 +7,7 @@ import math
 import sys
 import threading
 
-pg.mixer.init()
+pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
 pg.init()
 
 from os import listdir
