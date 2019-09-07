@@ -13,12 +13,19 @@ pg.init()
 from os import listdir
 from os.path import isfile, join
 
-minDurSecs = 10 * 60
+minDurSecs = 3 * 60
 fadeInSecs = 1
 fadeOutSecs = 10
+noteRange = range(48, 70)
 
 #scale = [48, 50, 51, 53, 55, 56, 58]
-scale = [48,50,52,53,55,57,59]
+scale = [48, 50, 52, 53, 55, 57, 59]
+for i in range(7):
+	if scale[i] + 12 in noteRange:
+		scale.append(scale[i] + 12)
+	if scale[i] - 12 in noteRange:
+		scale.append(scale[i] - 12)
+
 path = sys.argv[1]
 
 files = {}
