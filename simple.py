@@ -44,9 +44,9 @@ class NotePlayer():
                     pan = random.random()
                     note = self.stock[random.randint(0, len(self.stock) - 1)]
                     channel.set_volume(1.0 - pan, pan)
-                    channel.play(note, fade_ms = self._fractionLen(note, 0.4))
+                    channel.play(note, loops = -1, fade_ms = self._fractionLen(note, 0.5))
                     time.sleep(note.get_length() * 0.45)
-                    channel.fadeout(self._fractionLen(note, 0.5))
+                    channel.fadeout(10000)
             else:
                 for c in inFlight:
                     if not c.get_busy():
