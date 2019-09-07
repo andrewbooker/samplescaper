@@ -13,8 +13,12 @@ pg.init()
 from os import listdir
 from os.path import isfile, join
 
-scale = [48, 50, 51, 53, 55, 56, 58]
+minDurSecs = 10 * 60
+fadeInSecs = 1
+fadeOutSecs = 10
 
+#scale = [48, 50, 51, 53, 55, 56, 58]
+scale = [48,50,52,53,55,57,59]
 path = sys.argv[1]
 
 files = {}
@@ -30,9 +34,6 @@ class NotePlayer():
     def __init__(self, number):
         self.stock = [pg.mixer.Sound(f) for f in files[number]]
 
-    def _fractionLen(self, note, f):
-        return math.floor(note.get_length() * 1000.0 * f)
-
     def play(self, minDurationSecs):
         end = time.time() + minDurationSecs
         inFlight = []
@@ -44,9 +45,9 @@ class NotePlayer():
                     pan = random.random()
                     note = self.stock[random.randint(0, len(self.stock) - 1)]
                     channel.set_volume(1.0 - pan, pan)
-                    channel.play(note, loops = -1, fade_ms = self._fractionLen(note, 0.5))
-                    time.sleep(note.get_length() * 0.45)
-                    channel.fadeout(10000)
+                    channel.play(note, loops = -1, fade_ms = fadeInSecs * 1000)
+                    time.sleep(fadeInSecs)
+                    channel.fadeout(fadeOutSecs * 1000)
             else:
                 for c in inFlight:
                     if not c.get_busy():
@@ -74,10 +75,10 @@ def playAll(t):
         launchNote(random.randint(0, 6), random.randint(5, 30))
         time.sleep(random.randint(2, 10))
 
-playAll(120)
+playAll(minDurSecs)
 for nt in noteThreads:
     nt.join()
 
-pg.mixer.fadeout(5000)
-time.sleep(5)
+pg.mixer.fadeout(fadeOutSecs * 1000)
+time.sleep(fadeOutSecs + 1)
 print("done")
