@@ -76,7 +76,7 @@ class CaptureAudio():
 
     def start(self, shouldStop):
         print("starting audio capture on %s" % self.dev)
-        with sd.InputStream(samplerate=44100.0, device=self.dev, channels=1, callback=self.cb.make()):
+        with sd.InputStream(samplerate=44100.0, device=self.dev, channels=1, callback=self.cb.make(), blocksize=512):
             while not shouldStop.is_set():
                 time.sleep(1)
 
@@ -94,15 +94,17 @@ class RecordAudio():
                 file.write(self.buffer.q.get())
 
 class RecordSamples():
-    def __init__(self, dirOut, buffer):
+    def __init__(self, dirOut, buffer, gain):
         self.dirOut = "%s/%s" % (dirOut, datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d_%H%M%S"))
         os.makedirs(self.dirOut)
+        self.gain = gain
         self.buffer = buffer
         self.out = None
         self.state = 0
         self.movingAvg5 = AbsMovingAvg(5)
         self.movingAvg30 = AbsMovingAvg(30)
         self.fn = 0
+        self.lastStart = 0
         self.i = 0
 
     def _readOneSample(self, v):
@@ -114,7 +116,7 @@ class RecordSamples():
             self.movingAvg30.clear()
             self.state = 0
 
-        if (self.state == 1 and self.movingAvg30.avg < 0.003):
+        if (self.state == 1 and ((self.i - self.lastStart) > 2 * 44100) and self.movingAvg30.avg < 0.003):
             print("ending sample at %d at %d" % (self.fn, self.i))
             self.state = 2
             self.out.close()
@@ -125,15 +127,17 @@ class RecordSamples():
             print("beginning sample %d at %d" % (self.fn, self.i))
             self.out = sf.SoundFile("%s/sample%03d.wav" % (self.dirOut, self.fn), mode="x", samplerate=44100, channels=1, subtype="PCM_16")
             self.state = 1
+            self.lastStart = self.i
 
         if (self.state == 1):
             self.out.write(self.movingAvg5.first())
 
     def start(self, shouldStop):
         while not shouldStop.is_set():
+            #print("queue length %d" % self.buffer.q.qsize())
             data = self.buffer.q.get()
             for d in data:
-                self._readOneSample(d)
+                self._readOneSample(d * self.gain)
                 self.i += 1
 
 
@@ -146,8 +150,8 @@ if not os.path.exists(outDir):
 
 shouldStop = threading.Event()
 
-recording = RecordSamples(outDir, buffer)
-capture = CaptureAudio(1, buffer)
+recording = RecordSamples(outDir, buffer, 10)
+capture = CaptureAudio("Microphone (Blue Snowball ), MME", buffer)
 
 captureThread = threading.Thread(target = capture.start, args = (shouldStop,), daemon = True)
 recordThread = threading.Thread(target = recording.start, args = (shouldStop,), daemon = True)
