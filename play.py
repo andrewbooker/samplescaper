@@ -13,13 +13,16 @@ pg.init()
 from os import listdir
 from os.path import isfile, join
 
-minDurSecs = 1 * 60
 fadeInSecs = 1
 fadeOutSecs = 10
-noteRange = range(48, 70)
 
-root = "G"
-mode = "chromatic"
+path = sys.argv[1]
+root = sys.argv[2] if len(sys.argv) > 2 else "E"
+mode = sys.argv[3] if len(sys.argv) > 3 else "aeolian"
+minDurSecs = (int(sys.argv[4]) if len(sys.argv) > 4 else 3) * 60
+noteRange = [int(n) for n in listdir(path)]
+print("range available")
+print(noteRange)
 
 import scale as modal
 
@@ -32,8 +35,9 @@ for i in range(7):
 		modalNotes.append(modalNotes[i] - 12)
 		
 scale = [n for n in modalNotes if n in noteRange]
+print("%d notes available in %s %s" % (len(scale), root, mode))
+print(scale)
 
-path = sys.argv[1]
 
 files = {}
 for s in scale:
@@ -71,8 +75,6 @@ class NotePlayer():
 noteThreads = []
 
 allNotes = [NotePlayer(n) for n in scale]
-print("%d note players available" % len(allNotes))
-
 
 def playNote(n, t):
     allNotes[n].play(t)
@@ -86,7 +88,7 @@ def launchNote(n, t):
 def playAll(t):
     end = time.time() + t
     while time.time() < end:
-        launchNote(random.randint(0, 6), random.randint(5, 30))
+        launchNote(random.randint(0, len(scale) - 1), random.randint(5, 30))
         time.sleep(random.randint(2, 10))
 
 playAll(minDurSecs)
