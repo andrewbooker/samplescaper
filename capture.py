@@ -74,12 +74,20 @@ class CaptureAudio():
         self.dev = dev
         self.cb = cb
 
-    def start(self, shouldStop):
+    def start(self, shouldStop, shouldPause):
         print("starting audio capture on %s" % self.dev)
-        with sd.InputStream(samplerate=44100.0, device=self.dev, channels=1, callback=self.cb.make(), blocksize=512):
+        with sd.InputStream(samplerate=44100.0, device=self.dev, channels=1, callback=self.cb.make(), blocksize=512) as stream:
+            running = True
             while not shouldStop.is_set():
+                if shouldPause.is_set() and running:
+                    stream.stop()
+                    running = False
+                    print("capture stopped")
+                elif not shouldPause.is_set() and not running:
+                    stream.start()
+                    running = True
+                    print("capture started")
                 time.sleep(1)
-
             print("stopping audio capture on %s" % self.dev)
 
 class RecordAudio():
@@ -108,15 +116,21 @@ class RecordSamples():
         self.i = 0
 
     def _readOneSample(self, v):
-        self.movingAvg5.add(v)
-        self.movingAvg30.add(v)
+        if (self.i < 44100): #1s
+            return
+
+        if (self.state == 0):
+            self.movingAvg5.add(v)
+
+        if (self.state == 1):
+            self.movingAvg30.add(v)
 
         if (self.state == 2):
             self.movingAvg5.clear()
             self.movingAvg30.clear()
             self.state = 0
 
-        if (self.state == 1 and ((self.i - self.lastStart) > 2 * 44100) and self.movingAvg30.avg < 0.003):
+        if (self.state == 1 and ((self.i - self.lastStart) > 2 * 44100) and self.movingAvg30.avg < 0.01):
             print("ending sample at %d at %d" % (self.fn, self.i))
             self.state = 2
             self.out.close()
@@ -130,7 +144,7 @@ class RecordSamples():
             self.lastStart = self.i
 
         if (self.state == 1):
-            self.out.write(self.movingAvg5.first())
+            self.out.write(v)
 
     def start(self, shouldStop):
         while not shouldStop.is_set():
@@ -149,20 +163,36 @@ if not os.path.exists(outDir):
     os.makedirs(outDir)
 
 shouldStop = threading.Event()
+shouldPause = threading.Event()
+recording = RecordSamples(outDir, buffer, 5)
+#capture = CaptureAudio("Microphone (Blue Snowball ), MME", buffer)
+capture = CaptureAudio(1, buffer)
 
-recording = RecordSamples(outDir, buffer, 10)
-capture = CaptureAudio("Microphone (Blue Snowball ), MME", buffer)
-
-captureThread = threading.Thread(target = capture.start, args = (shouldStop,), daemon = True)
+captureThread = threading.Thread(target = capture.start, args = (shouldStop, shouldPause,), daemon = True)
 recordThread = threading.Thread(target = recording.start, args = (shouldStop,), daemon = True)
 
 print("starting recording to %s" % outDir)
 recordThread.start()
 captureThread.start()
 
-keyboard.wait("q")
-print ("stopping...")
-shouldStop.set()
-recordThread.join()
-captureThread.join()
+def stopCapture(e):
+    print("stopping...")
+    shouldStop.set()
+    recordThread.join()
+    captureThread.join()
+
+def togglePauseCapture(e):
+    if not shouldPause.is_set():
+        print("pausing at queue size %d..." % buffer.q.qsize())
+        shouldPause.set()
+    else:
+        print("resuming at queue size %d..." % buffer.q.qsize())
+        time.sleep(0.5)
+        shouldPause.clear()
+
+keyboard.on_press_key("q", stopCapture, suppress = True)
+keyboard.on_press_key(" ", togglePauseCapture, suppress = True)
+while not shouldStop.is_set():
+    time.sleep(1)
+
 print("done")
