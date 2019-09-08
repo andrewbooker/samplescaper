@@ -14,7 +14,7 @@ class RawSample():
 
 def createLoopableSample(raw):
     halfWay = math.floor(len(raw.data) / 2)
-    xFade = math.floor(halfWay / 2)
+    xFade = math.floor(0.75 * halfWay)
     data = []
 
     for s in range(len(raw.data) - xFade):
@@ -32,8 +32,10 @@ def createLoopableSample(raw):
 
 inDir = sys.argv[1]
 outDir = sys.argv[2]
+lowestNote = int(sys.argv[3]) if len(sys.argv) > 3 else 48
+highestNote = int(sys.argv[4]) if len(sys.argv) > 4 else 69
 
-for noteNumber in range(48, 70):
+for noteNumber in range(lowestNote, highestNote + 1):
     noteDir = os.path.join(inDir, str(noteNumber))
     noteFiles = [f for f in os.listdir(noteDir) if os.path.isfile(os.path.join(noteDir, f))]
     fileOutDir = os.path.join(outDir, str(noteNumber))
