@@ -5,19 +5,13 @@ import sys
 import math
 import os
 
-class RawSample():
-    def __init__(self, file):
-        print("loading %s" % file)
-        (data, ignore) = sf.read(file, dtype="float32")
-        self.data = data
-
-
 def createLoopableSample(raw):
+    length = len(raw.data)
     halfWay = math.floor(len(raw.data) / 2)
     xFade = math.floor(0.75 * halfWay)
     data = []
 
-    for s in range(len(raw.data) - xFade):
+    for s in range(length - xFade):
         p = s + xFade - halfWay
         if s < (halfWay - xFade):
             data.append(raw.data[s + halfWay])
@@ -28,6 +22,15 @@ def createLoopableSample(raw):
             data.append((f * raw.data[p]) + ((1.0 - f) * raw.data[s + halfWay]))
 
     return data
+    
+
+class RawSample():
+    def __init__(self, file):
+        print("loading %s" % file)
+        (data, ignore) = sf.read(file, dtype="float32")
+        self.data = []
+        for d in range(2 * 4410, len(data) - (5 * 4410)):
+            self.data.append(data[d])
 
 
 inDir = sys.argv[1]
