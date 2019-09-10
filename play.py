@@ -6,6 +6,7 @@ import random
 import math
 import sys
 import threading
+from datetime import datetime
 
 pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
 pg.init()
@@ -37,6 +38,7 @@ for i in range(7):
 scale = [n for n in modalNotes if n in noteRange]
 print("%d notes available in %s %s" % (len(scale), root, mode))
 print(scale)
+print("expected finish time %s" % datetime.fromtimestamp(time.time() + minDurSecs + 0.5).strftime("%H:%M"))
 
 
 files = {}
