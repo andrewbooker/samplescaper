@@ -4,16 +4,22 @@ import soundfile as sf
 import math
 
 class LoopableSample():
-    def __init__(self, file):
+    def __init__(self):
+        self.data = []
+        
+    def addBuffer(self, buffer):
+        for d in buffer:
+            self.data.append(d)
+
+    def fromFile(self, file):
         print("loading %s" % file)
         (data, ignore) = sf.read(file, dtype="float32")
-        self.data = []
-        for d in range(2 * 4410, len(data) - (5 * 4410)):
-            self.data.append(data[d])
-
+        self.addBuffer(data[2 * 4410:])
+        return self
+            
     def create(self, outFile):
-        length = len(self.data)
-        halfWay = math.floor(len(self.data) / 2)
+        length = len(self.data) - (5 * 4410)
+        halfWay = math.floor(length / 2)
         xFade = math.floor(0.75 * halfWay)
         out = []
 

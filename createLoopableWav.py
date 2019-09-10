@@ -20,5 +20,5 @@ for noteNumber in range(lowestNote, highestNote + 1):
     for f in noteFiles:
         outFile = os.path.join(fileOutDir, "loop_%d_%d.wav" % (noteNumber, i))
         print("converting %s into %s" % (f, outFile))
-        LoopableSample(os.path.join(noteDir, f)).create(outFile)
+        LoopableSample().fromFile(os.path.join(noteDir, f)).create(outFile)
         i += 1
