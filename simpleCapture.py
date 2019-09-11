@@ -28,7 +28,7 @@ class RecordSamples():
     def __init__(self, device, dirOut, buffer):
         self.device = device
         self.buffer = buffer
-        self.dirOut = "%s/%s" % (dirOut, datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d_%H%M%S"))
+        self.dirOut = "%s/%s" % (dirOut, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
         os.makedirs(self.dirOut)
 
     def start(self, sampleNumber, shouldStop, shouldRecordClip):
@@ -53,6 +53,7 @@ class RecordSamples():
                     out.create(fqfn)
                     out = None
                     fn += 1
+                    print("ready")
                 else:
                     out.addBuffer(self.buffer.q.get())
             else:
@@ -62,13 +63,10 @@ class RecordSamples():
             stream.stop()
 
 buffer = Buffer()
-
-sampleNumber = Value('i', 48)
-now = time.time()
 outDir = sys.argv[1]
 if not os.path.exists(outDir):
     os.makedirs(outDir)
-
+sampleNumber = Value('i', int(sys.argv[2]) if len(sys.argv) > 2 else 48)
 shouldStop = threading.Event()
 shouldRecordClip = threading.Event()
 
@@ -98,7 +96,7 @@ def toggleRecord(e):
 
 keyboard.on_press_key("q", stopCapture, suppress = True)
 keyboard.on_press_key("n", incrementNumber, suppress = True)
-keyboard.on_press_key(" ", toggleRecord, suppress = True)
+keyboard.on_press_key("s", toggleRecord, suppress = True)
 
 while not shouldStop.is_set():
     time.sleep(1)
