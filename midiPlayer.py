@@ -13,14 +13,12 @@ class Instrument():
 	def __init__(self, program, player, channel):
 		self.channel = channel
 		self.player = player
-		self.player.set_instrument(program) # a program change
-		
+		self.player.set_instrument(program, self.channel)
+
 	def play(self, note, vel, durSecs):
-		self.player.note_on(note, vel, self.channel)
+		now = time.time()
+		self.player.write([[[0x90 | self.channel, note, vel], 0], [[0x80 | self.channel, note, vel], durSecs * 1000]])
 		time.sleep(durSecs)
-		self.player.note_off(note, vel, self.channel)
-		
-		
 
 def playNotes(ins, n, interval, shouldStop):
 	for i in range(24):
@@ -29,7 +27,7 @@ def playNotes(ins, n, interval, shouldStop):
 
 stopped1 = threading.Event()
 stopped2 = threading.Event()
-player = midi.Output(0)
+player = midi.Output(0, latency = 100)
 
 i1 = Instrument(8, player, 0)
 i2 = Instrument(10, player, 1)
@@ -45,7 +43,9 @@ t2.join()
 while not stopped1.is_set() and not stopped2.is_set():
 	time.sleep(1)
 
+
 del i1
 del i2
+player.close()
 del player
 midi.quit()
