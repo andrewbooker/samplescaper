@@ -19,6 +19,7 @@ path = sys.argv[1]
 root = sys.argv[2] if len(sys.argv) > 2 else "E"
 mode = sys.argv[3] if len(sys.argv) > 3 else "aeolian"
 minDurSecs = (int(sys.argv[4]) if len(sys.argv) > 4 else 3) * 60
+tempo = int(sys.argv[5]) if len(sys.argv) > 5 else 120
 noteRange = [int(n) for n in listdir(path)]
 print("range available")
 print(noteRange)
@@ -88,7 +89,7 @@ def play(tempo, subdivision, t):
         launchNote(random.randint(0, len(scale) - 1), beatLengthMs)
         time.sleep(beatLengthMs * 0.001)
 
-play(120, 16, minDurSecs)
+play(tempo, 16, minDurSecs)
 for nt in noteThreads:
     nt.join()
 
