@@ -5,59 +5,31 @@ import time
 import random
 import math
 import sys
+
 import threading
 from datetime import datetime
+
+from utils.AvailableSamples import *
+
+minDurSecs = (int(sys.argv[4]) if len(sys.argv) > 4 else 3) * 60
 
 pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
 pg.init()
 
-from os import listdir
-from os.path import isfile, join
-
 fadeInSecs = 1
 fadeOutSecs = 10
 
-path = sys.argv[1]
-root = sys.argv[2] if len(sys.argv) > 2 else "E"
-mode = sys.argv[3] if len(sys.argv) > 3 else "aeolian"
-minDurSecs = (int(sys.argv[4]) if len(sys.argv) > 4 else 3) * 60
-noteRange = [int(n) for n in listdir(path)]
-print("range available")
-print(noteRange)
 
-import scale as modal
-
-modalNotes = modal.Scale(7, modal.roots[root], modal.modes[mode]).notes
-
-def searchOctave(i, o):
-    n = modalNotes[i] + (o * 12)
-    if n in noteRange:
-        modalNotes.append(n)
-
-for i in range(7):
-	searchOctave(i, -2)
-	searchOctave(i, -1)
-	searchOctave(i, 1)
-	searchOctave(i, 2)
-		
-scale = [n for n in modalNotes if n in noteRange]
-print("%d notes available in %s %s" % (len(scale), root, mode))
-print(scale)
 print("expected finish time %s" % datetime.fromtimestamp(time.time() + minDurSecs + 0.5).strftime("%H:%M"))
 
-
-files = {}
-for s in scale:
-    notePath = join(path, str(s))
-    files[s] = [join(notePath, f) for f in listdir(notePath) if isfile(join(notePath, f))]
 
 maxInflightPerNote = 6
 pg.mixer.set_num_channels(maxInflightPerNote * len(scale))
 
 
 class NotePlayer():
-    def __init__(self, number):
-        self.stock = [pg.mixer.Sound(f) for f in files[number]]
+    def __init__(self, number, sampleFiles):
+        self.stock = [pg.mixer.Sound(f) for f in sampleFiles[number]]
 
     def play(self, minDurationSecs):
         end = time.time() + minDurationSecs
@@ -81,7 +53,7 @@ class NotePlayer():
 
 noteThreads = []
 
-allNotes = [NotePlayer(n) for n in scale]
+allNotes = [NotePlayer(n, files) for n in scale]
 
 def playNote(n, t):
     allNotes[n].play(t)
