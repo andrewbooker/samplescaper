@@ -4,11 +4,8 @@ import sounddevice as sd
 import soundfile as sf
 import sys
 import math
-
 import random
-import queue
-import time
-import threading
+
 sd.default.samplerate = 44100
 sd.default.channels = 2
 
@@ -59,16 +56,16 @@ files.append(RawSample(sys.argv[1]))
 print("loading samples")
 samples = []
 for file in files:
-    for _ in range(4):
+    for _ in range(12):
         samples.append(Sample(file.data))
 print("%d samples loaded" % len(samples))
 
 
 def nextSample():
     s = samples[random.randint(0, len(samples) - 1)]
-    if not s.canStart():
-        return nextSample()
-    return s
+    if s.canStart():
+        return s
+    return None
     
 class SampleMix():
     def __init__(self):
@@ -106,33 +103,18 @@ class SampleMix():
 
 mix = SampleMix()
 mix.add(nextSample())
-
-q = queue.Queue()
-
-def callback(outdata, frames, time, status):
-    outdata[:] = q.get()
     
 blocksize = 4410
-q.put(mix.read(blocksize))
-t = time.time()
-oneHour = t + 3600
-interval = t + 2
-stream = None
-try:
-    stream = sd.OutputStream(blocksize=blocksize, dtype="float32", callback=callback)
-    stream.start()
-    while time.time() < oneHour:
-        q.put(mix.read(blocksize))
-        now = time.time()
-        if (now > t):
-            mix.add(nextSample())
-            t = now + 0.5 + random.random()
-        time.sleep(0.02)
+blocksToWrite = 100
+
+with sf.SoundFile("./test.wav", "w", samplerate=sd.default.samplerate, channels=2) as outfile:
+    for _ in range(blocksToWrite):
+        outfile.write(mix.read(blocksize))
+        if (blocksToWrite % 10) == 0:
+            next = nextSample()
+            if next is not None:
+                mix.add(next)
             
-except KeyboardInterrupt:
-    print("stopping")
-    
-stream.stop()
-stream.close()
+
 print("done")
 
