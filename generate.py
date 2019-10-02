@@ -105,7 +105,8 @@ mix = SampleMix()
 mix.add(nextSample())
     
 blocksize = 4410
-blocksToWrite = 100
+durationMins = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+blocksToWrite = int(durationMins * 600)
 
 with sf.SoundFile("./test.wav", "w", samplerate=sd.default.samplerate, channels=2) as outfile:
     for _ in range(blocksToWrite):
