@@ -53,19 +53,11 @@ class Sample():
     
 files = []
 files.append(RawSample(sys.argv[1]))
-print("loading samples")
-samples = []
-for file in files:
-    for _ in range(12):
-        samples.append(Sample(file.data))
-print("%d samples loaded" % len(samples))
-
+print("%d files available" % len(files))
 
 def nextSample():
-    s = samples[random.randint(0, len(samples) - 1)]
-    if s.canStart():
-        return s
-    return None
+    file = files[random.randint(0, len(files) - 1)]
+    return Sample(file.data)
     
 class SampleMix():
     def __init__(self):
@@ -107,11 +99,12 @@ mix.add(nextSample())
 blocksize = 4410
 durationMins = int(sys.argv[2]) if len(sys.argv) > 2 else 1
 blocksToWrite = int(durationMins * 600)
+print("writing %d blocks" % blocksToWrite)
 
 with sf.SoundFile("./test.wav", "w", samplerate=sd.default.samplerate, channels=2) as outfile:
-    for _ in range(blocksToWrite):
+    for b in range(blocksToWrite):
         outfile.write(mix.read(blocksize))
-        if (blocksToWrite % 10) == 0:
+        if (b % 10) == 0:
             next = nextSample()
             if next is not None:
                 mix.add(next)
