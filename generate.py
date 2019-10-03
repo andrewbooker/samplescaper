@@ -19,7 +19,7 @@ class RawSample():
 class Sample():
     def __init__(self, data):
         self.pos = 0
-        pan = random.random()
+        self.pan = random.random()
         
         self.sampleCount = len(data)
         ramp = math.floor(self.sampleCount / (6.0 * random.random()))
@@ -34,9 +34,7 @@ class Sample():
             if (p > rampDown):
                 sample *= (1.0 - ((p - rampDown) / (1.0 * ramp)))
 
-            left = sample * pan
-            right = sample * (1.0 - pan)
-            self.buffer.append([left, right])
+            self.buffer.append(sample)
 
     def hasData(self):
         return self.pos < self.sampleCount
@@ -49,7 +47,10 @@ class Sample():
         
     def readOne(self):
         self.pos += 1
-        return self.buffer[self.pos - 1]
+        sample = self.buffer[self.pos - 1]
+        left = sample * self.pan
+        right = sample * (1.0 - self.pan)
+        return [left, right]
     
 files = []
 files.append(RawSample(sys.argv[1]))
@@ -104,11 +105,8 @@ print("writing %d blocks" % blocksToWrite)
 with sf.SoundFile("./test.wav", "w", samplerate=sd.default.samplerate, channels=2) as outfile:
     for b in range(blocksToWrite):
         outfile.write(mix.read(blocksize))
-        if (b % 10) == 0:
-            next = nextSample()
-            if next is not None:
-                mix.add(next)
-            
+        if (b % 10) == 0 and len(mix.samples) < 6:
+            mix.add(nextSample())
 
 print("done")
 
