@@ -18,36 +18,36 @@ class RawSample():
 
 class Sample():
     def __init__(self, data):
+        self.data = data
         self.pos = 0
         self.pan = random.random()
-        
+        self.requiredLength = 44100 * 5
+        self.requiredPos = 0
+
         self.sampleCount = len(data)
-        ramp = math.floor(self.sampleCount / (6.0 * random.random()))
-        rampDown = self.sampleCount - ramp
-        
-        self.buffer = []
-        for p in range(self.sampleCount):
-            sample = data[p]
-            if (p < ramp):
-                sample *= (1.0 * p / ramp)
-
-            if (p > rampDown):
-                sample *= (1.0 - ((p - rampDown) / (1.0 * ramp)))
-
-            self.buffer.append(sample)
+        self.rampUp = math.floor(self.requiredLength / (6.0 * random.random()))
+        self.rampDown = self.requiredLength - self.rampUp
 
     def hasData(self):
-        return self.pos < self.sampleCount
+        return self.requiredPos < self.requiredLength
         
     def reset(self):
         self.pos = 0
+        self.requiredPos = 0
         
     def canStart(self):
-        return self.pos == 0
+        return self.requiredPos == 0
         
     def readOne(self):
-        self.pos += 1
-        sample = self.buffer[self.pos - 1]
+        self.requiredPos += 1
+        self.pos = self.pos + 1 if self.pos < self.sampleCount else 1
+        sample = self.data[self.pos - 1]
+        if (self.requiredPos < self.rampUp):
+            sample *= (1.0 * self.requiredPos / self.rampUp)
+
+        if (self.requiredPos > self.rampDown):
+            sample *= (1.0 - ((self.requiredPos - self.rampDown) / (1.0 * self.rampUp)))
+
         left = sample * self.pan
         right = sample * (1.0 - self.pan)
         return [left, right]
