@@ -19,22 +19,27 @@ class RawSample():
 class Sample():
     def __init__(self, data):
         self.data = data
-        self.pos = 0
-        self.pan = random.random()
-        self.requiredLength = 44100 * 5
-        self.requiredPos = 0
-
         self.sampleCount = len(data)
-        self.rampUp = math.floor(self.requiredLength / (6.0 * random.random()))
-        self.rampDown = self.requiredLength - self.rampUp
 
-    def hasData(self):
-        return self.requiredPos < self.requiredLength
-        
+        self.pan = 0.5
+        self.pos = 0
+        self.requiredLength = 9
+        self.requiredPos = 0
+        self.rampUp = 9
+        self.rampDown = 9
+        self.reset()
+
     def reset(self):
         self.pos = 0
         self.requiredPos = 0
+        self.requiredLength = 44100 * 10 * (0.1 + random.random())
+        self.rampUp = math.floor(self.requiredLength / (6.0 * (0.1 + random.random())))
+        self.rampDown = math.floor(self.requiredLength / (4.0 * (0.5 + random.random())))
+        self.pan = random.random()
         
+    def hasData(self):
+        return self.requiredPos < self.requiredLength
+
     def canStart(self):
         return self.requiredPos == 0
         
@@ -45,8 +50,9 @@ class Sample():
         if (self.requiredPos < self.rampUp):
             sample *= (1.0 * self.requiredPos / self.rampUp)
 
-        if (self.requiredPos > self.rampDown):
-            sample *= (1.0 - ((self.requiredPos - self.rampDown) / (1.0 * self.rampUp)))
+        rampDownStart = self.requiredLength - self.rampDown
+        if (self.requiredPos > rampDownStart):
+            sample *= (1.0 - ((self.requiredPos - rampDownStart) / (1.0 * self.rampDown)))
 
         left = sample * self.pan
         right = sample * (1.0 - self.pan)
