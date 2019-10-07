@@ -5,6 +5,7 @@ import soundfile as sf
 import sys
 import math
 import random
+from utils.AvailableSamples import files
 
 sd.default.samplerate = 44100
 sd.default.channels = 2
@@ -58,13 +59,31 @@ class Sample():
         right = sample * (1.0 - self.pan)
         return [left, right]
     
-files = []
-files.append(RawSample(sys.argv[1]))
+
 print("%d files available" % len(files))
 
-def nextSample():
-    file = files[random.randint(0, len(files) - 1)]
-    return Sample(file.data)
+notes = []
+notes[:] = files.keys()
+
+
+class SampleChooser():
+    def __init__(self):
+        self.currentNote = -1
+        self.currentIdx = 0
+
+    def nextSample(self):
+        if self.currentNote == -1:
+            self.currentNote = random.randint(0, len(notes) - 1)
+
+        available = files[notes[self.currentNote]]
+        if self.currentIdx < len(available):
+            file = available[self.currentIdx]
+            self.currentIdx += 1
+            return Sample(RawSample(file).data)
+        else:
+            self.currentIdx = -1
+            self.currentNote = -1    
+            return self.nextSample()
     
 class SampleMix():
     def __init__(self):
@@ -100,11 +119,12 @@ class SampleMix():
             out.append(stereoPair)
         return out
 
+chooser = SampleChooser()
 mix = SampleMix()
-mix.add(nextSample())
+mix.add(chooser.nextSample())
     
 blocksize = 4410
-durationMins = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+durationMins = (int(sys.argv[4]) if len(sys.argv) > 4 else 3)
 blocksToWrite = int(durationMins * 600)
 print("writing %d blocks" % blocksToWrite)
 
@@ -112,7 +132,7 @@ with sf.SoundFile("./test.wav", "w", samplerate=sd.default.samplerate, channels=
     for b in range(blocksToWrite):
         outfile.write(mix.read(blocksize))
         if (b % 10) == 0 and len(mix.samples) < 6:
-            mix.add(nextSample())
+            mix.add(chooser.nextSample())
 
 print("done")
 
