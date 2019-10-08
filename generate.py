@@ -5,6 +5,8 @@ import soundfile as sf
 import sys
 import math
 import random
+import time
+from datetime import datetime
 from utils.AvailableSamples import files
 
 sd.default.samplerate = 44100
@@ -60,10 +62,16 @@ class Sample():
         return [left, right]
     
 
-print("%d files available" % len(files))
-
+print("loading files for %d notes" % len(files))
+loadedFiles = {}
+l = 0
+for n in files.keys():
+    loadedFiles[n] = [RawSample(f) for f in files[n]]
+    l += len(loadedFiles[n])
+print("%d files loaded" % l)
+start = time.time()
 notes = []
-notes[:] = files.keys()
+notes[:] = loadedFiles.keys()
 
 
 class SampleChooser():
@@ -75,11 +83,11 @@ class SampleChooser():
         if self.currentNote == -1:
             self.currentNote = random.randint(0, len(notes) - 1)
 
-        available = files[notes[self.currentNote]]
+        available = loadedFiles[notes[self.currentNote]]
         if self.currentIdx < len(available):
-            file = available[self.currentIdx]
+            f = available[self.currentIdx]
             self.currentIdx += 1
-            return Sample(RawSample(file).data)
+            return Sample(f.data)
         else:
             self.currentIdx = -1
             self.currentNote = -1    
@@ -134,5 +142,6 @@ with sf.SoundFile("./test.wav", "w", samplerate=sd.default.samplerate, channels=
         if (b % 10) == 0 and len(mix.samples) < 6:
             mix.add(chooser.nextSample())
 
-print("done")
+timeTaken = time.time() - start
+print("finished after %s" % datetime.fromtimestamp(timeTaken).strftime("%M:%S"))
 
