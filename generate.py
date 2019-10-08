@@ -75,22 +75,24 @@ notes[:] = loadedFiles.keys()
 
 
 class SampleChooser():
+    maxInflightPerNote = 6
+
     def __init__(self):
         self.currentNote = -1
-        self.currentIdx = 0
+        self.currentlyInflight = 0
 
     def nextSample(self):
         if self.currentNote == -1:
             self.currentNote = random.randint(0, len(notes) - 1)
 
         available = loadedFiles[notes[self.currentNote]]
-        if self.currentIdx < len(available):
-            f = available[self.currentIdx]
-            self.currentIdx += 1
+        if self.currentlyInflight < SampleChooser.maxInflightPerNote:
+            f = available[random.randint(0, len(available) - 1)]
+            self.currentlyInflight += 1
             return Sample(f.data)
         else:
-            self.currentIdx = -1
-            self.currentNote = -1    
+            self.currentNote = -1
+            self.currentlyInflight = 0
             return self.nextSample()
     
 class SampleMix():
@@ -139,7 +141,7 @@ print("writing %d blocks" % blocksToWrite)
 with sf.SoundFile("./test.wav", "w", samplerate=sd.default.samplerate, channels=2) as outfile:
     for b in range(blocksToWrite):
         outfile.write(mix.read(blocksize))
-        if (b % 10) == 0 and len(mix.samples) < 6:
+        if (b % 10) == 0 and len(mix.samples) < 36:
             mix.add(chooser.nextSample())
 
 timeTaken = time.time() - start
