@@ -74,27 +74,30 @@ notes = []
 notes[:] = loadedFiles.keys()
 
 
-class SampleChooser():
+class NotePlayer():
+    blockInterval = 3
     maxInflightPerNote = 6
 
-    def __init__(self):
-        self.currentNote = -1
-        self.currentlyInflight = 0
+    def __init__(self, mix):
+        self.mix = mix
+        self.lastBlock = 0
+        self.currentNotes = []
 
-    def nextSample(self):
-        if self.currentNote == -1:
-            self.currentNote = random.randint(0, len(notes) - 1)
+    def nextNote(self, note):
+        self.currentNotes.append({"note": note, "added": 0})
 
-        available = loadedFiles[notes[self.currentNote]]
-        if self.currentlyInflight < SampleChooser.maxInflightPerNote:
-            f = available[random.randint(0, len(available) - 1)]
-            self.currentlyInflight += 1
-            return Sample(f.data)
-        else:
-            self.currentNote = -1
-            self.currentlyInflight = 0
-            return self.nextSample()
-    
+    def tickBlock(self, b):
+        if b - self.lastBlock == NotePlayer.blockInterval:
+            for n in self.currentNotes:
+                if n["added"] < NotePlayer.maxInflightPerNote:
+                    available = loadedFiles[n["note"]]
+                    f = available[random.randint(0, len(available) - 1)]
+                    self.mix.add(Sample(f.data))
+                    n["added"] += 1
+                else:
+                    self.currentNotes.remove(n)
+            self.lastBlock = b
+
 class SampleMix():
     def __init__(self):
         self.samples = []
@@ -129,20 +132,31 @@ class SampleMix():
             out.append(stereoPair)
         return out
 
-chooser = SampleChooser()
+def secsUntilNextSample():
+    return random.randint(2, 10);
+
+
 mix = SampleMix()
-mix.add(chooser.nextSample())
+notePlayer = NotePlayer(mix);
+notePlayer.nextNote(notes[random.randint(0, len(notes) - 1)])
     
 blocksize = 4410
 durationMins = (int(sys.argv[4]) if len(sys.argv) > 4 else 3)
 blocksToWrite = int(durationMins * 600)
 print("writing %d blocks" % blocksToWrite)
 
+lastBlockStart = 0
+nextSampleAt = secsUntilNextSample() * 10
+
 with sf.SoundFile("./test.wav", "w", samplerate=sd.default.samplerate, channels=2) as outfile:
     for b in range(blocksToWrite):
         outfile.write(mix.read(blocksize))
-        if (b % 10) == 0 and len(mix.samples) < 36:
-            mix.add(chooser.nextSample())
+        notePlayer.tickBlock(b)
+
+        if b > nextSampleAt:
+            notePlayer.nextNote(notes[random.randint(0, len(notes) - 1)])
+            nextSampleAt = b + (secsUntilNextSample() * 10)
+
 
 timeTaken = time.time() - start
 print("finished after %s" % datetime.fromtimestamp(timeTaken).strftime("%M:%S"))
