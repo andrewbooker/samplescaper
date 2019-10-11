@@ -20,13 +20,14 @@ class RawSample():
         self.data = data
 
 class Sample():
-    def __init__(self, data):
+    def __init__(self, data, duration):
         self.data = data
         self.sampleCount = len(data)
+        self.requiredLength = duration * 44100
 
+        self.vol = 0.5
         self.pan = 0.5
-        self.pos = 0
-        self.requiredLength = 9
+        self.pos = 0        
         self.requiredPos = 0
         self.rampUp = 9
         self.rampDown = 9
@@ -35,9 +36,8 @@ class Sample():
     def reset(self):
         self.pos = 0
         self.requiredPos = 0
-        self.requiredLength = 44100 * 10 * (0.1 + random.random())
-        self.rampUp = math.floor(self.requiredLength / (6.0 * (0.1 + random.random())))
-        self.rampDown = math.floor(self.requiredLength / (4.0 * (0.5 + random.random())))
+        self.rampUp = 44100;
+        self.rampDown = 441000;
         self.pan = random.random()
         
     def hasData(self):
@@ -49,7 +49,7 @@ class Sample():
     def readOne(self):
         self.requiredPos += 1
         self.pos = self.pos + 1 if self.pos < self.sampleCount else 1
-        sample = self.data[self.pos - 1]
+        sample = self.vol * self.data[self.pos - 1]
         if (self.requiredPos < self.rampUp):
             sample *= (1.0 * self.requiredPos / self.rampUp)
 
@@ -83,16 +83,16 @@ class NotePlayer():
         self.lastBlock = 0
         self.currentNotes = []
 
-    def nextNote(self, note):
-        self.currentNotes.append({"note": note, "added": 0})
+    def nextNote(self, note, duration):
+        self.currentNotes.append({"note": note, "duration": duration, "added": 0})
 
-    def tickBlock(self, b):
-        if b - self.lastBlock == NotePlayer.blockInterval:
+    def setCurrentBlock(self, b):
+        if (b - self.lastBlock) == NotePlayer.blockInterval:
             for n in self.currentNotes:
                 if n["added"] < NotePlayer.maxInflightPerNote:
                     available = loadedFiles[n["note"]]
                     f = available[random.randint(0, len(available) - 1)]
-                    self.mix.add(Sample(f.data))
+                    self.mix.add(Sample(f.data, n["duration"]))
                     n["added"] += 1
                 else:
                     self.currentNotes.remove(n)
@@ -133,12 +133,14 @@ class SampleMix():
         return out
 
 def secsUntilNextSample():
-    return random.randint(2, 10);
+    return random.randint(2, 10)
 
+def sampleDuration():
+    return random.randint(5, 30)
 
 mix = SampleMix()
 notePlayer = NotePlayer(mix);
-notePlayer.nextNote(notes[random.randint(0, len(notes) - 1)])
+notePlayer.nextNote(notes[random.randint(0, len(notes) - 1)], sampleDuration())
     
 blocksize = 4410
 durationMins = (int(sys.argv[4]) if len(sys.argv) > 4 else 3)
@@ -151,10 +153,10 @@ nextSampleAt = secsUntilNextSample() * 10
 with sf.SoundFile("./test.wav", "w", samplerate=sd.default.samplerate, channels=2) as outfile:
     for b in range(blocksToWrite):
         outfile.write(mix.read(blocksize))
-        notePlayer.tickBlock(b)
+        notePlayer.setCurrentBlock(b)
 
-        if b > nextSampleAt:
-            notePlayer.nextNote(notes[random.randint(0, len(notes) - 1)])
+        if b > nextSampleAt and len(notePlayer.currentNotes) < (1 + len(notes)):
+            notePlayer.nextNote(notes[random.randint(0, len(notes) - 1)], sampleDuration())
             nextSampleAt = b + (secsUntilNextSample() * 10)
 
 
