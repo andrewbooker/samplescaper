@@ -1,65 +1,35 @@
 #!/usr/bin/env python
 
-import queue
-import sounddevice as sd
-
-import datetime
-import time
 import sys
 import os
 import keyboard
-import threading
-from multiprocessing import Value
+import time
 
-
-from utils.sampleRecording import *
-
+from utils.sampleRecording import Controller
+from utils.sampleRecording import usableAudioDevices
 
 if len(sys.argv) < 2:
     print("please supply output directory (will be created if necessary)")
     exit()
 
 outDir = sys.argv[1]
-buffer = Buffer()
+
 if not os.path.exists(outDir):
     os.makedirs(outDir)
-sampleNumber = Value('i', int(sys.argv[2]) if len(sys.argv) > 2 else 48)
-shouldStop = threading.Event()
-shouldRecordClip = threading.Event()
+ 
 
 devices = usableAudioDevices()
 audioDevice = [k for k in devices.keys()][0]
 print("using %s" % devices[audioDevice])
+startNumber = int(sys.argv[2]) if len(sys.argv) > 2 else 48
 
-recording = RecordSamples(audioDevice, outDir, buffer)
-recordThread = threading.Thread(target = recording.start, args = (sampleNumber, shouldStop, shouldRecordClip), daemon = True)
+controller = Controller(startNumber, audioDevice, outDir)
 
-print("ready to record to %s" % outDir)
-recordThread.start()
+keyboard.on_press_key("q", controller.stopCapture, suppress = True)
+keyboard.on_press_key("n", controller.incrementNumber, suppress = True)
+keyboard.on_press_key("s", controller.toggleRecord, suppress = True)
 
-def incrementNumber(e):
-    with sampleNumber.get_lock():
-        sampleNumber.value += 1
-    print("next sample number %d" % sampleNumber.value)
-
-def stopCapture(e):
-    print("stopping...")
-    shouldStop.set()
-    recordThread.join()
-
-def toggleRecord(e):
-    if not shouldRecordClip.is_set():
-        print("starting at queue size %d..." % buffer.q.qsize())
-        shouldRecordClip.set()
-    else:
-        print("stopping at queue size %d..." % buffer.q.qsize())
-        shouldRecordClip.clear()
-
-keyboard.on_press_key("q", stopCapture, suppress = True)
-keyboard.on_press_key("n", incrementNumber, suppress = True)
-keyboard.on_press_key("s", toggleRecord, suppress = True)
-
-while not shouldStop.is_set():
+while not controller.shouldStop.is_set():
     time.sleep(1)
 
 print("done")
