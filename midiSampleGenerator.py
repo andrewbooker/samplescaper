@@ -32,9 +32,11 @@ if not os.path.exists(outDir):
 devices = usableAudioDevices()
 audioDevice = [k for k in devices.keys()][0]
 print("using %s" % devices[audioDevice])
-startNumber = int(sys.argv[2]) if len(sys.argv) > 2 else 48
+baseNote = int(sys.argv[2]) if len(sys.argv) > 2 else 48
+cycles = int(sys.argv[3]) if len(sys.argv) > 3 else 1
 
-controller = Controller(startNumber, audioDevice, outDir)
+
+controller = Controller(baseNote, audioDevice, outDir)
 ####
 
 midi.init()
@@ -47,16 +49,16 @@ if device is None:
 	
 player = midi.Output(device, latency = 0)
 
-baseNote = 48
-for i in range(12):
-	note = baseNote + i
-	controller.setNumber(note)
-	player.note_on(note, velocity=100, channel=0)
-	controller.toggleRecord(None)
-	time.sleep(2.0)
-	controller.toggleRecord(None)
-	player.note_off(note, velocity=0, channel=0)
-	time.sleep(1.0)
+for c in range(cycles):
+	for i in range(18):
+		note = baseNote + i
+		controller.setNumber(note)
+		player.note_on(note, velocity=100, channel=0)
+		controller.toggleRecord(None)
+		time.sleep(4.0)
+		controller.toggleRecord(None)
+		player.note_off(note, velocity=0, channel=0)
+		time.sleep(4.0)
 
 controller.stopCapture(None)
 player.close()
