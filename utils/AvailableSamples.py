@@ -21,7 +21,7 @@ noteRange = [int(n) for n in listdir(path)]
 print("range available")
 print(noteRange)
 
-modalNotes = modal.Scale(7, modal.roots[root], modal.modes[mode]).notes
+modalNotes = modal.Scale(7, root, modal.Modes.named(mode)).notes
 
 def searchOctave(i, o):
     n = modalNotes[i] + (o * 12)
