@@ -1,8 +1,16 @@
 #!/usr/bin/env python
 
+import os
 import sys
+parentDir = os.path.dirname(os.getcwd())
+sys.path.append(parentDir)
+if not os.path.exists(os.path.join(parentDir, "compositionutils")):
+    print("compositionutils library not found.")
+    print("please clone github.com/andrewbooker/compositionutils.git into %s" % parentDir)
+    exit()
+
 from os import listdir
-import utils.scale as modal
+import compositionutils.scale as modal
 from os.path import isfile, join
 
 path = sys.argv[1]

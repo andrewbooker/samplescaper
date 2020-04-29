@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+
+
+from utils.AvailableSamples import files
+
 import sounddevice as sd
 import soundfile as sf
 import sys
@@ -7,8 +11,6 @@ import math
 import random
 import time
 from datetime import datetime
-from utils.AvailableSamples import files
-
 sd.default.samplerate = 44100
 sd.default.channels = 2
 

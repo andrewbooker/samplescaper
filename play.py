@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 
+from utils.AvailableSamples import scale, files
+
 import pygame as pg
 import time
 import random
 import math
 import sys
-
 import threading
 from datetime import datetime
 
-from utils.AvailableSamples import scale, files
+
+
 
 minDurSecs = (int(sys.argv[4]) if len(sys.argv) > 4 else 3) * 60
 
