@@ -21,6 +21,7 @@ pg.mixer.set_num_channels(2)
 print("expected finish time %s" % datetime.fromtimestamp(time.time() + minDurSecs + 0.5).strftime("%H:%M"))
 
 class NotePlayer():
+    fade = 3
     def __init__(self, number):
         self.stock = [pg.mixer.Sound(f) for f in files[number]]
 
@@ -30,9 +31,9 @@ class NotePlayer():
             pan = random.random()
             note = self.stock[random.randint(0, len(self.stock) - 1)]
             channel.set_volume(1.0 - pan, pan)
-            channel.play(note, loops = -1, fade_ms = 5)
-            time.sleep(0.001 * (durationMs - 10))
-            channel.fadeout(5)
+            channel.play(note, loops = -1, fade_ms = NotePlayer.fade)
+            time.sleep(0.001 * (durationMs - (2 * NotePlayer.fade)))
+            channel.fadeout(NotePlayer.fade)
 
 noteThreads = []
 
