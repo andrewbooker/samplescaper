@@ -7,17 +7,6 @@ import queue
 import sounddevice as sd
 from utils.LoopableSample import LoopableSample
 
-def usableAudioDevices():
-    usable = {}
-
-    devs = sd.query_devices()
-    for d in range(len(devs)):
-        dev = devs[d]
-        if "USB" in dev["name"] and dev["default_samplerate"] == 44100:
-            usable[d] = dev["name"]
-
-    return usable
-
 
 class Buffer():
     def __init__(self):

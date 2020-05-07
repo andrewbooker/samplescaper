@@ -2,11 +2,20 @@
 
 import pygame.midi as midi
 import time
-import sys
 import os
+import sys
+parentDir = os.path.dirname(os.getcwd())
+sys.path.append(parentDir)
+def checkImport(lib):
+    if not os.path.exists(os.path.join(parentDir, lib)):
+        print("%s library not found." % lib)
+        print("please clone github.com/andrewbooker/%s.git into %s" % (lib, parentDir))
+        exit()
+
+checkImport("mediautils")
+from mediautils.audiodevices import UsbAudioDevices
 
 from utils.sampleRecording import Controller
-from utils.sampleRecording import usableAudioDevices
 
 
 def getUsableOutputDevice():
@@ -29,7 +38,7 @@ if not os.path.exists(outDir):
     os.makedirs(outDir)
 
 
-devices = usableAudioDevices()
+devices = UsbAudioDevices()
 audioDevice = [k for k in devices.keys()][0]
 print("using %s" % devices[audioDevice])
 baseNote = int(sys.argv[2]) if len(sys.argv) > 2 else 48
