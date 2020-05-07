@@ -40,7 +40,7 @@ if not os.path.exists(outDir):
 
 devices = UsbAudioDevices()
 audioDevice = [k for k in devices.keys()][0]
-print("using %s" % devices[audioDevice])
+print("using", devices[audioDevice])
 baseNote = int(sys.argv[2]) if len(sys.argv) > 2 else 48
 cycles = int(sys.argv[3]) if len(sys.argv) > 3 else 1
 

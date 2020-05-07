@@ -29,7 +29,7 @@ if not os.path.exists(outDir):
 
 devices = UsbAudioDevices()
 audioDevice = [k for k in devices.keys()][0]
-print("using %s" % devices[audioDevice])
+print("using", devices[audioDevice])
 startNumber = int(sys.argv[2]) if len(sys.argv) > 2 else 48
 
 controller = Controller(startNumber, audioDevice, outDir)
