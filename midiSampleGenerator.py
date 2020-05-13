@@ -34,6 +34,7 @@ audioDevice = [k for k in devices.keys()][0]
 print("using", devices[audioDevice])
 baseNote = int(sys.argv[2]) if len(sys.argv) > 2 else 48
 cycles = int(sys.argv[3]) if len(sys.argv) > 3 else 1
+channel = int(sys.argv[4]) - 1 if len(sys.argv) > 4 else 0
 
 
 controller = Controller(baseNote, audioDevice, outDir)
@@ -46,11 +47,11 @@ for c in range(cycles):
 	for i in range(18):
 		note = baseNote + i
 		controller.setNumber(note)
-		midiOut.io.note_on(note, velocity=100, channel=0)
+		midiOut.io.note_on(note, velocity=100, channel=channel)
 		controller.toggleRecord(None)
 		time.sleep(4.0)
 		controller.toggleRecord(None)
-		midiOut.io.note_off(note, velocity=0, channel=0)
+		midiOut.io.note_off(note, velocity=0, channel=channel)
 		time.sleep(4.0)
 
 controller.stopCapture(None)
