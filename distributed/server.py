@@ -15,11 +15,13 @@ audioFile = sys.argv[1]
 class AudioFileServer(BaseHTTPRequestHandler):
     
     def do_GET(self):
+        size = os.stat(audioFile).st_size
         with open(audioFile, "rb") as loopFile:
             self.send_response(200)
-            self.send_header("Content-type", "audio/x-wav")
-            self.wfile.write(loopFile.read())
+            self.send_header("Content-Type", "audio/x-wav")
+            self.send_header("Content-Length", size)
             self.end_headers()
+            self.wfile.write(loopFile.read())
 
 class StoppableServer:
     def __init__(self, port):
