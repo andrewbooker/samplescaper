@@ -1,27 +1,57 @@
 #!/usr/bin/env python
 
-import pygame as pg
+import sounddevice as sd
+import soundfile as sf
 import requests
 import time
+import io
+import random
 
-pg.mixer.init(frequency=44100, size=-16, channels=1, buffer=1024)
-pg.init()
+
+class Volume():
+
+    def __init__(self, totalLength, upTimePercent):
+        self.pos = 0
+        self.totalLength = totalLength
+        self.upLength = upTimePercent * totalLength
+
+    def vol(self):
+        self.pos += 1
+        if self.pos > self.totalLength:
+            return 0
+        if self.pos > self.upLength:
+            return 1.0 - ((self.pos - self.upLength) / (self.totalLength - self.upLength))
+        return self.pos / self.upLength
+
+def applyPan(s, pan):
+    return [pan * s, (1.0 - pan) * s]
+
+
+
+sd.default.channels = 2
+
 
 url = "http://localhost:3064"
 response = requests.get(url, stream=True)
-note = pg.mixer.Sound(response.raw.read())
+data, sampleRate = sf.read(io.BytesIO(response.raw.read()))
 del response
 
-fadeInSecs = 1
-fadeOutSecs = 10
+print(len(data), sampleRate)
 
-channel = pg.mixer.find_channel()
-channel.set_volume(1.0)
-channel.play(note, loops = -1, fade_ms = fadeInSecs * 1000)
-time.sleep(fadeInSecs)
-channel.fadeout(fadeOutSecs * 1000)
-time.sleep(fadeOutSecs)
+pan = random.random()
+totalTime = 10
+minLength = totalTime * sampleRate
+sound = []
+while len(sound) < minLength:
+    sound += [d for d in data]
 
-pg.mixer.quit()
-pg.quit()
+vol = Volume(len(sound), 0.1)
+
+sd.play([applyPan(vol.vol() * s, pan) for s in sound], sampleRate)
+
+
+time.sleep(len(sound) / (1.0 * sampleRate))
+exit()
+
+
 
