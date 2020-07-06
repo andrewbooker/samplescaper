@@ -1,5 +1,48 @@
 <html>
 <body>
-<audio id="audio" src="http://localhost:3064" type="audio/wav" loop controls></audio>
+<button id="start">Start</button>
+<div id="container"></div>
 </body>
+<script>
+
+class Envelope {    
+    constructor(rampUpSec, rampDownSec) {
+        this.p = 0.0;
+        this.rampUp = rampUpSec * 100;
+        this.rampDown = rampDownSec * 100;
+    }
+
+    vol() {
+        this.p += 1;
+        if (this.p > (this.rampUp + this.rampDown)) {
+            return 0;
+        }
+        if (this.p < this.rampUp) {
+            return this.p / this.rampUp;
+        }
+        return 1.0 - ((this.p - this.rampUp) / this.rampDown);
+    }
+}
+Envelope.intervalMs = 10
+
+const c = document.getElementById("container");
+
+c.appendChild((() => {
+    const a = new Audio("http://localhost:3064");
+    const env = new Envelope(1, 9);
+    a.loop = true;  
+    a.volume = 0;
+    
+    document.getElementById("start").onclick = () => { 
+        a.play();
+        setInterval(() => { a.volume = env.vol(); }, 10); 
+    };
+    return a;
+})());
+
+
+
+// serve another version for a desktop machine (eg serve from improvizone site)
+// it should pan, and launch multiple loops as desired. 
+</script>
 <html>
