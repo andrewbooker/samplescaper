@@ -4,6 +4,11 @@
 <div id="container"></div>
 </body>
 <script>
+let seed = 1;
+function random() {
+    const x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+}
 
 class Envelope {    
     constructor(rampUpSec, rampDownSec) {
@@ -15,7 +20,7 @@ class Envelope {
     vol() {
         this.p += 1;
         if (this.p > (this.rampUp + this.rampDown)) {
-            return 0;
+            return 0.0;
         }
         if (this.p < this.rampUp) {
             return this.p / this.rampUp;
@@ -23,26 +28,41 @@ class Envelope {
         return 1.0 - ((this.p - this.rampUp) / this.rampDown);
     }
 }
-Envelope.intervalMs = 10
 
 const c = document.getElementById("container");
+const players = [];
 
-c.appendChild((() => {
-    const a = new Audio("http://localhost:3064");
-    const env = new Envelope(1, 9);
-    a.loop = true;  
-    a.volume = 0;
-    
-    document.getElementById("start").onclick = () => { 
-        a.play();
-        setInterval(() => { a.volume = env.vol(); }, 10); 
-    };
-    return a;
-})());
+players.push({});
+
+function reset(e) {
+    e.state = "notStarted";
+    e.env = new Envelope(1 + random(), 5 + (10 * random()));
+    e.audio = new Audio("http://localhost:3064?" + random());
+    e.audio.loop = true;  
+    e.audio.volume = 0.0;    
+    e.audio.play();
+    e.state = "playPressed";
+}
+
+document.getElementById("start").onclick = function() {
+    reset(players[0]);
+    players.forEach(p => c.appendChild(p.audio));
+
+    setInterval(() => { 
+        players.forEach(e => {
+            if (e.state === "notStarted") {
+                return;
+            }
+            e.audio.volume = e.env.vol();
+            if (e.audio.volume === 0.0 && e.state === "started") {
+                reset(e);
+                return;
+            }
+            e.state = "started";
+        });
+    }, 10);
+};
 
 
-
-// serve another version for a desktop machine (eg serve from improvizone site)
-// it should pan, and launch multiple loops as desired. 
 </script>
 <html>
