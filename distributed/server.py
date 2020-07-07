@@ -51,6 +51,24 @@ thread = threading.Thread(target=server.start, args=(), daemon=True)
 thread.start()
 done = False
 
+
+import http.server
+import socketserver
+
+class ClientHtmlServer(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        self.path = "./client.html"
+        return http.server.SimpleHTTPRequestHandler.do_GET(self)
+
+my_server = socketserver.TCPServer(("0.0.0.0", 3065), ClientHtmlServer)
+my_server.serve_forever()
+
+
+
+
+
+
+
 import readchar
 print("Serving on port %d. Press 'q' to exit" % port)
 while not done:
