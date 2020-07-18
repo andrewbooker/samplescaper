@@ -47,17 +47,27 @@ def playOne():
 
     server = anyItemIn(servers)
     url = "http://%s:3064" % server
-    response = requests.get(url, stream=True)
-    data, sampleRate = sf.read(io.BytesIO(response.raw.read()))
-    del response
 
     pan = random.random()
     totalTime = 5.0 + (10.0 * random.random())
-    minLength = int(totalTime * sampleRate)
+    
     sound = []
-    while len(sound) < minLength:
-        sound += [d for d in data]
-
+    minLength = 0
+    sampleRate = 44100
+    
+    try:
+        response = requests.get(url, stream=True)
+        data, sr = sf.read(io.BytesIO(response.raw.read()))
+        del response
+        sampleRate = sr
+        minLength = int(totalTime * sampleRate)
+        while len(sound) < minLength:
+            sound += [d for d in data]
+    except requests.exceptions.RequestException as e:
+        print("No audio available from %s" % server)
+        time.sleep(10)
+        return True
+    
     vol = Volume(len(sound), 0.1)
 
     sd.play([applyPan(vol.vol() * s, pan) for s in sound], sampleRate)
