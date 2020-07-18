@@ -14,7 +14,7 @@ def nextAudioFile():
     notes = [50, 52, 53, 55, 57, 58, 60, 62, 64, 65]
     note = notes[random.randint(0, len(notes) - 1)]
     noteDir = os.path.join(audioFileDir, str(note))
-    files = os.listdir(noteDir)
+    files = [f for f in filter(lambda f: "wav" in f, os.listdir(noteDir))]
     return os.path.join(os.path.join(noteDir, files[random.randint(0, len(files) - 1)]))
 
 
