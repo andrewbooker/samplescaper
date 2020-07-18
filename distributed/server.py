@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import HTTPServer, BaseHTTPRequestHandler, SimpleHTTPRequestHandler
 import threading
 import sys
 import time
 import urllib
 import os
+import sys
 import random
 
 
@@ -28,13 +29,21 @@ class AudioFileServer(BaseHTTPRequestHandler):
             self.send_header("Content-Length", size)
             self.end_headers()
             self.wfile.write(loopFile.read())
+        sys.stdout.write("\r")
+        return None
+
+class StaticHtmlServer(SimpleHTTPRequestHandler):
+    def do_GET(self):
+        self.path = "./client.html"
+        return SimpleHTTPRequestHandler.do_GET(self)
 
 class StoppableServer:
-    def __init__(self, port):
+    def __init__(self, port, servlet):
         self.port = port
+        self.servlet = servlet
 
     def start(self):
-        self.httpd = HTTPServer(("0.0.0.0", self.port), AudioFileServer)
+        self.httpd = HTTPServer(("0.0.0.0", self.port), self.servlet)
         self.httpd.serve_forever()
         
     def stop(self):
@@ -44,39 +53,24 @@ class StoppableServer:
         print("stopped")
 
 random.seed()
-port = 3064
-server = StoppableServer(port)
-thread = threading.Thread(target=server.start, args=(), daemon=True)
 
-thread.start()
+servers = [StoppableServer(3064, AudioFileServer), StoppableServer(3065, StaticHtmlServer)]
+threads = []
+
+for s in servers:
+    threads.append(threading.Thread(target=s.start, args=(), daemon=True))
+
+[t.start() for t in threads]
 done = False
 
-
-import http.server
-import socketserver
-
-class ClientHtmlServer(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
-        self.path = "./client.html"
-        return http.server.SimpleHTTPRequestHandler.do_GET(self)
-
-my_server = socketserver.TCPServer(("0.0.0.0", 3065), ClientHtmlServer)
-my_server.serve_forever()
-
-
-
-
-
-
-
 import readchar
-print("Serving on port %d. Press 'q' to exit" % port)
+print("Started. Press 'q' to exit")
 while not done:
     c = readchar.readchar()
     if c == "q":
         done = True
 
-server.stop()
-thread.join()
+[s.stop() for s in servers]
+[t.join() for t in threads]
     
 
