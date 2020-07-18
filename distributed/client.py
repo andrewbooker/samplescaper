@@ -26,32 +26,30 @@ class Volume():
 def applyPan(s, pan):
     return [pan * s, (1.0 - pan) * s]
 
-
-
 sd.default.channels = 2
 
+def playOne():
+    url = "http://localhost:3064"
+    response = requests.get(url, stream=True)
+    data, sampleRate = sf.read(io.BytesIO(response.raw.read()))
+    del response
 
-url = "http://localhost:3064"
-response = requests.get(url, stream=True)
-data, sampleRate = sf.read(io.BytesIO(response.raw.read()))
-del response
+    pan = random.random()
+    totalTime = 5.0 + (10.0 * random.random())
+    minLength = int(totalTime * sampleRate)
+    sound = []
+    while len(sound) < minLength:
+        sound += [d for d in data]
 
-print(len(data), sampleRate)
+    vol = Volume(len(sound), 0.1)
 
-pan = random.random()
-totalTime = 10
-minLength = totalTime * sampleRate
-sound = []
-while len(sound) < minLength:
-    sound += [d for d in data]
-
-vol = Volume(len(sound), 0.1)
-
-sd.play([applyPan(vol.vol() * s, pan) for s in sound], sampleRate)
+    sd.play([applyPan(vol.vol() * s, pan) for s in sound], sampleRate)
+    time.sleep(len(sound) / (1.0 * sampleRate))
 
 
-time.sleep(len(sound) / (1.0 * sampleRate))
-exit()
+while True:
+    playOne()
+
 
 
 
