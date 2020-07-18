@@ -6,6 +6,7 @@ import requests
 import time
 import io
 import random
+import json
 
 
 class Volume():
@@ -26,10 +27,26 @@ class Volume():
 def applyPan(s, pan):
     return [pan * s, (1.0 - pan) * s]
 
+def anyItemIn(arr):
+    if len(arr) == 1:
+        return arr[0]
+
+    return arr[random.randint(0, len(arr) - 1)]
+
 sd.default.channels = 2
 
+
 def playOne():
-    url = "http://localhost:3064"
+    servers = []
+    with open("./servers.json", "r") as sl:
+        servers += json.load(sl)
+
+    if len(servers) == 0:
+        print("stopping. no servers available.")
+        return False
+
+    server = anyItemIn(servers)
+    url = "http://%s:3064" % server
     response = requests.get(url, stream=True)
     data, sampleRate = sf.read(io.BytesIO(response.raw.read()))
     del response
@@ -45,10 +62,12 @@ def playOne():
 
     sd.play([applyPan(vol.vol() * s, pan) for s in sound], sampleRate)
     time.sleep(len(sound) / (1.0 * sampleRate))
+    return True
 
 
-while True:
-    playOne()
+canContinue = True
+while canContinue:
+    canContinue = playOne()
 
 
 
