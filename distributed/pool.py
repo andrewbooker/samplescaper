@@ -21,7 +21,8 @@ checkImport("mediautils")
 from mediautils.audiodevices import UsbAudioDevices
 from utils.LoopableSample import LoopableSample
 
-sampleRate = 44100.0
+SAMPLE_RATE = 44100.0
+MINIMAL_LEVEL = 0.9
 
 
 class Buffer():
@@ -41,7 +42,15 @@ class Consumer():
         self.sampleLength = 0
         self.outDir = outDir
 
+    def reset(self):
+        self.out = None
+        self.sampleLength = 0
+
     def addBuffer(self, b):
+        if sum([abs(v) for v in b]) < MINIMAL_LEVEL and self.sampleLength < 2.0:
+            self.reset()
+            return
+
         if self.out is None:
             self.out = LoopableSample()
 
@@ -52,14 +61,10 @@ class Consumer():
             fqfn = os.path.join(self.outDir, fn)
             print("Writing to %s" % fqfn)
             self.out.create(fqfn)
-            self.out = None
-            self.sampleLength = 0
+            self.reset()
             print("ready")
 
-        #if zero but too short    
-            #abandon : self.out = None
-        
-        self.sampleLength += (len(b) / sampleRate)
+        self.sampleLength += (len(b) / SAMPLE_RATE)
     
 
 class Recorder():
@@ -74,7 +79,7 @@ class Recorder():
             self.stream.stop()
 
     def start(self):
-        self.stream = sd.InputStream(samplerate=sampleRate, device=self.device, channels=1, callback=self.buffer.make(), blocksize=512)
+        self.stream = sd.InputStream(samplerate=SAMPLE_RATE, device=self.device, channels=1, callback=self.buffer.make(), blocksize=512)
         
         self.stream.start()
         consumer = Consumer(self.dirOut)
