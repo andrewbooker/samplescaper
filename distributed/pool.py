@@ -6,6 +6,7 @@ import queue
 import sounddevice as sd
 import os
 import sys
+import shutil
 
 localParentDir = os.path.dirname(os.getcwd())
 parentDir = os.path.dirname(localParentDir)
@@ -88,20 +89,52 @@ class Recorder():
             consumer.addBuffer(self.buffer.q.get())
 
 
+class PoolMaintainer():
+    def _create(self, poolDir, sub):
+        p = os.path.join(poolDir, sub)
+        if not os.path.exists(p):
+            os.makedirs(p)
+        return p
+
+    def __init__(self, poolDir):
+        self.outDir = self._create(poolDir, "live")
+        self.oldDir = self._create(poolDir, "dead")
+
+    def start(self, shouldStop):
+        maxLivePoolSize = 100
+        i = 0
+        while not shouldStop.is_set():
+            if i > 100:
+                files = [os.path.join(self.outDir, f) for f in os.listdir(self.outDir)]
+                sortedFiles = sorted(files, key=lambda f: os.path.getmtime(f))
+                number = len(sortedFiles)
+                if number > maxLivePoolSize:
+                    for f in sortedFiles[:(number - maxLivePoolSize)]:
+                        shutil.move(f, self.oldDir)
+                i = 0
+
+            time.sleep(0.05)
+            i += 1
+
 devices = UsbAudioDevices()
 audioDevice = [k for k in devices.keys()][0]
 print("using", devices[audioDevice])
-outDir = sys.argv[1]
+
+
+poolDir = sys.argv[1]
+maintainer = PoolMaintainer(poolDir)
+
 
 
 import threading
 import readchar
 
 shouldStop = threading.Event()
-recorder = Recorder(audioDevice, outDir)
+recorder = Recorder(audioDevice, maintainer.outDir)
 
 threads = []
 threads.append(threading.Thread(target=recorder.start, args=(shouldStop,), daemon=True))
+threads.append(threading.Thread(target=maintainer.start, args=(shouldStop,), daemon=True))
 
 [t.start() for t in threads]
 done = False
