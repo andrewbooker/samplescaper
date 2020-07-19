@@ -77,13 +77,14 @@ class Recorder():
     def __del__(self):
         if self.stream is not None:
             self.stream.stop()
+            print("audio stream stopped")
 
-    def start(self):
+    def start(self, shouldStop):
         self.stream = sd.InputStream(samplerate=SAMPLE_RATE, device=self.device, channels=1, callback=self.buffer.make(), blocksize=512)
         
         self.stream.start()
         consumer = Consumer(self.dirOut)
-        while True:
+        while not shouldStop.is_set():
             consumer.addBuffer(self.buffer.q.get())
 
 
@@ -93,6 +94,25 @@ print("using", devices[audioDevice])
 outDir = sys.argv[1]
 
 
+import threading
+import readchar
+
+shouldStop = threading.Event()
 recorder = Recorder(audioDevice, outDir)
-recorder.start()
+
+threads = []
+threads.append(threading.Thread(target=recorder.start, args=(shouldStop,), daemon=True))
+
+[t.start() for t in threads]
+done = False
+
+import readchar
+print("Started. Press 'q' to exit")
+while not done:
+    c = readchar.readchar()
+    if c == "q":
+        shouldStop.set()
+        done = True
+
+[t.join() for t in threads]
 
