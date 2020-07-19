@@ -7,6 +7,9 @@ import time
 import io
 import random
 import json
+import os
+
+serversFile = "./servers_client.json"
 
 
 class Volume():
@@ -38,11 +41,12 @@ sd.default.channels = 2
 
 def playOne():
     servers = []
-    with open("./servers.json", "r") as sl:
-        servers += json.load(sl)
+    if os.path.exists(serversFile) and os.stat(serversFile).st_size > 2:
+        with open(serversFile, "r") as sl:
+            servers += json.load(sl)
 
     if len(servers) == 0:
-        print("stopping. no servers available.")
+        print("Stopping. No servers available.")
         return False
 
     server = anyItemIn(servers)
@@ -75,6 +79,26 @@ def playOne():
     return True
 
 
+def discover():
+    found = []
+    base = "192.168.0"
+    print("looking for servers...")
+    for r in range(64):
+        server = "%s.%d" % (base, r)
+        url = "http://%s:%d" % (server, 3066)
+        try:
+            response = requests.head(url, timeout=0.1)
+            if (response.status_code == 200):
+                found.append(server)
+                print("found", server)
+            del response
+        except requests.exceptions.RequestException as e:
+            pass
+
+    with open(serversFile, "w") as sl:
+        json.dump(found, sl)
+
+discover()
 canContinue = True
 while canContinue:
     canContinue = playOne()

@@ -8,6 +8,7 @@ import urllib
 import os
 import sys
 import random
+import json
 
 
 def nextAudioFile():
@@ -29,10 +30,32 @@ class AudioFileServer(BaseHTTPRequestHandler):
         sys.stdout.write("\r")
         return None
 
+
 class StaticHtmlServer(SimpleHTTPRequestHandler):
     def do_GET(self):
         self.path = "./client.html"
         return SimpleHTTPRequestHandler.do_GET(self)
+
+
+class Discoverer(BaseHTTPRequestHandler):
+    def do_HEAD(self):
+        fn = "./servers.json"
+        known = []
+        if os.path.exists(fn) and os.stat(fn).st_size > 2:
+            with open(fn, "r") as sl:
+                known += json.load(sl)
+
+        found = self.client_address[0]
+        print("discovered by", found)
+        updated = [found]
+        [updated.append(s) for s in filter(lambda h: h not in ["127.1.1.0", "localhost", found], known)]
+        if updated != known:
+            with open(fn, "w") as sl:
+                json.dump(updated, sl)
+        sys.stdout.write("\r")
+        self.send_response(200)
+        self.end_headers()
+        return None
 
 class StoppableServer:
     def __init__(self, port, servlet):
@@ -51,7 +74,10 @@ class StoppableServer:
 
 random.seed()
 
-servers = [StoppableServer(3064, AudioFileServer), StoppableServer(3065, StaticHtmlServer)]
+servers = []
+servers.append(StoppableServer(3064, AudioFileServer))
+servers.append(StoppableServer(3065, StaticHtmlServer))
+servers.append(StoppableServer(3066, Discoverer))
 threads = []
 
 for s in servers:
