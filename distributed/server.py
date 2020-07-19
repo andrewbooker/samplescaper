@@ -14,7 +14,7 @@ import json
 def nextAudioFile():
     poolDir = sys.argv[1]
     files = [f for f in filter(lambda f: "wav" in f, os.listdir(poolDir))]
-    return os.path.join(os.path.join(poolDir, files[random.randint(0, len(files) - 1)]))
+    return os.path.join(poolDir, files[random.randint(0, len(files) - 1)])
 
 
 class AudioFileServer(BaseHTTPRequestHandler):
