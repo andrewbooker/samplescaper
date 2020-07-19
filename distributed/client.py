@@ -87,7 +87,7 @@ def discover():
         server = "%s.%d" % (base, r)
         url = "http://%s:%d" % (server, 3066)
         try:
-            response = requests.head(url, timeout=0.1)
+            response = requests.head(url, timeout=0.2)
             if (response.status_code == 200):
                 found.append(server)
                 print("found", server)

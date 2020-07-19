@@ -101,7 +101,7 @@ class PoolMaintainer():
         self.oldDir = self._create(poolDir, "dead")
 
     def start(self, shouldStop):
-        maxLivePoolSize = 100
+        maxLivePoolSize = 20
         i = 0
         while not shouldStop.is_set():
             if i > 100:
