@@ -24,7 +24,7 @@ from utils.LoopableSample import LoopableSample
 from utils.LevelMonitor import LevelMonitor
 
 SAMPLE_RATE = 44100.0
-MINIMAL_LEVEL = 2.0
+MINIMAL_LEVEL = 5.0
 MAX_LIVE_POOL_SIZE = 30
 
 
@@ -49,20 +49,24 @@ class PoolFeeder():
     def reset(self):
         self.out = None
         self.sampleLength = 0
-        self.monitor.setRecording(False)
+        self.monitor.setRecording(0)
 
     def addBuffer(self, b):
-        if sum([abs(v) for v in b]) < MINIMAL_LEVEL and self.sampleLength < 2.0:
+        dropped = sum([abs(v) for v in b]) < MINIMAL_LEVEL
+
+        if self.sampleLength > 2.0:
+            self.monitor.setRecording(2)
+        elif dropped:
             self.reset()
             return
 
         if self.out is None:
             self.out = LoopableSample()
-            self.monitor.setRecording(True)
+            self.monitor.setRecording(1)
 
         self.out.addBuffer(b)
 
-        if self.sampleLength > 3.0:
+        if dropped or self.sampleLength > 6.0:
             fn = "%s.wav" % datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S")
             fqfn = os.path.join(self.outDir, fn)
             self.out.create(fqfn)
