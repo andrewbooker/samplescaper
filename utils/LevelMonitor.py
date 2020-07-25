@@ -2,35 +2,44 @@
 
 import sys
 import math
+import time
+from multiprocessing import Value
 
 
 class LevelMonitor():
     def __init__(self):
         self.scale = 50
         self.height = 3    
-        self.refresh = 10
-        self.r = 0
-        self.started = False
+        self.refreshMillis = 100
         self.recording = False
-        
-    def addBuffer(self, b):
-        self.recording = b[0] > 0.4
+        self.lastValue = 0.0
 
-        if self.r == self.refresh:
-            if self.started:
+    def start(self, shouldStop):
+        v = Value("d", 0.0)
+        started = False
+        while not shouldStop.is_set():
+            with v.get_lock():
+                v.value = self.lastValue
+
+            self.recording = v.value > 0.1
+            if started:
                 sys.stdout.write("\x1b[A" * self.height)
+
+            bar = int(self.scale * v.value)
+            fill = self.scale - bar
             for h in range(self.height):
-                bar = int(self.scale * b[0])           
                 sys.stdout.write("\033[92m%s\033[0m" % ("\u2589" * bar))
-                sys.stdout.write("\u2591" * (self.scale - bar))
+                sys.stdout.write("\u2591" * fill)
                 sys.stdout.write("\033[96m%s\033[0m" % (("\u2588" if self.recording else " ") * 10))
                 sys.stdout.write("\n\r")
-    
+
             sys.stdout.flush()
-            self.r = 0
-            self.started = True
-        else:
-            self.r += 1
+            started = True
+            time.sleep(self.refreshMillis / 1000.0)
+
+    def addBuffer(self, b):
+        self.lastValue = abs(b[0])
+
 
 
 
