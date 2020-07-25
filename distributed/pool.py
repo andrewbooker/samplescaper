@@ -21,9 +21,11 @@ def checkImport(lib):
 checkImport("mediautils")
 from mediautils.audiodevices import UsbAudioDevices
 from utils.LoopableSample import LoopableSample
+from utils.LevelMonitor import LevelMonitor
 
 SAMPLE_RATE = 44100.0
-MINIMAL_LEVEL = 0.9
+MINIMAL_LEVEL = 2.0
+MAX_LIVE_POOL_SIZE = 30
 
 
 class Buffer():
@@ -36,16 +38,18 @@ class Buffer():
         return handle
 
 
-class Consumer():
-    def __init__(self, outDir):
+class PoolFeeder():
+    def __init__(self, outDir, monitor):
         self.out = None
         self.done = False
         self.sampleLength = 0
         self.outDir = outDir
+        self.monitor = monitor
 
     def reset(self):
         self.out = None
         self.sampleLength = 0
+        self.monitor.setRecording(False)
 
     def addBuffer(self, b):
         if sum([abs(v) for v in b]) < MINIMAL_LEVEL and self.sampleLength < 2.0:
@@ -54,25 +58,25 @@ class Consumer():
 
         if self.out is None:
             self.out = LoopableSample()
+            self.monitor.setRecording(True)
 
         self.out.addBuffer(b)
 
         if self.sampleLength > 3.0:
             fn = "%s.wav" % datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S")
             fqfn = os.path.join(self.outDir, fn)
-            print("Writing to %s" % fqfn)
             self.out.create(fqfn)
             self.reset()
-            print("ready")
+            self.monitor.setMessage("Written to %s" % fqfn)
 
         self.sampleLength += (len(b) / SAMPLE_RATE)
     
 
 class Recorder():
-    def __init__(self, device, dirOut):
+    def __init__(self, device, consumers):
         self.device = device
         self.buffer = Buffer()
-        self.dirOut = dirOut
+        self.consumers = consumers
         self.stream = None
 
     def __del__(self):
@@ -84,9 +88,9 @@ class Recorder():
         self.stream = sd.InputStream(samplerate=SAMPLE_RATE, device=self.device, channels=1, callback=self.buffer.make(), blocksize=512)
         
         self.stream.start()
-        consumer = Consumer(self.dirOut)
         while not shouldStop.is_set():
-            consumer.addBuffer(self.buffer.q.get())
+            b = self.buffer.q.get()
+            [c.addBuffer(b) for c in self.consumers]
 
 
 class PoolMaintainer():
@@ -101,15 +105,14 @@ class PoolMaintainer():
         self.oldDir = self._create(poolDir, "dead")
 
     def start(self, shouldStop):
-        maxLivePoolSize = 20
         i = 0
         while not shouldStop.is_set():
             if i > 100:
                 files = [os.path.join(self.outDir, f) for f in os.listdir(self.outDir)]
                 sortedFiles = sorted(files, key=lambda f: os.path.getmtime(f))
                 number = len(sortedFiles)
-                if number > maxLivePoolSize:
-                    for f in sortedFiles[:(number - maxLivePoolSize)]:
+                if number > MAX_LIVE_POOL_SIZE:
+                    for f in sortedFiles[:(number - MAX_LIVE_POOL_SIZE)]:
                         shutil.move(f, self.oldDir)
                 i = 0
 
@@ -123,16 +126,17 @@ print("using", devices[audioDevice])
 
 poolDir = sys.argv[1]
 maintainer = PoolMaintainer(poolDir)
-
-
+level = LevelMonitor()
+feeder = PoolFeeder(maintainer.outDir, level)
 
 import threading
 import readchar
 
 shouldStop = threading.Event()
-recorder = Recorder(audioDevice, maintainer.outDir)
+recorder = Recorder(audioDevice, [feeder, level])
 
 threads = []
+threads.append(threading.Thread(target=level.start, args=(shouldStop,), daemon=True))
 threads.append(threading.Thread(target=recorder.start, args=(shouldStop,), daemon=True))
 threads.append(threading.Thread(target=maintainer.start, args=(shouldStop,), daemon=True))
 
