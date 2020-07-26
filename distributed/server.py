@@ -67,7 +67,7 @@ class StoppableServer:
         self.httpd.serve_forever()
         
     def stop(self):
-        print("stopping...")
+        print("stopping %s..." % self.servlet.__name__)
         self.httpd.shutdown()
         self.httpd.server_close()
         print("stopped")
