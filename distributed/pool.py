@@ -40,14 +40,12 @@ class Buffer():
 
 class PoolFeeder():
     def __init__(self, outDir, monitor):
-        self.out = None
-        self.done = False
-        self.sampleLength = 0
         self.outDir = outDir
         self.monitor = monitor
+        self.reset()
 
     def reset(self):
-        self.out = None
+        self.out = []
         self.sampleLength = 0
         self.monitor.setRecording(0)
 
@@ -60,19 +58,21 @@ class PoolFeeder():
             self.reset()
             return
 
-        if self.out is None:
-            self.out = LoopableSample()
+        if self.out == []:
+            self.out = [LoopableSample(), LoopableSample()]
             self.monitor.setRecording(1)
 
-        self.out.addBuffer(b)
-
         if dropped or self.sampleLength > 6.0:
-            fn = "%s.wav" % datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S")
-            fqfn = os.path.join(self.outDir, fn)
-            self.out.create(fqfn)
+            for i in [0, 1]:
+                fn = "%s_%d.wav" % (datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"), i)
+                fqfn = os.path.join(self.outDir, fn)
+                self.out[i].create(fqfn)
             self.reset()
             self.monitor.setMessage("Written to %s" % fqfn)
+            return
 
+        self.out[0].addBuffer(b)
+        self.out[1].addBuffer(b[0::2])
         self.sampleLength += (len(b) / SAMPLE_RATE)
     
 
