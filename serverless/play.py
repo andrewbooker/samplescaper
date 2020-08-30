@@ -7,6 +7,36 @@ import math
 import sys
 import os
 
+class Sine():
+    def __init__(self, periodSecs, incrSecs):
+        self.radsPerSec = incrSecs * 2 * math.pi / periodSecs
+
+    def _nextQuadrantAfter(self, theta, q):
+        if q == 0 and theta > math.pi / 2.0:
+            return 1
+        if q == 1 and theta < 0:
+            return 2
+        if q == 2 and theta < math.pi / 2.0:
+            return 3
+        if q == 3 and theta > 0:
+            return 0
+        return q
+
+    def nextValAfter(self, last):
+        theta = math.asin((2 * last["value"]) - 1.0)
+        incr = -1.0 if last["quadrant"] in [1, 2] else 1.0
+        theta += (incr * self.radsPerSec)
+
+        return {"value": 0.5 * (1.0 + math.sin(theta)), "quadrant": self._nextQuadrantAfter(theta, last["quadrant"])}
+
+    @staticmethod
+    def randomStart():
+        r = (random.random(), int(2 * random.random()))
+        val = r[0]
+        q = r[1] if val > 0.5 else 2 + r[1]
+        return {"value": val, "quadrant": q}
+
+
 def nextAudioFileFrom(poolDir):
     files = [f for f in filter(lambda f: "wav" in f, os.listdir(poolDir))]
     return os.path.join(poolDir, files[random.randint(0, len(files) - 1)])
@@ -25,22 +55,25 @@ def playOneFrom(poolDir):
     totalTime = fadeInSecs + fadeOutSecs + 1.0
     start = time.time()
 
-    channel.set_volume(1.0, 0.0)
+    incr = 0.01
+    pan = Sine(2.0 + (5 * random.random()), incr)
+    p = Sine.randomStart()
+    channel.set_volume(1.0 - p["value"], p["value"])
     channel.play(sound, loops = -1, fade_ms = int(fadeInSecs * 1000))
     fadingOut = False
     dt = 0
-    incr = 0.01
+
     while channel.get_busy():
         time.sleep(incr)
         dt += incr
         if not fadingOut and dt > fadeInSecs:
             channel.fadeout(int(fadeOutSecs * 1000))
 
-        p = dt / totalTime
-        if p >= 1.0:
+        if (dt / totalTime) >= 1.0:
             channel.stop()
         else:
-            channel.set_volume(1.0 - p, p)
+            p = pan.nextValAfter(p)
+            channel.set_volume(1.0 - p["value"], p["value"])
 
 
 def playContinuouslyFrom(poolDir, shouldStop):
