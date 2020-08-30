@@ -47,13 +47,12 @@ def playOneFrom(poolDir):
         return
 
     f = nextAudioFileFrom(poolDir)
-    print(f)
-    sys.stdout.write("\r")
     sound = pg.mixer.Sound(f)
-    fadeInSecs = random.random() + 0.5
-    fadeOutSecs = (10.0 * random.random()) + 5.0
+    fadeInSecs = (3 * random.random()) + 0.5
+    fadeOutSecs = (10 * random.random()) + 3.0
     totalTime = fadeInSecs + fadeOutSecs + 1.0
     start = time.time()
+    sys.stdout.write("%.6f: %s\n\r" % (start, f))
 
     incr = 0.01
     pan = Sine(2.0 + (5 * random.random()), incr)
