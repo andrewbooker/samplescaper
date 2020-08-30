@@ -22,12 +22,26 @@ def playOneFrom(poolDir):
     sound = pg.mixer.Sound(f)
     fadeInSecs = random.random() + 0.5
     fadeOutSecs = (10.0 * random.random()) + 5.0
+    totalTime = fadeInSecs + fadeOutSecs + 1.0
+    start = time.time()
 
-    channel.set_volume(1.0, 1.0)
+    channel.set_volume(1.0, 0.0)
     channel.play(sound, loops = -1, fade_ms = int(fadeInSecs * 1000))
-    time.sleep(fadeInSecs)
-    channel.fadeout(int(fadeOutSecs * 1000))
-    time.sleep(fadeOutSecs + 1)
+    fadingOut = False
+    dt = 0
+    incr = 0.01
+    while channel.get_busy():
+        time.sleep(incr)
+        dt += incr
+        if not fadingOut and dt > fadeInSecs:
+            channel.fadeout(int(fadeOutSecs * 1000))
+
+        p = dt / totalTime
+        if p >= 1.0:
+            channel.stop()
+        else:
+            channel.set_volume(1.0 - p, p)
+
 
 def playContinuouslyFrom(poolDir, shouldStop):
     threads = []
