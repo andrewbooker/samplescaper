@@ -18,6 +18,7 @@ def playOneFrom(poolDir):
 
     f = nextAudioFileFrom(poolDir)
     print(f)
+    sys.stdout.write("\r")
     sound = pg.mixer.Sound(f)
     fadeInSecs = random.random() + 0.5
     fadeOutSecs = (10.0 * random.random()) + 5.0
@@ -28,6 +29,22 @@ def playOneFrom(poolDir):
     channel.fadeout(int(fadeOutSecs * 1000))
     time.sleep(fadeOutSecs + 1)
 
+def playContinuouslyFrom(poolDir, shouldStop):
+    threads = []
+    while not shouldStop.is_set():
+        nextSound = threading.Thread(target=playOneFrom, args=(poolDir,), daemon=True)
+        nextSound.start()
+        threads.append(nextSound)
+
+        for t in threads:
+            if not t.is_alive():
+                t.join()
+                threads.remove(t)
+
+        time.sleep(random.random() * 10)
+
+    for t in threads:
+        t.join()
 
 poolDir = sys.argv[1]
 
@@ -39,4 +56,21 @@ maxInflightPerNote = 6
 pg.mixer.set_num_channels(maxInflightPerNote)
 
 
-playOneFrom(poolDir)
+import readchar
+import threading
+
+
+shouldStop = threading.Event()
+
+
+playAll = threading.Thread(target=playContinuouslyFrom, args=(poolDir,shouldStop), daemon=True)
+playAll.start()
+
+print("Started. Press 'q' to exit")
+while not shouldStop.is_set():
+    c = readchar.readchar()
+    if c == "q":
+        print("Stopping...")
+        shouldStop.set()
+
+playAll.join()
