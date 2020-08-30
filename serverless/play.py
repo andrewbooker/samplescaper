@@ -44,6 +44,7 @@ def nextAudioFileFrom(poolDir):
 def playOneFrom(poolDir):
     channel = pg.mixer.find_channel()
     if channel is None:
+        sys.stdout.write("%.6f: %s\n\r" % (time.time(), "all channels busy"))
         return
 
     f = nextAudioFileFrom(poolDir)
@@ -98,17 +99,12 @@ pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
 pg.init()
 
 random.seed()
-maxInflightPerNote = 6
-pg.mixer.set_num_channels(maxInflightPerNote)
-
+pg.mixer.set_num_channels(3)
 
 import readchar
 import threading
 
-
 shouldStop = threading.Event()
-
-
 playAll = threading.Thread(target=playContinuouslyFrom, args=(poolDir,shouldStop), daemon=True)
 playAll.start()
 
