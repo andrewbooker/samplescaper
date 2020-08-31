@@ -8,7 +8,7 @@ def freq(n):
     return math.pow(2, (n - 69)/12.0) * 440
 
 def anywhereBetween(v1, v2):
-    return v1 + (random.random() * random.random() * random.random() * (v2 - v1))
+    return v1 + (math.pow(random.random(), 3) * (v2 - v1))
 
 def genQuadrants():
     nodes = [1.0, 0.0, -1.0, 0.0]
@@ -47,11 +47,12 @@ def genRandomTemplateFrom(quadrants):
 
 class WaveIterator():
 
-    def __init__(self, template, f, sampleRate):
+    def __init__(self, template, f, vol, sampleRate):
         self.template = template
         self.length = len(template)
         self.stretch = f * self.length / sampleRate
         self.pos = 0
+        self.vol = vol
     
     def next(self):
         ps = math.modf(self.pos * self.stretch)
@@ -62,7 +63,7 @@ class WaveIterator():
         v1 = self.template[p1]
 
         self.pos += 1
-        return ((p - p0) * v1) + ((p1 - p) * v0)
+        return self.vol * ((p - p0) * v1) + ((p1 - p) * v0)
 
 
 class Loopable():
@@ -92,7 +93,7 @@ def assembleWaves(f):
     waves = []
     for i in range(random.randint(2, 6)):
         fr = f if i == 0 else modulate(f)
-        waves.append(WaveIterator(genRandomTemplateFrom(genQuadrants()), fr, 44100))
+        waves.append(WaveIterator(genRandomTemplateFrom(genQuadrants()), fr, 0.6 + (0.4 * random.random()), 44100))
     return waves
 
 def build(n):
