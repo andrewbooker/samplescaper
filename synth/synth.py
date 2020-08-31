@@ -73,6 +73,8 @@ class Loopable():
         self.partB = data[self.l:]
 
     def _merge(self, fromB):
+        if self.pos >= len(self.partA):
+            return fromB
         p = 1.0 * self.pos / self.l
         v = (fromB * (1.0 - p)) + (p * self.partA[self.pos])
         self.pos += 1
@@ -82,32 +84,58 @@ class Loopable():
         return [self._merge(s) for s in self.partB]
 
 
-sampleRate = 44100
-quadrants1 = genQuadrants()
-quadrants2 = genQuadrants()
-template1 = genRandomTemplateFrom(quadrants1)
-template2 = genRandomTemplateFrom(quadrants2)
-templateLength = 256
+def modulate(f):
+    r = (1.0 - (2 * random.random()))
+    return f * (1 + (0.01 * r))
 
+def assembleWaves(f):
+    quadrants1 = genQuadrants()
+    quadrants2 = genQuadrants()
+    template1 = genRandomTemplateFrom(quadrants1)
+    template2 = genRandomTemplateFrom(quadrants2)
 
-durSecs = 4
-f = freq(61)
+    waves = []
+    waves.append(WaveIterator(template1, f, 44100))
+    waves.append(WaveIterator(template1, modulate(f), 44100))
+    waves.append(WaveIterator(template1, modulate(f), 44100))
+    waves.append(WaveIterator(template2, modulate(f), 44100))
+    waves.append(WaveIterator(template2, modulate(f), 44100))
+    return waves
 
-waves = []
-waves.append(WaveIterator(template1, f, 44100))
-waves.append(WaveIterator(template1, f * 1.015, 44100))
-waves.append(WaveIterator(template1, f - 0.9, 44100))
-waves.append(WaveIterator(template2, f + 0.11, 44100))
-waves.append(WaveIterator(template2, f * 0.994, 44100))
-denominator = len(waves)
-data = []
+def build(n):
+    fn = "%d_%s.wav" % (n, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
+    waves = assembleWaves(freq(n))
+    durSecs = 2 + (5 * random.random())
 
-for i in range(sampleRate * durSecs):
-    v = 0.0
-    for w in waves:
-        v += w.next()
+    sampleRate = 44100
+    templateLength = 256
+
+    denominator = len(waves)
+    data = []
+
+    for i in range(int(sampleRate * durSecs)):
+        v = 0.0
+        for w in waves:
+            v += w.next()
+
+        data.append(v / denominator)
     
-    data.append(v / denominator)
+    print("writing", fn)
+    sf.write(os.path.join(outDir, fn), Loopable(data).create(), sampleRate)
 
+import sys
+import os
+import time
+import datetime
+import time
+outDir = sys.argv[1]
+notes = [48, 50, 51, 53, 55, 56, 58]
 
-sf.write("test.wav", Loopable(data).create(), sampleRate)
+for i in range(20):
+    n = notes[random.randint(0, len(notes) - 1)]
+
+    build(n)
+    build(n + 12)
+    build(n + 24)
+    time.sleep(20)
+
