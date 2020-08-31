@@ -3,6 +3,7 @@
 import math
 import soundfile as sf
 import random
+import datetime
 
 def freq(n):
     return math.pow(2, (n - 69)/12.0) * 440
@@ -107,37 +108,60 @@ def assembleWaves(f):
         waves.append(WaveIterator(t, fr, 0.6 + (0.4 * random.random()), 44100))
     return waves
 
-def build(n):
-    fn = "%d_%s.wav" % (n, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
-    waves = assembleWaves(freq(n))
-    durSecs = 2 + (5 * random.random())
+MAX_LIVE_POOL_SIZE = 63
+class Builder():
+    def __init__(self, outDir):
+        self.outDir = outDir
+        files = [os.path.join(self.outDir, f) for f in os.listdir(self.outDir)]
+        self.done = sorted(files, key=lambda f: os.path.getmtime(f))
+        print(len(self.done), "files in pool already")
 
-    sampleRate = 44100
-    templateLength = 256
+    def build(self, n):
+        fn = "%d_%s.wav" % (n, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
+        waves = assembleWaves(freq(n))
+        durSecs = 2 + (5 * random.random())
 
-    denominator = len(waves)
-    data = []
+        sampleRate = 44100
+        templateLength = 256
 
-    for i in range(int(sampleRate * durSecs)):
-        v = 0.0
-        for w in waves:
-            v += w.next()
+        denominator = len(waves)
+        data = []
 
-        data.append(v / denominator)
+        for i in range(int(sampleRate * durSecs)):
+            v = 0.0
+            for w in waves:
+                v += w.next()
 
-    print("writing", fn)
-    sf.write(os.path.join(outDir, fn), Loopable(data).create(), sampleRate)
+            data.append(v / denominator)
+
+        print("writing", fn)
+        fqfn = os.path.join(self.outDir, fn)
+        sf.write(fqfn, Loopable(data).create(), sampleRate)
+        self.done.append(fqfn)
+
+        if len(self.done) > MAX_LIVE_POOL_SIZE:
+            d = self.done[0]
+            print("dropping", d)
+            os.remove(d)
+            self.done.remove(d)
 
 import sys
 import os
 import time
-import datetime
-import time
+
 outDir = sys.argv[1]
 notes = [48, 50, 51, 53, 55, 56, 58]
+builder = Builder(outDir)
 
-for n in notes:
-    build(n)
-    build(n + 12)
-    build(n + 24)
+i = 0
+while True:
+    n = notes[i]
+    builder.build(n)
+    builder.build(n + 12)
+    builder.build(n + 24)
+    i += 1
+    if i == len(notes):
+        i = 0
+
+    time.sleep(30)
 
