@@ -44,9 +44,17 @@ def genRandomTemplateFrom(quadrants):
 
     return template
 
+def sineTemplate():
+    template = []
+    templateLength = 256
+
+    for i in range(templateLength):
+        template.append(math.sin(2 * math.pi * i / templateLength))
+
+    return template
+
 
 class WaveIterator():
-
     def __init__(self, template, f, vol, sampleRate):
         self.template = template
         self.length = len(template)
@@ -58,13 +66,12 @@ class WaveIterator():
         ps = math.modf(self.pos * self.stretch)
         p = ps[0] + (int(ps[1]) % self.length)
         p0 = math.floor(p)
-        p1 = (p0 + 1) % self.length
+        p1 = (p0 + 1) if p0 < (self.length - 1) else 0
         v0 = self.template[p0]
         v1 = self.template[p1]
 
         self.pos += 1
-        return self.vol * ((p - p0) * v1) + ((p1 - p) * v0)
-
+        return self.vol * (((p - p0) * v1) + ((p0 + 1 - p) * v0))
 
 class Loopable():
     def __init__(self, data):
@@ -75,7 +82,7 @@ class Loopable():
 
     def _merge(self, fromB):
         if self.pos >= len(self.partA):
-            return fromB
+            return self.partA[-1]
         p = 1.0 * self.pos / self.l
         v = (fromB * (1.0 - p)) + (p * self.partA[self.pos])
         self.pos += 1
@@ -93,7 +100,8 @@ def assembleWaves(f):
     waves = []
     for i in range(random.randint(2, 6)):
         fr = f if i == 0 else modulate(f)
-        waves.append(WaveIterator(genRandomTemplateFrom(genQuadrants()), fr, 0.6 + (0.4 * random.random()), 44100))
+        #waves.append(WaveIterator(genRandomTemplateFrom(genQuadrants()), fr, 0.6 + (0.4 * random.random()), 44100))
+        waves.append(WaveIterator(sineTemplate(), fr, 0.6 + (0.4 * random.random()), 44100))
     return waves
 
 def build(n):
@@ -113,7 +121,7 @@ def build(n):
             v += w.next()
 
         data.append(v / denominator)
-    
+
     print("writing", fn)
     sf.write(os.path.join(outDir, fn), Loopable(data).create(), sampleRate)
 
@@ -125,11 +133,8 @@ import time
 outDir = sys.argv[1]
 notes = [48, 50, 51, 53, 55, 56, 58]
 
-for i in range(20):
-    n = notes[random.randint(0, len(notes) - 1)]
-
+for n in notes:
     build(n)
     build(n + 12)
     build(n + 24)
-    time.sleep(20)
 
