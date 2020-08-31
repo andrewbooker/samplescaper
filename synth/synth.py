@@ -44,27 +44,52 @@ def genRandomTemplateFrom(quadrants):
 
     return template
 
+
+class WaveIterator():
+
+    def __init__(self, template, f, sampleRate):
+        self.template = template
+        self.length = len(template)
+        self.stretch = f * self.length / sampleRate
+        self.pos = 0
+    
+    def next(self):
+        ps = math.modf(self.pos * self.stretch)
+        p = ps[0] + (int(ps[1]) % self.length)
+        p0 = math.floor(p)
+        p1 = (p0 + 1) % self.length
+        v0 = self.template[p0]
+        v1 = self.template[p1]
+
+        self.pos += 1
+        return ((p - p0) * v1) + ((p1 - p) * v0)
+
 sampleRate = 44100
-quadrants = genQuadrants()
-print(quadrants)
-template = genRandomTemplateFrom(quadrants)
-templateLength = len(template)
+quadrants1 = genQuadrants()
+quadrants2 = genQuadrants()
+template1 = genRandomTemplateFrom(quadrants1)
+template2 = genRandomTemplateFrom(quadrants2)
+templateLength = 256
 
 
 durSecs = 2
-f = freq(67)
+f = freq(61)
+
+waves = []
+waves.append(WaveIterator(template1, f, 44100))
+waves.append(WaveIterator(template1, f * 1.015, 44100))
+waves.append(WaveIterator(template1, f - 0.9, 44100))
+waves.append(WaveIterator(template2, f + 0.11, 44100))
+waves.append(WaveIterator(template2, f * 0.994, 44100))
+denominator = len(waves)
 data = []
-stretch = f * templateLength / sampleRate
-print(stretch, f)
 
 for i in range(sampleRate * durSecs):
-    ps = math.modf(i * stretch)
-    p = ps[0] + (int(ps[1]) % templateLength)
-    p0 = math.floor(p)
-    p1 = (p0 + 1) % templateLength
-    v0 = template[p0]
-    v1 = template[p1]
-    data.append(((p - p0) * v1) + ((p1 - p) * v0))
+    v = 0.0
+    for w in waves:
+        v += w.next()
+    
+    data.append(v / denominator)
 
 
 sf.write("test.wav", data, sampleRate)
