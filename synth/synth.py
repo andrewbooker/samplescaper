@@ -94,14 +94,17 @@ class Loopable():
 
 def modulate(f):
     r = (1.0 - (2 * random.random()))
-    return f * (1 + (0.0095 * r))
+    return f * (1 + (0.009 * r))
+
+def withProbability(prob):
+    return random.random() > (1.0 - prob)
 
 def assembleWaves(f):
     waves = []
     for i in range(random.randint(2, 6)):
         fr = f if i == 0 else modulate(f)
-        #waves.append(WaveIterator(genRandomTemplateFrom(genQuadrants()), fr, 0.6 + (0.4 * random.random()), 44100))
-        waves.append(WaveIterator(sineTemplate(), fr, 0.6 + (0.4 * random.random()), 44100))
+        t = sineTemplate() if withProbability(0.75) else genRandomTemplateFrom(genQuadrants())
+        waves.append(WaveIterator(t, fr, 0.6 + (0.4 * random.random()), 44100))
     return waves
 
 def build(n):
