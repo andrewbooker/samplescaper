@@ -102,9 +102,9 @@ def withProbability(prob):
 
 def assembleWaves(f):
     waves = []
+    t = sineTemplate() if withProbability(0.75) else genRandomTemplateFrom(genQuadrants())
     for i in range(random.randint(2, 6)):
         fr = f if i == 0 else modulate(f)
-        t = sineTemplate() if withProbability(0.75) else genRandomTemplateFrom(genQuadrants())
         waves.append(WaveIterator(t, fr, 0.6 + (0.4 * random.random()), 44100))
     return waves
 
