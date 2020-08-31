@@ -86,20 +86,13 @@ class Loopable():
 
 def modulate(f):
     r = (1.0 - (2 * random.random()))
-    return f * (1 + (0.01 * r))
+    return f * (1 + (0.0095 * r))
 
 def assembleWaves(f):
-    quadrants1 = genQuadrants()
-    quadrants2 = genQuadrants()
-    template1 = genRandomTemplateFrom(quadrants1)
-    template2 = genRandomTemplateFrom(quadrants2)
-
     waves = []
-    waves.append(WaveIterator(template1, f, 44100))
-    waves.append(WaveIterator(template1, modulate(f), 44100))
-    waves.append(WaveIterator(template1, modulate(f), 44100))
-    waves.append(WaveIterator(template2, modulate(f), 44100))
-    waves.append(WaveIterator(template2, modulate(f), 44100))
+    for i in range(random.randint(2, 6)):
+        fr = f if i == 0 else modulate(f)
+        waves.append(WaveIterator(genRandomTemplateFrom(genQuadrants()), fr, 44100))
     return waves
 
 def build(n):
