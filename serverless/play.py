@@ -16,7 +16,7 @@ class Sine():
             return 1
         if q == 1 and theta < 0:
             return 2
-        if q == 2 and theta < math.pi / 2.0:
+        if q == 2 and theta < math.pi / -2.0:
             return 3
         if q == 3 and theta > 0:
             return 0
