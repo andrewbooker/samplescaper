@@ -22,29 +22,34 @@ def genQuadrants():
     q.append((r, nodes[-1]))
     return q
 
+def genRandomTemplateFrom(quadrants):
+    q = 0
+    qp = 0.0
+    val = 0.0
+
+    template = []
+    templateLength = 256
+
+    for i in range(templateLength):
+        quadrant = quadrants[q];
+
+        val = anywhereBetween(val, quadrant[1])
+        template.append(val)
+
+        qp += 1.0 / templateLength
+        if qp > quadrant[0]:
+            val = quadrant[1] 
+            q += 1
+            qp = 0.0
+
+    return template
+
 sampleRate = 44100
 quadrants = genQuadrants()
 print(quadrants)
+template = genRandomTemplateFrom(quadrants)
+templateLength = len(template)
 
-
-q = 0
-qp = 0.0
-val = 0.0
-
-template = []
-templateLength = 256
-
-for i in range(templateLength):
-    quadrant = quadrants[q];
-    
-    val = anywhereBetween(val, quadrant[1])
-    template.append(val)
-    
-    qp += 1.0 / templateLength
-    if qp > quadrant[0]:
-        val = quadrant[1] 
-        q += 1
-        qp = 0.0
 
 durSecs = 2
 f = freq(67)
