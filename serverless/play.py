@@ -39,15 +39,21 @@ class Sine():
 
 def nextAudioFileFrom(poolDir):
     files = [f for f in filter(lambda f: "wav" in f, os.listdir(poolDir))]
+    if len(files) == 0:
+        return None
     return os.path.join(poolDir, files[random.randint(0, len(files) - 1)])
 
 def playOneFrom(poolDir):
     channel = pg.mixer.find_channel()
     if channel is None:
-        sys.stdout.write("%.6f: %s\n\r" % (time.time(), "all channels busy"))
+        sys.stdout.write("%.6f: all channels busy\n\r" % time.time())
         return
 
     f = nextAudioFileFrom(poolDir)
+    if f is None:
+        sys.stdout.write("%.6f: No files in %s\n\r" % (time.time(), poolDir))
+        return
+
     sound = pg.mixer.Sound(f)
     fadeInSecs = (3 * random.random()) + 0.5
     fadeOutSecs = (10 * random.random()) + 3.0
