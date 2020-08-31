@@ -64,6 +64,24 @@ class WaveIterator():
         self.pos += 1
         return ((p - p0) * v1) + ((p1 - p) * v0)
 
+
+class Loopable():
+    def __init__(self, data):
+        self.pos = 0
+        self.l = int(len(data) / 2)
+        self.partA = data[:self.l]
+        self.partB = data[self.l:]
+
+    def _merge(self, fromB):
+        p = 1.0 * self.pos / self.l
+        v = (fromB * (1.0 - p)) + (p * self.partA[self.pos])
+        self.pos += 1
+        return v
+
+    def create(self):
+        return [self._merge(s) for s in self.partB]
+
+
 sampleRate = 44100
 quadrants1 = genQuadrants()
 quadrants2 = genQuadrants()
@@ -72,7 +90,7 @@ template2 = genRandomTemplateFrom(quadrants2)
 templateLength = 256
 
 
-durSecs = 2
+durSecs = 4
 f = freq(61)
 
 waves = []
@@ -92,4 +110,4 @@ for i in range(sampleRate * durSecs):
     data.append(v / denominator)
 
 
-sf.write("test.wav", data, sampleRate)
+sf.write("test.wav", Loopable(data).create(), sampleRate)
