@@ -27,7 +27,7 @@ def playOneFrom(poolDir):
     sound = pg.mixer.Sound(f)
     sys.stdout.write("%.6f: %s\n\r" % (time.time(), f))
 
-    channel.set_volume(0.2)
+    channel.set_volume(1.0)
     channel.play(sound)
 
 
