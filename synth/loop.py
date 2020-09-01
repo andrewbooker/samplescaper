@@ -26,6 +26,15 @@ class Envelope():
             return 1.0 - (float(i - self.downStart) / self.down)
         return 1.0
 
+class Pan():
+    def __init__(self, sampleRate):
+        self.freqHz = 0.5 * (5 * random.random())
+        self.radPerSample = self.freqHz * 2 * math.pi / sampleRate
+        self.offset = random.random() * sampleRate / self.freqHz
+
+    def at(self, i):
+        return 0.5 * (1.0 + math.sin((i + self.offset) * self.radPerSample))
+
 inFile = sys.argv[1]
 outDir = sys.argv[2]
 
@@ -33,14 +42,17 @@ data, sampleRate = sf.read(inFile)
 dataLen = len(data)
 
 env = Envelope(sampleRate)
+pan = Pan(sampleRate)
 print("creating %.2fs" % env.lengthSecs, "file of", env.required, "samples")
 
 wave = []
 i = 0
 while i != env.required:
-    wave.append(env.vol(i) * data[i % dataLen])
+    s = env.vol(i) * data[i % dataLen]
+    p = pan.at(i)
+    wave.append([s * p, s * (1.0 - p)])
     i += 1
 
-sf.write(os.path.join(outDir, "test.wav"), wave, sampleRate)
+sf.write(os.path.join(outDir, "test2.wav"), wave, sampleRate)
 
 
