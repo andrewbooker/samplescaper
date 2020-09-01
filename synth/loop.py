@@ -5,9 +5,6 @@ import soundfile as sf
 import random
 import sys
 import os
-#list files in the outdir
-#if any file names from the indir are not in the outdir, generate
-
 
 class Envelope():
     def __init__(self, sampleRate):
@@ -35,24 +32,33 @@ class Pan():
     def at(self, i):
         return 0.5 * (1.0 + math.sin((i + self.offset) * self.radPerSample))
 
-inFile = sys.argv[1]
+def convert(f, inDir, outDir):
+    data, sampleRate = sf.read(os.path.join(inDir, f))
+    dataLen = len(data)
+
+    env = Envelope(sampleRate)
+    pan = Pan(sampleRate)
+    print("creating %.2fs" % env.lengthSecs, "file of", env.required, "samples")
+
+    wave = []
+    i = 0
+    while i != env.required:
+        s = env.vol(i) * data[i % dataLen]
+        p = pan.at(i)
+        wave.append([s * p, s * (1.0 - p)])
+        i += 1
+
+    sf.write(os.path.join(outDir, "looped_%s" % f), wave, sampleRate)
+
+inDir = sys.argv[1]
 outDir = sys.argv[2]
 
-data, sampleRate = sf.read(inFile)
-dataLen = len(data)
+while True:
+    rawFiles = os.listdir(inDir)
+    loopedFiles = [f[7:] for f in os.listdir(outDir)]
 
-env = Envelope(sampleRate)
-pan = Pan(sampleRate)
-print("creating %.2fs" % env.lengthSecs, "file of", env.required, "samples")
-
-wave = []
-i = 0
-while i != env.required:
-    s = env.vol(i) * data[i % dataLen]
-    p = pan.at(i)
-    wave.append([s * p, s * (1.0 - p)])
-    i += 1
-
-sf.write(os.path.join(outDir, "test2.wav"), wave, sampleRate)
-
-
+    for f in rawFiles:
+        if f not in loopedFiles:
+            convert(f, inDir, outDir)
+        else:
+            print("already done", f)
