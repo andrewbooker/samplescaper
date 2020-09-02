@@ -50,6 +50,8 @@ def convert(f, inDir, outDir):
 
     sf.write(os.path.join(outDir, "looped_%s" % f), wave, sampleRate)
 
+
+import time
 inDir = sys.argv[1]
 outDir = sys.argv[2]
 
@@ -62,3 +64,5 @@ while True:
             convert(f, inDir, outDir)
         else:
             print("already done", f)
+
+    time.sleep(5)
