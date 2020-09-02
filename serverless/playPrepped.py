@@ -29,6 +29,8 @@ def playOneFrom(poolDir):
 
     channel.set_volume(1.0)
     channel.play(sound)
+    while channel.get_busy():
+        time.sleep(0.1)
 
 
 def playContinuouslyFrom(poolDir, shouldStop):
