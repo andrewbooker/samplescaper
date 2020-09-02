@@ -62,21 +62,10 @@ pg.init()
 random.seed()
 pg.mixer.set_num_channels(3)
 
-import readchar
 import threading
 
 shouldStop = threading.Event()
-playAll = threading.Thread(target=playContinuouslyFrom, args=(poolDir,shouldStop), daemon=True)
-playAll.start()
-
-print("Started. Press 'q' to exit")
-while not shouldStop.is_set():
-    c = readchar.readchar()
-    if c == "q":
-        print("Stopping...")
-        shouldStop.set()
-
-playAll.join()
+playContinuouslyFrom(poolDir, shouldStop)
 
 
 
