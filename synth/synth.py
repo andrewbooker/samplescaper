@@ -93,19 +93,21 @@ class Loopable():
         return [self._merge(s) for s in self.partB]
 
 
-def modulate(f):
-    r = (1.0 - (2 * random.random()))
-    return f * (1 + (0.009 * r))
-
 def withProbability(prob):
     return random.random() > (1.0 - prob)
 
 def assembleWaves(f):
     waves = []
     t = sineTemplate() if withProbability(0.75) else genRandomTemplateFrom(genQuadrants())
-    for i in range(random.randint(2, 6)):
-        fr = f if i == 0 else modulate(f)
-        waves.append(WaveIterator(t, fr, 0.6 + (0.4 * random.random()), 44100))
+    waves.append(WaveIterator(t, f, 0.6 + (0.4 * random.random()), 44100))
+
+    for i in range(random.randint(1, 3)):
+        r = random.random()
+        fmUp = f * (1 + (0.012 * r))
+        fmDown = f * (1 - (0.012 * r))
+        waves.append(WaveIterator(t, fmUp, 0.6 + (0.4 * random.random()), 44100))
+        waves.append(WaveIterator(t, fmDown, 0.6 + (0.4 * random.random()), 44100))
+
     return waves
 
 MAX_LIVE_POOL_SIZE = 63
