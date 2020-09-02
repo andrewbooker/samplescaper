@@ -31,6 +31,10 @@ def playOneFrom(poolDir):
     channel.play(sound)
     while channel.get_busy():
         time.sleep(0.1)
+        
+    if len(os.listdir(poolDir)) > 30:
+        sys.stdout.write("%.6f: dropping %s\n\r" % (time.time(), f))
+        os.remove(f)
 
 
 def playContinuouslyFrom(poolDir, shouldStop):
@@ -51,7 +55,7 @@ def playContinuouslyFrom(poolDir, shouldStop):
         t.join()
 
 
-poolDir = sys.argv[1]
+poolDir = os.path.join(sys.argv[1], "looped")
 pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
 pg.init()
 

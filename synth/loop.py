@@ -52,8 +52,8 @@ def convert(f, inDir, outDir):
 
 
 import time
-inDir = sys.argv[1]
-outDir = sys.argv[2]
+inDir = os.path.join(sys.argv[1], "raw")
+outDir = os.path.join(sys.argv[1], "looped")
 
 while True:
     rawFiles = os.listdir(inDir)

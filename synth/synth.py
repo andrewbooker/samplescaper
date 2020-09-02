@@ -4,6 +4,7 @@ import math
 import soundfile as sf
 import random
 import datetime
+import shutil
 
 def freq(n):
     return math.pow(2, (n - 69)/12.0) * 440
@@ -113,7 +114,8 @@ def assembleWaves(f):
 MAX_LIVE_POOL_SIZE = 63
 class Builder():
     def __init__(self, outDir):
-        self.outDir = outDir
+        self.buildDir = os.path.join(outDir, "factory")
+        self.outDir = os.path.join(outDir, "raw")
         files = [os.path.join(self.outDir, f) for f in os.listdir(self.outDir)]
         self.done = sorted(files, key=lambda f: os.path.getmtime(f))
         print(len(self.done), "files in pool already")
@@ -137,9 +139,11 @@ class Builder():
             data.append(v / denominator)
 
         print("writing", fn)
-        fqfn = os.path.join(self.outDir, fn)
+        fqfn = os.path.join(self.buildDir, fn)
         sf.write(fqfn, Loopable(data).create(), sampleRate)
-        self.done.append(fqfn)
+        print("moving to pool")
+        shutil.move(fqfn, self.outDir)
+        self.done.append(os.path.join(self.outDir, fn))
 
         if len(self.done) > MAX_LIVE_POOL_SIZE:
             d = self.done[0]
