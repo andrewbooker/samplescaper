@@ -95,11 +95,15 @@ class Loopable():
 
 
 def withProbability(prob):
+    if prob > 1.0:
+        return True
+    if prob < 0.0:
+        return False
     return random.random() > (1.0 - prob)
 
 def assembleWaves(f):
     waves = []
-    t = sineTemplate() if withProbability(0.75) else genRandomTemplateFrom(genQuadrants())
+    t = sineTemplate() if withProbability((f / 1000.0) - 0.13) else genRandomTemplateFrom(genQuadrants())
     waves.append(WaveIterator(t, f, 0.6 + (0.4 * random.random()), 44100))
 
     for i in range(random.randint(1, 3)):
