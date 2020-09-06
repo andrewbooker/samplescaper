@@ -5,6 +5,7 @@ import soundfile as sf
 import random
 import sys
 import os
+import shutil
 
 class Envelope():
     def __init__(self, sampleRate):
@@ -32,7 +33,7 @@ class Pan():
     def at(self, i):
         return 0.5 * (1.0 + math.sin((i + self.offset) * self.radPerSample))
 
-def convert(f, inDir, outDir):
+def convert(f, inDir, factoryDir, outDir):
     data, sampleRate = sf.read(os.path.join(inDir, f))
     dataLen = len(data)
 
@@ -48,11 +49,15 @@ def convert(f, inDir, outDir):
         wave.append([s * p, s * (1.0 - p)])
         i += 1
 
-    sf.write(os.path.join(outDir, "looped_%s" % f), wave, sampleRate)
+    fqfn = os.path.join(factoryDir, "looped_%s" % f)
+    sf.write(fqfn, wave, sampleRate)
+    print("moving to live pool")
+    shutil.move(fqfn, outDir)
 
 
 import time
 inDir = os.path.join(sys.argv[1], "raw")
+factoryDir = os.path.join(sys.argv[1], "factory")
 outDir = os.path.join(sys.argv[1], "looped")
 
 while True:
@@ -61,7 +66,10 @@ while True:
 
     for f in rawFiles:
         if f not in loopedFiles:
-            convert(f, inDir, outDir)
+            try:
+                convert(f, inDir, factoryDir, outDir)
+            except:
+                print("failed to create loop for", f, "probably still being written")
         else:
             print("already done", f)
 
