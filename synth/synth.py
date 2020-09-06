@@ -108,8 +108,8 @@ def assembleWaves(f):
 
     for i in range(random.randint(1, 3)):
         r = random.random()
-        fmUp = f * (1 + (0.012 * r))
-        fmDown = f * (1 - (0.012 * r))
+        fmUp = f * (1 + (0.01 * r))
+        fmDown = f * (1 - (0.01 * r))
         waves.append(WaveIterator(t, fmUp, 0.6 + (0.4 * random.random()), 44100))
         waves.append(WaveIterator(t, fmDown, 0.6 + (0.4 * random.random()), 44100))
 
