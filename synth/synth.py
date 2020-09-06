@@ -100,6 +100,11 @@ def withProbability(prob):
     if prob < 0.0:
         return False
     return random.random() > (1.0 - prob)
+    
+def maxdDetuneCoeffAt(f):
+    c = 0.012
+    m = (c - 0.005) / 1000.0
+    return c - (m * f)
 
 def assembleWaves(f):
     waves = []
@@ -107,9 +112,9 @@ def assembleWaves(f):
     waves.append(WaveIterator(t, f, 0.6 + (0.4 * random.random()), 44100))
 
     for i in range(random.randint(1, 3)):
-        r = random.random()
-        fmUp = f * (1 + (0.01 * r))
-        fmDown = f * (1 - (0.01 * r))
+        r = maxdDetuneCoeffAt(f) * random.random()
+        fmUp = f * (1 + r)
+        fmDown = f * (1 - r)
         waves.append(WaveIterator(t, fmUp, 0.6 + (0.4 * random.random()), 44100))
         waves.append(WaveIterator(t, fmDown, 0.6 + (0.4 * random.random()), 44100))
 
@@ -164,6 +169,7 @@ notes = [48, 50, 51, 53, 55, 56, 58]
 builder = Builder(outDir)
 
 i = 0
+start = time.time()
 while True:
     n = notes[i]
     builder.build(n)
@@ -173,5 +179,9 @@ while True:
     if i == len(notes):
         i = 0
 
-    time.sleep(30)
+    while (time.time() - start) < 20:
+        time.sleep(1)
 
+    now = time.time()
+    print("generation cycle took %0.1fs" % (now - start))
+    start = now
