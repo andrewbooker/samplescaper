@@ -81,7 +81,7 @@ def playOneFrom(poolDir):
             p = pan.nextValAfter(p)
             channel.set_volume(1.0 - p["value"], p["value"])
 
-
+import threading
 def playContinuouslyFrom(poolDir, shouldStop):
     threads = []
     while not shouldStop.is_set():
@@ -99,7 +99,11 @@ def playContinuouslyFrom(poolDir, shouldStop):
     for t in threads:
         t.join()
 
-poolDir = sys.argv[1]
+class NeverStop():
+    def is_set(self):
+        return False
+
+poolDir = os.path.join(sys.argv[1], "raw")
 
 pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
 pg.init()
@@ -107,18 +111,5 @@ pg.init()
 random.seed()
 pg.mixer.set_num_channels(3)
 
-import readchar
-import threading
-
-shouldStop = threading.Event()
-playAll = threading.Thread(target=playContinuouslyFrom, args=(poolDir,shouldStop), daemon=True)
-playAll.start()
-
-print("Started. Press 'q' to exit")
-while not shouldStop.is_set():
-    c = readchar.readchar()
-    if c == "q":
-        print("Stopping...")
-        shouldStop.set()
-
-playAll.join()
+shouldStop = NeverStop()
+playContinuouslyFrom(poolDir, shouldStop)
