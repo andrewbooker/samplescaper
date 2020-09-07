@@ -18,6 +18,11 @@ class SystemVolumeControl(BaseHTTPRequestHandler):
         d = {"volume": vol}
         self.wfile.write(json.dumps(d).encode("utf-8"))
 
+    def do_POST(self):
+        os.system("shutdown now")
+        self.send_response(200)
+        self.end_headers()
+
 
 server = HTTPServer(("0.0.0.0", 9966), SystemVolumeControl)
 server.serve_forever()
