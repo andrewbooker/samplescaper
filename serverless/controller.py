@@ -9,12 +9,21 @@ class SystemVolumeControl(BaseHTTPRequestHandler):
     def _sendVol(self, vol):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "null")
         self.end_headers()
 
         d = {"volume": vol}
         self.wfile.write(json.dumps(d).encode("utf-8"))
 
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "null")
+        self.send_header("Access-Control-Allow-Methods", "GET, PUT, POST")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
     def do_GET(self):
+        print(self.headers.get("Origin"))
         sv = os.popen("amixer sget 'Digital'").read().split("\n")[-2]
         self._sendVol(int(re.search("\[(\d+)%\]", sv).group(1)))
 
