@@ -4,6 +4,7 @@
 <div id="vol"></div>
 <button id="button-up">+</button>
 <button id="button-down">-</button>
+<div><button id="shutdown">Shutdown</button></div>
 <script>
 
 class RemoteUnit {
@@ -37,6 +38,12 @@ class RemoteUnit {
         };
         req.send(JSON.stringify({volume: (self.volume + delta)}));
     }
+
+    shutdown() {
+        const req = new XMLHttpRequest();
+        req.open("POST", this.url, true);
+        req.send();
+    }
 }
 
 function showVolume(v) {
@@ -67,6 +74,9 @@ const searchProc = setInterval(() => {
     }
     ++i;
 }, 250);
+
+
+document.getElementById("shutdown").setAttribute("onclick", "unit.shutdown();");
 
 
 
