@@ -1,42 +1,75 @@
 <html>
 <body>
+<div id="unit"></div>
 <div id="vol"></div>
 <button id="button-up">+</button>
 <button id="button-down">-</button>
 <script>
-const device = "192.168.0.43";
+
+class RemoteUnit {
+    volume = 0;
+
+    constructor(url) {
+        this.url = url;
+    }
+
+    getVolume(callback) {
+        const req = new XMLHttpRequest();
+        req.responseType = "json";
+        req.open("GET", this.url, true);
+        const self = this;
+        req.onload  = function() {
+            self.volume = req.response.volume;
+            callback(self.volume);
+        };
+        req.send();
+    }
+
+    setVolume(delta, callback) {
+        const req = new XMLHttpRequest();
+        req.responseType = "json";
+        req.open("PUT", this.url, true);
+        req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        const self = this;
+        req.onload  = function() {
+            self.volume = req.response.volume;
+            callback(self.volume);
+        };
+        req.send(JSON.stringify({volume: (self.volume + delta)}));
+    }
+}
+
+function showVolume(v) {
+    document.getElementById("vol").innerHTML = v;
+}
+
+
+const device = "192.168.0.";
 const port = 9966;
-let vol = 0;
+let unit = null;
 
-function showVol() {
-    const req = new XMLHttpRequest();
-    req.responseType = "json";
-    req.open("GET", "http://" + device + ":" + port, true);
-    req.onload  = function() {
-       var jsonResponse = req.response;
-       vol = jsonResponse.volume;
-       document.getElementById("vol").innerHTML = vol; 
-    };
-    req.send();
-}
+let i = 1;
+const searchProc = setInterval(() => {
+    const host = device + i;
+    if (unit === null) {
+        document.getElementById("unit").innerHTML = "Trying " + host;
+    }
+    const u = new RemoteUnit("http://" + host + ":" + port);
+    u.getVolume((v) => {
+        document.getElementById("unit").innerHTML = host;
+        unit = u;
+        showVolume(unit.volume);
+    });
+    if (unit !== null || i > 64) {
+        clearInterval(searchProc);
+        document.getElementById("button-up").setAttribute("onclick", "unit.setVolume(1, showVolume);");
+        document.getElementById("button-down").setAttribute("onclick", "unit.setVolume(-1, showVolume);");
+    }
+    ++i;
+}, 250);
 
-function changeVol(delta) {
-    const req = new XMLHttpRequest();
-    req.responseType = "json";    
-    req.open("PUT", "http://" + device + ":" + port, true);
-    req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-    req.onload  = function() {
-       const jsonResponse = req.response;
-       vol = jsonResponse.volume;
-       document.getElementById("vol").innerHTML = vol; 
-    };
-    req.send(JSON.stringify({volume: vol + delta}));
-}
 
-document.getElementById("button-up").setAttribute("onclick", "changeVol(1);");
-document.getElementById("button-down").setAttribute("onclick", "changeVol(-1);");
 
-showVol();
 
 </script>
 </body>
