@@ -6,20 +6,22 @@ import json
 import re
 
 class SystemVolumeControl(BaseHTTPRequestHandler):
-    def _sendVol(self, vol):
+    def _standardResponse(self):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "null")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
+    def _sendVol(self, vol):
+        self._standardResponse()
         self.end_headers()
 
         d = {"volume": vol}
         self.wfile.write(json.dumps(d).encode("utf-8"))
 
     def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header("Access-Control-Allow-Origin", "null")
+        self._standardResponse()
         self.send_header("Access-Control-Allow-Methods", "GET, PUT, POST")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
     def do_GET(self):
@@ -36,9 +38,10 @@ class SystemVolumeControl(BaseHTTPRequestHandler):
         self._sendVol(vol)
 
     def do_POST(self):
-        os.system("shutdown now")
-        self.send_response(200)
+        self._standardResponse()
         self.end_headers()
+        self.wfile.write(json.dumps({}).encode("utf-8"))
+        os.system("shutdown now")
 
 
 server = HTTPServer(("0.0.0.0", 9966), SystemVolumeControl)
