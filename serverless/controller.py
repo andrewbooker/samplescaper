@@ -41,7 +41,7 @@ class SystemVolumeControl(BaseHTTPRequestHandler):
         self._standardResponse()
         self.end_headers()
         self.wfile.write(json.dumps({}).encode("utf-8"))
-        os.system("shutdown now")
+        os.system("sudo shutdown now")
 
 
 server = HTTPServer(("0.0.0.0", 9966), SystemVolumeControl)
