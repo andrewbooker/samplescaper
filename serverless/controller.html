@@ -1,6 +1,6 @@
 <html>
 <body>
-<div id="unit"></div>
+<div id="say"></div>
 <div id="vol"></div>
 <button id="button-up">+</button>
 <button id="button-down">-</button>
@@ -26,7 +26,7 @@ class RemoteUnit {
         req.send();
     }
 
-    setVolume(delta, callback) {
+    applyVolume(vol, callback) {
         const req = new XMLHttpRequest();
         req.responseType = "json";
         req.open("PUT", this.url, true);
@@ -36,7 +36,11 @@ class RemoteUnit {
             self.volume = req.response.volume;
             callback(self.volume);
         };
-        req.send(JSON.stringify({volume: (self.volume + delta)}));
+        req.send(JSON.stringify({volume: vol}));
+    }
+
+    moveVolume(delta, callback) {
+        this.applyVolume(this.volume + delta, callback);
     }
 
     shutdown() {
@@ -50,33 +54,52 @@ function showVolume(v) {
     document.getElementById("vol").innerHTML = v;
 }
 
+function say(what) {
+    document.getElementById("say").innerHTML = what;
+}
+
 
 const device = "192.168.0.";
 const port = 9966;
-let unit = null;
+
+class Units {
+    units = []
+
+    add(u) {
+        this.units.push(u);
+        showVolume(u.volume);
+    }
+
+    applyVolume(v, cb) { this.units.map(u => u.applyVolume(v, cb)); }
+    moveVolume(v, cb) { this.units.map(u => u.moveVolume(v, cb)); }
+    shutdown(v, cb) { this.units.map(u => u.shutdown(v, cb)); }
+}
+
+let units = new Units();
 
 let i = 1;
 const searchProc = setInterval(() => {
     const host = device + i;
-    if (unit === null) {
-        document.getElementById("unit").innerHTML = "Trying " + host;
-    }
+    say("Trying " + host);
     const u = new RemoteUnit("http://" + host + ":" + port);
-    u.getVolume((v) => {
-        document.getElementById("unit").innerHTML = host;
-        unit = u;
-        showVolume(unit.volume);
-    });
-    if (unit !== null || i > 64) {
+    try {
+        u.getVolume((v) => {
+            say(host);
+            units.add(u);
+        });
+    } catch (e) {
+        say(e.message)
+    }
+    if (i === 64) {
         clearInterval(searchProc);
-        document.getElementById("button-up").setAttribute("onclick", "unit.setVolume(1, showVolume);");
-        document.getElementById("button-down").setAttribute("onclick", "unit.setVolume(-1, showVolume);");
+        units.applyVolume(70, showVolume);
     }
     ++i;
 }, 250);
 
-
-document.getElementById("shutdown").setAttribute("onclick", "unit.shutdown();");
+document.getElementById("button-up").setAttribute("onclick", "units.moveVolume(1, showVolume);");
+document.getElementById("button-down").setAttribute("onclick", "units.moveVolume(-1, showVolume);");
+document.getElementById("shutdown").setAttribute("onclick", "units.shutdown();");
 
 
 
