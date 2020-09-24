@@ -45,6 +45,7 @@ class RemoteUnit {
 
     shutdown() {
         const req = new XMLHttpRequest();
+        req.responseType = "json";
         req.open("POST", this.url, true);
         req.send();
     }
@@ -72,7 +73,7 @@ class Units {
 
     applyVolume(v, cb) { this.units.map(u => u.applyVolume(v, cb)); }
     moveVolume(v, cb) { this.units.map(u => u.moveVolume(v, cb)); }
-    shutdown(v, cb) { this.units.map(u => u.shutdown(v, cb)); }
+    shutdown() { this.units.map(u => u.shutdown()); }
 }
 
 let units = new Units();
