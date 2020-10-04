@@ -165,7 +165,8 @@ import os
 import time
 
 outDir = sys.argv[1]
-notes = [48, 50, 51, 53, 55, 56, 58]
+#notes = [48, 50, 51, 53, 55, 56, 58]
+notes = [45, 47, 49, 50, 52, 54, 56]
 builder = Builder(outDir)
 
 i = 0
