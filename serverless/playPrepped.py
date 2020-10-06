@@ -13,7 +13,7 @@ def nextAudioFileFrom(poolDir):
         return None
     return os.path.join(poolDir, files[random.randint(0, len(files) - 1)])
 
-def playOneFrom(poolDir):
+def playOneFrom(poolDir, startedAt):
     channel = pg.mixer.find_channel()
     if channel is None:
         sys.stdout.write("%.6f: all channels busy\n\r" % time.time())
@@ -25,7 +25,9 @@ def playOneFrom(poolDir):
         return
 
     sound = pg.mixer.Sound(f)
-    sys.stdout.write("%.6f: %s\n\r" % (time.time(), f))
+    log = "%f,%s\n" % (time.time() - startedAt, f)
+    with open(os.path.join(sys.argv[1], "inventory.txt"), "a") as inv:
+        inv.write(log)
 
     channel.set_volume(1.0)
     channel.play(sound)
@@ -34,13 +36,14 @@ def playOneFrom(poolDir):
         
     if len(os.listdir(poolDir)) > 30:
         sys.stdout.write("%.6f: dropping %s\n\r" % (time.time(), f))
-        os.remove(f)
+        os.system("mv %s ../played" % os.file.basename(f))
 
 
 def playContinuouslyFrom(poolDir, shouldStop):
+    startedAt = time.time()
     threads = []
     while not shouldStop.is_set():
-        nextSound = threading.Thread(target=playOneFrom, args=(poolDir,), daemon=True)
+        nextSound = threading.Thread(target=playOneFrom, args=(poolDir,startedAt), daemon=True)
         nextSound.start()
         threads.append(nextSound)
 

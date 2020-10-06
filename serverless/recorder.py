@@ -7,6 +7,8 @@ import time
 import datetime
 import struct
 
+BYTES_PER_SAMPLE=8
+
 
 class AudioCacher():
     def __init__(self, outDir):
@@ -24,57 +26,62 @@ class AudioCacher():
         flatBytes = [struct.pack("f", f) for pair in sp for f in pair]
         return bytearray([b for sample in flatBytes for b in sample])
 
-    def __del__(self):
+    def dump(self):
+        start = time.time()
         print("writing to", self.fnBase)
         with open(self.cacheFn, "rb") as cache:
             with sf.SoundFile(os.path.join(self.outDir, "%s.wav" % self.fnBase), mode="x", samplerate=44100, channels=2, subtype="PCM_24") as wav:
                 done = False
                 while not done:
-                    b = cache.read(8 * 44100)
+                    b = cache.read(BYTES_PER_SAMPLE * 44100)
                     if len(b) == 0:
                         done = True
                     else:
                         wav.write(self._bytesToSamplePairs(b))
+        print("done in", time.time() - start)
         
     def append(self, samplePairs, startPos):
-        if startPos == 0:
-            with open(self.cacheFn, "wb") as out:
-                out.write(self._samplePairsToBytes(samplePairs))
-            return
-            
+        startBytes = BYTES_PER_SAMPLE * startPos
+        catchup = startBytes
+        if os.path.exists(self.cacheFn):
+            catchup -= os.stat(self.cacheFn).st_size
+        
         with open(self.cacheFn, "ab+") as cache:
-            cache.seek(8 * 44100 * startPos, 0)
-            buff = cache.read()
-            flp = self._bytesToSamplePairs(buff)
-            mergeLen = min(len(flp), len(samplePairs))
-            cache.seek(8 * 44100 * startPos, 0)
-            cache.write(self._samplePairsToBytes([flp[i] + samplePairs[i] for i in range(0, mergeLen)]))
-            cache.write(self._samplePairsToBytes(flp[mergeLen:] if mergeLen < len(flp) else samplePairs[mergeLen:]))
+            if catchup > 0:
+                cache.write(bytearray([0] * catchup))
+                cache.write(self._samplePairsToBytes(samplePairs))
+            else:
+                cache.seek(startBytes)
+                buff = cache.read()
+                flp = self._bytesToSamplePairs(buff)
+                mergeLen = min(len(flp), len(samplePairs))
+                cache.seek(startBytes)
+                cache.write(self._samplePairsToBytes([flp[i] + samplePairs[i] for i in range(0, mergeLen)]))
+                cache.write(self._samplePairsToBytes(flp[mergeLen:] if mergeLen < len(flp) else samplePairs[mergeLen:]))
 
 
 cacher = AudioCacher(sys.argv[1])
 
-inDir = os.path.join(sys.argv[1], "played")
+inDir = os.path.join(sys.argv[1], "looped")
 outFile = os.path.join(sys.argv[1], "recording.wav")
+
 done = []
 
-inv = open(os.path.join(inDir, "inventory.txt"), "r")
+inv = open(os.path.join(sys.argv[1], "inventory.txt"), "r")
 invLines = inv.readlines()
 inv.close()
 
 
-baseTime = 0.0
 for r in invLines:
     row = r.rstrip().split(",")
     t = row[0]
-    st = float(t)
-    startTime = st - baseTime if baseTime > 0.0 else 0.0
-    inFile = os.path.join(inDir, row[1])
-    print("adding", inFile)
-    toAdd, sampleRate = sf.read(inFile)
-    cacher.append(toAdd, int(sampleRate * float(startTime)) + 1)
-    done.append(t)
-    baseTime += st
+    if t not in done:
+        st = float(t)
+        inFile = os.path.join(inDir, row[1])
+        print("adding", inFile, "at", st)
+        toAdd, sampleRate = sf.read(inFile)
+        cacher.append(toAdd, int(sampleRate * float(st)) + 1)
+        done.append(t)
 
-del cacher
+cacher.dump()
 
