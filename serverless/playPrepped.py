@@ -25,7 +25,7 @@ def playOneFrom(poolDir, startedAt):
         return
 
     sound = pg.mixer.Sound(f)
-    log = "%f,%s\n" % (time.time() - startedAt, f)
+    log = "%f,%s\n" % (time.monotonic() - startedAt, os.path.basename(f))
     with open(os.path.join(sys.argv[1], "inventory.txt"), "a") as inv:
         inv.write(log)
 
@@ -35,15 +35,15 @@ def playOneFrom(poolDir, startedAt):
         time.sleep(0.1)
         
     if len(os.listdir(poolDir)) > 30:
-        sys.stdout.write("%.6f: dropping %s\n\r" % (time.time(), f))
-        os.system("mv %s ../played" % os.file.basename(f))
+        sys.stdout.write("%.6f: dropping %s\n\r" % (time.monotonic(), f))
+        os.system("mv %s %s" % (f, os.path.join(sys.argv[1], "played")))
 
 
 def playContinuouslyFrom(poolDir, shouldStop):
-    startedAt = time.time()
+    startedAt = time.monotonic()
     threads = []
     while not shouldStop.is_set():
-        nextSound = threading.Thread(target=playOneFrom, args=(poolDir,startedAt), daemon=True)
+        nextSound = threading.Thread(target=playOneFrom, args=(poolDir, startedAt), daemon=True)
         nextSound.start()
         threads.append(nextSound)
 
