@@ -39,49 +39,72 @@ class AudioCacher():
                     else:
                         wav.write(self._bytesToSamplePairs(b))
         print("done in", time.time() - start)
-        
+
     def append(self, samplePairs, startPos):
         startBytes = BYTES_PER_SAMPLE * startPos
         catchup = startBytes
         if os.path.exists(self.cacheFn):
             catchup -= os.stat(self.cacheFn).st_size
-        
+
         with open(self.cacheFn, "ab+") as cache:
             if catchup > 0:
                 cache.write(bytearray([0] * catchup))
                 cache.write(self._samplePairsToBytes(samplePairs))
+                cache.flush()
             else:
                 cache.seek(startBytes)
-                buff = cache.read()
+                buff = cache.peek()
                 flp = self._bytesToSamplePairs(buff)
                 mergeLen = min(len(flp), len(samplePairs))
-                cache.seek(startBytes)
                 cache.write(self._samplePairsToBytes([flp[i] + samplePairs[i] for i in range(0, mergeLen)]))
                 cache.write(self._samplePairsToBytes(flp[mergeLen:] if mergeLen < len(flp) else samplePairs[mergeLen:]))
+                cache.flush()
 
+def pollInventory(inFile, cacher, shouldStop):
+    inDir = sys.argv[1]
+    done = []
+    while not shouldStop.is_set():
+        inv = open(inFile, "r")
+        invLines = inv.readlines()
+        inv.close()
+
+        for r in invLines:
+            row = r.rstrip().split(",")
+            t = row[0]
+            if t not in done:
+                st = float(t)
+                f = row[1]
+                df = os.path.join(inDir, "looped")
+                if not os.path.exists(os.path.join(df, f)):
+                    df = os.path.join(inDir, "played")
+
+                inFile = os.path.join(df, f)
+                sys.stdout.write("adding %s %s\n\r" % (inFile, t))
+                toAdd, sampleRate = sf.read(inFile)
+                cacher.append(toAdd, int((sampleRate * float(st)) + 0.5))
+                done.append(t)
+            else:
+                sys.stdout.write("done %s\n\r")
+
+        time.sleep(1)
+        shouldStop.set()
 
 cacher = AudioCacher(sys.argv[1])
 
-inDir = os.path.join(sys.argv[1], "looped")
-outFile = os.path.join(sys.argv[1], "recording.wav")
+import threading
+shouldStop = threading.Event()
 
-done = []
+inFile = os.path.join(sys.argv[1], "inventory.txt")
 
-inv = open(os.path.join(sys.argv[1], "inventory.txt"), "r")
-invLines = inv.readlines()
-inv.close()
+print("Starting... press 'q' to exit")
+t = threading.Thread(target=pollInventory, args=(inFile, cacher, shouldStop), daemon=True)
+t.start()
 
+import readchar
+while not shouldStop.is_set():
+    c = readchar.readchar()
+    if c == "q":
+        shouldStop.set()
 
-for r in invLines:
-    row = r.rstrip().split(",")
-    t = row[0]
-    if t not in done:
-        st = float(t)
-        inFile = os.path.join(inDir, row[1])
-        print("adding", inFile, "at", st)
-        toAdd, sampleRate = sf.read(inFile)
-        cacher.append(toAdd, int(sampleRate * float(st)) + 1)
-        done.append(t)
-
+t.join()
 cacher.dump()
-
