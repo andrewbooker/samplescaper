@@ -25,9 +25,8 @@ def playOneFrom(poolDir, startedAt):
         return
 
     sound = pg.mixer.Sound(f)
-    log = "%f,%s\n" % (time.monotonic() - startedAt, os.path.basename(f))
-    with open(os.path.join(sys.argv[1], "inventory.txt"), "a") as inv:
-        inv.write(log)
+    with open(os.path.join(sys.argv[1], "inventory.lof"), "a") as lof:
+        lof.write("file \"%s\" offset %f\n" % (os.path.join(sys.argv[1], "looped", os.path.basename(f)), time.monotonic() - startedAt))
 
     channel.set_volume(1.0)
     channel.play(sound)
