@@ -26,8 +26,8 @@ class Envelope():
         return 1.0
 
 class Pan():
-    def __init__(self, sampleRate):
-        self.freqHz = 0.5 * (8 * random.random())
+    def __init__(self, sampleRate, numberOfFiles):
+        self.freqHz = 0.5 * (numberOfFiles * 5 * random.random())
         self.radPerSample = self.freqHz * 2 * math.pi / sampleRate
         self.offset = random.random() * sampleRate / self.freqHz
 
@@ -44,7 +44,7 @@ def convert(files, inDir, factoryDir, outDir):
 
     sampleRate = 44100
     env = Envelope(sampleRate)
-    pan = Pan(sampleRate)
+    pan = Pan(sampleRate, len(files))
     start = time.monotonic()
     print("creating %.2fs" % env.lengthSecs, "file of", env.required, "samples")
 
@@ -60,7 +60,7 @@ outDir = os.path.join(sys.argv[1], "looped")
 
 def convertItems(rawFiles, outDir):
     loopedFiles = [f[7:] for f in os.listdir(outDir)]
-    takeFirstTwo = len(rawFiles) > 1 and random.random() > 0.5
+    takeFirstTwo = (random.random() > 0.3) and (len(rawFiles) > 1)
 
     if takeFirstTwo:
         convert([f for f in rawFiles][:2], inDir, factoryDir, outDir)
