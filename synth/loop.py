@@ -6,6 +6,7 @@ import random
 import sys
 import os
 import shutil
+import time
 
 class Envelope():
     def __init__(self, sampleRate):
@@ -33,29 +34,25 @@ class Pan():
     def at(self, i):
         return 0.5 * (1.0 + math.sin((i + self.offset) * self.radPerSample))
 
+
+def pannedSample(val, pan):
+    return [val * pan, val * (1.0 - pan)]
+
 def convert(f, inDir, factoryDir, outDir):
     data, sampleRate = sf.read(os.path.join(inDir, f))
     dataLen = len(data)
 
     env = Envelope(sampleRate)
     pan = Pan(sampleRate)
+    start = time.monotonic()
     print("creating %.2fs" % env.lengthSecs, "file of", env.required, "samples")
 
-    wave = []
-    i = 0
-    while i != env.required:
-        s = env.vol(i) * data[i % dataLen]
-        p = pan.at(i)
-        wave.append([s * p, s * (1.0 - p)])
-        i += 1
-
     fqfn = os.path.join(factoryDir, "looped_%s" % f)
-    sf.write(fqfn, wave, sampleRate)
-    print("moving to live pool")
+    sf.write(fqfn, [pannedSample(env.vol(i) * data[i % dataLen], pan.at(i)) for i in range(0, env.required)], sampleRate)
+    print("moving to live pool after %.2fs" % (time.monotonic() - start))
     shutil.move(fqfn, outDir)
 
 
-import time
 inDir = os.path.join(sys.argv[1], "raw")
 factoryDir = os.path.join(sys.argv[1], "factory")
 outDir = os.path.join(sys.argv[1], "looped")
