@@ -13,8 +13,13 @@ player = Player()
 
 
 class Controller(BaseHTTPRequestHandler):
+    def _archive(self):
+        os.system("zip -r ~/Music/archives/$(date +\"%Y%m%d_%I%M%S\").zip ~/Music/20*")
+        os.system("rm -rf ~/Music/20*")
+
     def _shutdown(self):
         player.pause()
+        self._archive()
         os.system("sudo shutdown now")
 
     def _updateAndRestart(self):
@@ -47,7 +52,6 @@ class Controller(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        print(self.headers.get("Origin"))
         sv = os.popen("amixer sget 'Digital'").read().split("\n")[-2]
         self._sendVol(int(re.search("\[(\d+)%\]", sv).group(1)))
 

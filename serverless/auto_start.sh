@@ -1,6 +1,7 @@
 #!/bin/bash
 
 rm -rf ~/Music/pool
+mkdir -p ~/Music/archives
 mkdir -p ~/Music/pool/factory
 mkdir -p ~/Music/pool/raw
 mkdir -p ~/Music/pool/looped
