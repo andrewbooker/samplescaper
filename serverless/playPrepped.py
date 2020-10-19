@@ -47,7 +47,7 @@ def playOneFrom(poolDir, startedAt, playedDir):
 
 def playContinuouslyFrom(shouldStop):
     poolDir = os.path.join(sys.argv[1], "looped")
-    print("Playing from ", poolDir)
+    print("Playing from", poolDir)
     playedDir = os.path.join(Path(sys.argv[1]).parent, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
     os.mkdir(playedDir)
     startedAt = time.monotonic()
@@ -82,6 +82,7 @@ class Player():
         pg.mixer.set_num_channels(3)
 
         self.shouldStop = threading.Event();
+        self.thread = None
         self.resume()
 
     def __del__(self):
@@ -90,10 +91,11 @@ class Player():
 
     def pause(self):
         self.shouldStop.set()
-        self.thread.join()
+        if self.thread is not None:
+            self.thread.join()
 
     def resume(self):
-        if not self.shouldStop.is_set():
+        if not self.shouldStop.is_set() and self.thread is not None:
             return
 
         self.shouldStop.clear()
