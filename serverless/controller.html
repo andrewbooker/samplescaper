@@ -11,6 +11,7 @@
 <button id="button-down">-</button>
 <div><button id="pause-resume">Pause</button></div>
 <div><button id="shutdown">Shutdown</button></div>
+<div><button id="update-restart">Update and Restart</button></div>
 <div id="say"></div>
 <script>
 const device = "192.168.0.";
@@ -78,7 +79,7 @@ class RemoteUnit {
         this.applyVolume(this.volume + delta, callback);
     }
 
-    sendCommand(cmd) {
+    postCommand(cmd) {
         const req = new XMLHttpRequest();
         req.responseType = "json";
         req.open("POST", this.url + "/" + cmd, true);
@@ -96,9 +97,9 @@ class Units {
 
     applyVolume(v, cb) { this.units.map(u => u.applyVolume(v, cb)); }
     moveVolume(v, cb) { this.units.map(u => u.moveVolume(v, cb)); }
-    sendCommand(cmd) { this.units.map(u => u.sendCommand(cmd)); }
+    postCommand(cmd) { this.units.map(u => u.postCommand(cmd)); }
     pauseResume() {
-        this.units.map(u => u.sendCommand(this.playing ? "pause" : "resume"));
+        this.units.map(u => u.postCommand(this.playing ? "pause" : "resume"));
         this.playing = !this.playing;
         document.getElementById("pause-resume").innerHTML = this.playing ? "Pause" : "Resume";
     }
@@ -128,7 +129,8 @@ const searchProc = setInterval(() => {
 document.getElementById("button-up").setAttribute("onclick", "units.moveVolume(1, showVolume);");
 document.getElementById("button-down").setAttribute("onclick", "units.moveVolume(-1, showVolume);");
 document.getElementById("pause-resume").setAttribute("onclick", "units.pauseResume();");
-document.getElementById("shutdown").setAttribute("onclick", "units.sendCommand('shutdown');");
+document.getElementById("shutdown").setAttribute("onclick", "units.postCommand('shutdown');");
+document.getElementById("update-restart").setAttribute("onclick", "units.postCommand('updateAndRestart');");
 
 
 
