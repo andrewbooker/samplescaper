@@ -1,18 +1,52 @@
 <html>
 <body>
-<div id="say"></div>
-<div id="vol"></div>
+<div>
+<table>
+<thead><th>Device IP</th><th>Volume</th></thead>
+<tbody id="table">
+</tbody>
+</table>
+</div>
 <button id="button-up">+</button>
 <button id="button-down">-</button>
 <div><button id="pause-resume">Pause</button></div>
 <div><button id="shutdown">Shutdown</button></div>
+<div id="say"></div>
 <script>
+const device = "192.168.0.";
+const port = 9966;
+
+function say(what) {
+    document.getElementById("say").innerHTML = what;
+}
+
+function showVolume(v, i) {
+    if (!document.getElementById("vol" + i)) {
+        const tdIp = document.createElement("td");
+        tdIp.innerHTML = device + i;
+
+        const tdVol = document.createElement("td");
+        tdVol.setAttribute("id", "vol" + i);
+
+        const tr = document.createElement("tr");
+        tr.appendChild(tdIp);
+        tr.appendChild(tdVol);
+
+        document.getElementById("table").appendChild(tr);
+    }
+    document.getElementById("vol" + i).innerHTML = v;
+}
 
 class RemoteUnit {
     volume = 0;
+    id = 0;
+    url = "";
 
-    constructor(url) {
-        this.url = url;
+    constructor(i) {
+        this.id = i;
+        const host = device + i;
+        say("trying " + host);
+        this.url = "http://" + host + ":" + port;
     }
 
     getVolume(callback) {
@@ -22,7 +56,7 @@ class RemoteUnit {
         const self = this;
         req.onload  = function() {
             self.volume = req.response.volume;
-            callback(self.volume);
+            callback(self.volume, self.id);
         };
         req.send();
     }
@@ -35,7 +69,7 @@ class RemoteUnit {
         const self = this;
         req.onload  = function() {
             self.volume = req.response.volume;
-            callback(self.volume);
+            callback(self.volume, self.id);
         };
         req.send(JSON.stringify({volume: vol}));
     }
@@ -52,25 +86,12 @@ class RemoteUnit {
     }
 }
 
-function showVolume(v) {
-    document.getElementById("vol").innerHTML = v;
-}
-
-function say(what) {
-    document.getElementById("say").innerHTML = what;
-}
-
-
-const device = "192.168.0.";
-const port = 9966;
-
 class Units {
     units = []
     playing = true;
 
     add(u) {
         this.units.push(u);
-        showVolume(u.volume);
     }
 
     applyVolume(v, cb) { this.units.map(u => u.applyVolume(v, cb)); }
@@ -87,13 +108,11 @@ let units = new Units();
 
 let i = 1;
 const searchProc = setInterval(() => {
-    const host = device + i;
-    say("Trying " + host);
-    const u = new RemoteUnit("http://" + host + ":" + port);
+    const u = new RemoteUnit(i);
     try {
-        u.getVolume((v) => {
-            say(host);
+        u.getVolume((v, i) => {
             units.add(u);
+            showVolume(v, i);
         });
     } catch (e) {
         say(e.message)
@@ -101,6 +120,7 @@ const searchProc = setInterval(() => {
     if (i === 64) {
         clearInterval(searchProc);
         units.applyVolume(70, showVolume);
+        say("");
     }
     ++i;
 }, 250);
