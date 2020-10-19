@@ -14,7 +14,13 @@ player = Player()
 
 class Controller(BaseHTTPRequestHandler):
     def _shutdown(self):
+        player.pause()
         os.system("sudo shutdown now")
+
+    def _updateAndRestart(self):
+        player.pause()
+        os.system("cd ..; git pull --rebase")
+        os.system("sudo shutdown -r now")
 
     def _pause(self):
         player.pause()
