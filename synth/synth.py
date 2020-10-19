@@ -94,29 +94,22 @@ class Loopable():
         return [self._merge(s) for s in self.partB]
 
 
-def withProbability(prob):
-    if prob > 1.0:
-        return True
-    if prob < 0.0:
-        return False
-    return random.random() > (1.0 - prob)
     
 def maxdDetuneCoeffAt(f):
     c = 0.012
     m = (c - 0.005) / 1000.0
     return c - (m * f)
 
-def assembleWaves(f):
+def assembleWaves(f, template):
     waves = []
-    t = sineTemplate() if withProbability((f / 1000.0) - 0.13) else genRandomTemplateFrom(genQuadrants())
-    waves.append(WaveIterator(t, f, 0.6 + (0.4 * random.random()), 44100))
+    waves.append(WaveIterator(template, f, 0.6 + (0.4 * random.random()), 44100))
 
     for i in range(random.randint(1, 3)):
         r = maxdDetuneCoeffAt(f) * random.random()
         fmUp = f * (1 + r)
         fmDown = f * (1 - r)
-        waves.append(WaveIterator(t, fmUp, 0.6 + (0.4 * random.random()), 44100))
-        waves.append(WaveIterator(t, fmDown, 0.6 + (0.4 * random.random()), 44100))
+        waves.append(WaveIterator(template, fmUp, 0.6 + (0.4 * random.random()), 44100))
+        waves.append(WaveIterator(template, fmDown, 0.6 + (0.4 * random.random()), 44100))
 
     return waves
 
@@ -130,8 +123,10 @@ class Builder():
         print(len(self.done), "files in pool already")
 
     def build(self, n):
-        fn = "%d_%s.wav" % (n, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
-        waves = assembleWaves(freq(n))
+        frq = freq(n)
+        useGen = random.random() < (1.0 / pow(0.01 * frq, 1.5))
+        fn = "%d_%s_%s.wav" % (n, "ge" if useGen else "si", datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
+        waves = assembleWaves(frq, genRandomTemplateFrom(genQuadrants()) if useGen else sineTemplate())
         durSecs = 2 + (5 * random.random())
 
         sampleRate = 44100
@@ -165,7 +160,6 @@ import os
 import time
 
 outDir = sys.argv[1]
-#notes = [48, 50, 51, 53, 55, 56, 58]
 notes = [45, 47, 49, 50, 52, 54, 56]
 builder = Builder(outDir)
 
