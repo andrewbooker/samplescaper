@@ -60,10 +60,13 @@ outDir = os.path.join(sys.argv[1], "looped")
 
 def convertItems(rawFiles, outDir):
     loopedFiles = [f[7:] for f in os.listdir(outDir)]
-    takeFirstTwo = (random.random() > 0.3) and (len(rawFiles) > 1)
+    takeFirstTwo = (random.random() > 0.2) and (len(rawFiles) > 1)
 
     if takeFirstTwo:
-        convert([f for f in rawFiles][:2], inDir, factoryDir, outDir)
+        try:
+            convert([f for f in rawFiles][:2], inDir, factoryDir, outDir)
+        except:
+            print("failed to create paired loop, file probably still being written")
         return
 
     for f in rawFiles:
