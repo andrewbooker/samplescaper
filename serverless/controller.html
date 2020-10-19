@@ -4,6 +4,7 @@
 <div id="vol"></div>
 <button id="button-up">+</button>
 <button id="button-down">-</button>
+<div><button id="pause-resume">Pause</button></div>
 <div><button id="shutdown">Shutdown</button></div>
 <script>
 
@@ -43,10 +44,10 @@ class RemoteUnit {
         this.applyVolume(this.volume + delta, callback);
     }
 
-    shutdown() {
+    sendCommand(cmd) {
         const req = new XMLHttpRequest();
         req.responseType = "json";
-        req.open("POST", this.url, true);
+        req.open("POST", this.url + "/" + cmd, true);
         req.send();
     }
 }
@@ -65,6 +66,7 @@ const port = 9966;
 
 class Units {
     units = []
+    playing = true;
 
     add(u) {
         this.units.push(u);
@@ -73,7 +75,12 @@ class Units {
 
     applyVolume(v, cb) { this.units.map(u => u.applyVolume(v, cb)); }
     moveVolume(v, cb) { this.units.map(u => u.moveVolume(v, cb)); }
-    shutdown() { this.units.map(u => u.shutdown()); }
+    sendCommand(cmd) { this.units.map(u => u.sendCommand(cmd)); }
+    pauseResume() {
+        this.units.map(u => u.sendCommand(this.playing ? "pause" : "resume"));
+        this.playing = !this.playing;
+        document.getElementById("pause-resume").innerHTML = this.playing ? "Pause" : "Resume";
+    }
 }
 
 let units = new Units();
@@ -100,7 +107,8 @@ const searchProc = setInterval(() => {
 
 document.getElementById("button-up").setAttribute("onclick", "units.moveVolume(1, showVolume);");
 document.getElementById("button-down").setAttribute("onclick", "units.moveVolume(-1, showVolume);");
-document.getElementById("shutdown").setAttribute("onclick", "units.shutdown();");
+document.getElementById("pause-resume").setAttribute("onclick", "units.pauseResume();");
+document.getElementById("shutdown").setAttribute("onclick", "units.sendCommand('shutdown');");
 
 
 
