@@ -35,10 +35,15 @@ def playOneFrom(poolDir, startedAt, playedDir):
     while channel.get_busy():
         time.sleep(0.1)
         
-    if len(os.listdir(poolDir)) > 10:
-        sys.stdout.write("%.6f: dropping %s\n\r" % (time.monotonic(), f))
-        os.system("mv %s %s" % (f, playedDir))
-
+    if not Path(os.path.join(playedDir, os.path.basename(f))).exists():
+        if len(os.listdir(poolDir)) > 30:
+            sys.stdout.write("%.6f: moving to %s to %s\n\r" % (time.monotonic(), f, playedDir))
+            os.system("mv %s %s" % (f, playedDir))
+        else:
+            sys.stdout.write("%.6f: copying %s to %s\n\r" % (time.monotonic(), f, playedDir))
+            os.system("cp %s %s" % (f, playedDir))
+    else:
+        sys.stdout.write("%.6f: already stored %s\n\r" % (time.monotonic(), f))
 
 def playContinuouslyFrom(poolDir, shouldStop):
     playedDir = os.path.join(Path(sys.argv[1]).parent, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
