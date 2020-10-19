@@ -2,7 +2,9 @@
 
 import pygame as pg
 import time
+import datetime
 import os
+from pathlib import Path
 import sys
 import random
 
@@ -13,7 +15,7 @@ def nextAudioFileFrom(poolDir):
         return None
     return os.path.join(poolDir, files[random.randint(0, len(files) - 1)])
 
-def playOneFrom(poolDir, startedAt):
+def playOneFrom(poolDir, startedAt, playedDir):
     channel = pg.mixer.find_channel()
     if channel is None:
         sys.stdout.write("%.6f: all channels busy\n\r" % time.time())
@@ -25,7 +27,7 @@ def playOneFrom(poolDir, startedAt):
         return
 
     sound = pg.mixer.Sound(f)
-    with open(os.path.join(sys.argv[1], "inventory.lof"), "a") as lof:
+    with open(os.path.join(playedDir, "inventory.lof"), "a") as lof:
         lof.write("file \"%s\" offset %f\n" % (os.path.join(sys.argv[1], "looped", os.path.basename(f)), time.monotonic() - startedAt))
 
     channel.set_volume(1.0)
@@ -33,16 +35,18 @@ def playOneFrom(poolDir, startedAt):
     while channel.get_busy():
         time.sleep(0.1)
         
-    if len(os.listdir(poolDir)) > 30:
+    if len(os.listdir(poolDir)) > 10:
         sys.stdout.write("%.6f: dropping %s\n\r" % (time.monotonic(), f))
-        os.system("mv %s %s" % (f, os.path.join(sys.argv[1], "played")))
+        os.system("mv %s %s" % (f, playedDir))
 
 
 def playContinuouslyFrom(poolDir, shouldStop):
+    playedDir = os.path.join(Path(sys.argv[1]).parent, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
+    os.mkdir(playedDir)
     startedAt = time.monotonic()
     threads = []
     while not shouldStop.is_set():
-        nextSound = threading.Thread(target=playOneFrom, args=(poolDir, startedAt), daemon=True)
+        nextSound = threading.Thread(target=playOneFrom, args=(poolDir, startedAt, playedDir), daemon=True)
         nextSound.start()
         threads.append(nextSound)
 
