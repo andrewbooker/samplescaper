@@ -45,7 +45,9 @@ def playOneFrom(poolDir, startedAt, playedDir):
     else:
         sys.stdout.write("%.6f: already stored %s\n\r" % (time.monotonic(), f))
 
-def playContinuouslyFrom(poolDir, shouldStop):
+def playContinuouslyFrom(shouldStop):
+    poolDir = os.path.join(sys.argv[1], "looped")
+    print("Playing from ", poolDir)
     playedDir = os.path.join(Path(sys.argv[1]).parent, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
     os.mkdir(playedDir)
     startedAt = time.monotonic()
@@ -66,17 +68,36 @@ def playContinuouslyFrom(poolDir, shouldStop):
         t.join()
 
 
-poolDir = os.path.join(sys.argv[1], "looped")
-pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
-pg.init()
 
-random.seed()
-pg.mixer.set_num_channels(3)
+
 
 import threading
 
-shouldStop = threading.Event()
-playContinuouslyFrom(poolDir, shouldStop)
+class Player():
+    def __init__(self):
+        pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
+        pg.init()
 
+        random.seed()
+        pg.mixer.set_num_channels(3)
+
+        self.shouldStop = threading.Event();
+        self.resume()
+
+    def __del__(self):
+        self.pause()
+        pg.quit()
+
+    def pause(self):
+        self.shouldStop.set()
+        self.thread.join()
+
+    def resume(self):
+        if not self.shouldStop.is_set():
+            return
+
+        self.shouldStop.clear()
+        self.thread = threading.Thread(target=playContinuouslyFrom, args=(self.shouldStop,), daemon=True)
+        self.thread.start()
 
 

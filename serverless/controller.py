@@ -4,8 +4,24 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import os
 import json
 import re
+import threading
 
-class SystemVolumeControl(BaseHTTPRequestHandler):
+
+from playPrepped import Player
+
+player = Player()
+
+
+class Controller(BaseHTTPRequestHandler):
+    def _shutdown(self):
+        os.system("sudo shutdown now")
+
+    def _pause(self):
+        player.pause()
+
+    def _resume(self):
+        player.resume()
+
     def _standardResponse(self):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -41,8 +57,8 @@ class SystemVolumeControl(BaseHTTPRequestHandler):
         self._standardResponse()
         self.end_headers()
         self.wfile.write(json.dumps({}).encode("utf-8"))
-        os.system("sudo shutdown now")
+        fn = getattr(self, "_%s" % self.path[1:])()
 
 
-server = HTTPServer(("0.0.0.0", 9966), SystemVolumeControl)
-server.serve_forever()
+HTTPServer(("0.0.0.0", 9966), Controller).serve_forever()
+
