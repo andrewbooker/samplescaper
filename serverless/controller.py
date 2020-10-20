@@ -14,7 +14,7 @@ player = Player()
 
 class Controller(BaseHTTPRequestHandler):
     def _archive(self):
-        os.system("zip -r ~/Music/archives/$(date +\"%Y%m%d_%I%M%S\").zip ~/Music/20*")
+        os.system("zip -r ~/Music/archives/$(date +\"%Y%m%d_%H%M%S\").zip ~/Music/20*")
         os.system("rm -rf ~/Music/20*")
 
     def _shutdown(self):
