@@ -1,20 +1,44 @@
 <html>
+<head>
+<title>Randomatones</title>
+<style>
+body {
+    font-family: Arial;
+}
+h4 {
+    margin-bottom: 2px;
+    font-size: 110%;
+}
+th {
+    text-align: left;
+}
+#say {
+    margin-top: 4px;
+    font-size: 80%;
+}
+</style>
+</head>
 <body>
 <input type="text" id="subnet" value="192.168.0."/>
-
+<h4>Devices</h4>
 <div>
 <table>
-<thead><th>Device IP</th><th>Volume</th></thead>
+<thead><th>IP</th><th>Volume</th></thead>
 <tbody id="table">
 </tbody>
 </table>
 </div>
-
-<button id="button-up">+</button>
-<button id="button-down">-</button>
+<h4>Volume</h4>
+<button id="volume-up">+</button>
+<button id="volume-down">-</button>
+<button id="volume-max">Max</button>
+<button id="volume-min">Min</button>
+<h4>Control</h4>
 <div><button id="pause-resume">Pause</button></div>
-<div><button id="shutdown">Shutdown</button></div>
-<div><button id="update-restart">Update and Restart</button></div>
+<div>
+<button id="shutdown">Shutdown</button>
+<button id="update-restart">Update and Restart</button>
+</div>
 <div id="say"></div>
 <script>
 const port = 9966;
@@ -131,8 +155,10 @@ const searchProc = setInterval(() => {
     ++i;
 }, 250);
 
-document.getElementById("button-up").setAttribute("onclick", "units.moveVolume(1, showVolume);");
-document.getElementById("button-down").setAttribute("onclick", "units.moveVolume(-1, showVolume);");
+document.getElementById("volume-up").setAttribute("onclick", "units.moveVolume(1, showVolume);");
+document.getElementById("volume-down").setAttribute("onclick", "units.moveVolume(-1, showVolume);");
+document.getElementById("volume-max").setAttribute("onclick", "units.applyVolume(100, showVolume);");
+document.getElementById("volume-min").setAttribute("onclick", "units.applyVolume(50, showVolume);");
 document.getElementById("pause-resume").setAttribute("onclick", "units.pauseResume();");
 document.getElementById("shutdown").setAttribute("onclick", "units.postCommand('shutdown');");
 document.getElementById("update-restart").setAttribute("onclick", "units.postCommand('updateAndRestart');");
