@@ -19,6 +19,7 @@ th {
 </style>
 </head>
 <body>
+<button id="search">Search</button>
 <input type="text" id="subnet" value="192.168.0."/>
 <h4>Devices</h4>
 <div>
@@ -136,25 +137,28 @@ class Units {
 
 let units = new Units();
 
-let i = 1;
-const searchProc = setInterval(() => {
-    const u = new RemoteUnit(i);
-    try {
-        u.getVolume((v, i) => {
-            units.add(u);
-            showVolume(v, i);
-        });
-    } catch (e) {
-        say(e.message)
-    }
-    if (i === 64) {
-        clearInterval(searchProc);
-        units.applyVolume(70, showVolume);
-        say("");
-    }
-    ++i;
-}, 250);
+function search() {
+    let i = 1;
+    const searchProc = setInterval(() => {
+        const u = new RemoteUnit(i);
+        try {
+            u.getVolume((v, i) => {
+                units.add(u);
+                showVolume(v, i);
+            });
+        } catch (e) {
+            say(e.message)
+        }
+        if (i === 64) {
+            clearInterval(searchProc);
+            units.applyVolume(70, showVolume);
+            say("");
+        }
+        ++i;
+    }, 250);
+}
 
+document.getElementById("search").setAttribute("onclick", "search();");
 document.getElementById("volume-up").setAttribute("onclick", "units.moveVolume(1, showVolume);");
 document.getElementById("volume-down").setAttribute("onclick", "units.moveVolume(-1, showVolume);");
 document.getElementById("volume-max").setAttribute("onclick", "units.applyVolume(100, showVolume);");
