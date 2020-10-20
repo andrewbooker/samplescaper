@@ -9,3 +9,4 @@ mkdir -p ~/Music/pool/looped
 python ~/Documents/samplescaper/synth/synth.py ~/Music/pool &
 python ~/Documents/samplescaper/synth/loop.py ~/Music/pool &
 python ~/Documents/samplescaper/serverless/controller.py ~/Music/pool &
+~/Documents/samplescaper/recordAmbient.sh &
