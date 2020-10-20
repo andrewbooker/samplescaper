@@ -1,5 +1,7 @@
 <html>
 <body>
+<input type="text" id="subnet" value="192.168.0."/>
+
 <div>
 <table>
 <thead><th>Device IP</th><th>Volume</th></thead>
@@ -7,6 +9,7 @@
 </tbody>
 </table>
 </div>
+
 <button id="button-up">+</button>
 <button id="button-down">-</button>
 <div><button id="pause-resume">Pause</button></div>
@@ -14,8 +17,10 @@
 <div><button id="update-restart">Update and Restart</button></div>
 <div id="say"></div>
 <script>
-const device = "192.168.0.";
 const port = 9966;
+function subnet() {
+    return document.getElementById("subnet").getAttribute("value");
+}
 
 function say(what) {
     document.getElementById("say").innerHTML = what;
@@ -24,7 +29,7 @@ function say(what) {
 function showVolume(v, i) {
     if (!document.getElementById("vol" + i)) {
         const tdIp = document.createElement("td");
-        tdIp.innerHTML = device + i;
+        tdIp.innerHTML = subnet() + i;
 
         const tdVol = document.createElement("td");
         tdVol.setAttribute("id", "vol" + i);
@@ -45,7 +50,7 @@ class RemoteUnit {
 
     constructor(i) {
         this.id = i;
-        const host = device + i;
+        const host = subnet() + i;
         say("trying " + host);
         this.url = "http://" + host + ":" + port;
     }
