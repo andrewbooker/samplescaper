@@ -20,7 +20,7 @@ th {
 </head>
 <body>
 <button id="search">Search</button>
-<input type="text" id="subnet" value="192.168.0."/> expecting <input id="expected" type="number" value="3" size="3"/>
+<input type="text" id="subnet" value="192.168.0.0/24"/> expecting <input id="expected" type="number" value="3" size="3"/>
 <h4>Devices</h4>
 <div>
 <table>
@@ -43,6 +43,41 @@ th {
 <div id="say"></div>
 <script>
 const port = 9966;
+
+function Subnet() {
+    function longToIp(num) {
+        const ipn = [];
+        for (let i = 0; i != 4; ++i) {
+            const shift = 24 - (8 * i);
+            ipn.push((num & (255 << shift)) >>> shift);
+        }
+        return ipn.join(".");
+    }
+
+    function ipToLong(ip) {
+        let num = 0;
+        for (let i = 0; i != 4; ++i) {
+            num += ip[i] << (24 - (8 * i));
+        }
+        return num;
+    }
+
+    return {
+        possibleAddresses: function() {
+            const cidr = document.getElementById("subnet").getAttribute("value").split("/");
+            const mask = Math.pow(2, 32 - cidr[1]);
+            const ip = cidr[0].split(".");
+            ip[3] = 0;
+            const ipl = ipToLong(ip);
+
+            const ret = [];
+            for (let i = 0; i != mask; ++i) {
+                ret.push(longToIp(ipl + i));
+            }
+            return ret;
+        }
+    };
+}
 
 function say(what) {
     document.getElementById("say").innerHTML = what;
@@ -146,9 +181,10 @@ class RemoteUnit {
 const expected = 1 * document.getElementById("expected").value;
 
 function search() {
+    const possible = Subnet().possibleAddresses();
     let i = 1;
     const searchProc = setInterval(() => {
-        const ip = document.getElementById("subnet").getAttribute("value") + i;
+        const ip = possible[i];
         say("trying " + ip);
         const u = new RemoteUnit(ip);
         try {
@@ -159,10 +195,11 @@ function search() {
         } catch (e) {
             say(e.message)
         }
-        if (i === 64 || expected === units.size()) {
+        if (i === (possible.length - 1) || expected === units.size()) {
             clearInterval(searchProc);
             units.applyVolume(70, showVolume);
             say("Found " + units.size() + " unit(s)");
+            return;
         }
         ++i;
     }, 250);
