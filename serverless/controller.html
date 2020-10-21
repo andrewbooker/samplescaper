@@ -20,7 +20,7 @@ th {
 </head>
 <body>
 <button id="search">Search</button>
-<input type="text" id="subnet" value="192.168.0."/>
+<input type="text" id="subnet" value="192.168.0."/> expecting <input id="expected" type="number" value="3" size="3"/>
 <h4>Devices</h4>
 <div>
 <table>
@@ -125,6 +125,10 @@ class Units {
         this.units.push(u);
     }
 
+    size() {
+        return this.units.length;
+    }
+
     applyVolume(v, cb) { this.units.map(u => u.applyVolume(v, cb)); }
     moveVolume(v, cb) { this.units.map(u => u.moveVolume(v, cb)); }
     postCommand(cmd) { this.units.map(u => u.postCommand(cmd)); }
@@ -136,6 +140,7 @@ class Units {
 }
 
 let units = new Units();
+const expected = 1 * document.getElementById("expected").value;
 
 function search() {
     let i = 1;
@@ -149,10 +154,10 @@ function search() {
         } catch (e) {
             say(e.message)
         }
-        if (i === 64) {
+        if (i === 64 || expected === units.size()) {
             clearInterval(searchProc);
             units.applyVolume(70, showVolume);
-            say("");
+            say("Found " + units.size() + " unit(s)");
         }
         ++i;
     }, 250);
@@ -166,8 +171,6 @@ document.getElementById("volume-min").setAttribute("onclick", "units.applyVolume
 document.getElementById("pause-resume").setAttribute("onclick", "units.pauseResume();");
 document.getElementById("shutdown").setAttribute("onclick", "units.postCommand('shutdown');");
 document.getElementById("update-restart").setAttribute("onclick", "units.postCommand('updateAndRestart');");
-
-
 
 
 </script>
