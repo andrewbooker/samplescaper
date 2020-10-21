@@ -43,18 +43,43 @@ th {
 <div id="say"></div>
 <script>
 const port = 9966;
-function subnet() {
-    return document.getElementById("subnet").getAttribute("value");
-}
 
 function say(what) {
     document.getElementById("say").innerHTML = what;
 }
 
+class Units {
+    units = []
+    playing = true;
+
+    add(u) {
+        this.units.push(u);
+    }
+
+    size() {
+        return this.units.length;
+    }
+
+    ipOf(i) {
+        return this.units.filter(u => u.id === i)[0].ip;
+    }
+
+    applyVolume(v, cb) { this.units.map(u => u.applyVolume(v, cb)); }
+    moveVolume(v, cb) { this.units.map(u => u.moveVolume(v, cb)); }
+    postCommand(cmd) { this.units.map(u => u.postCommand(cmd)); }
+    pauseResume() {
+        this.units.map(u => u.postCommand(this.playing ? "pause" : "resume"));
+        this.playing = !this.playing;
+        document.getElementById("pause-resume").innerHTML = this.playing ? "Pause" : "Resume";
+    }
+}
+
+const units = new Units();
+
 function showVolume(v, i) {
     if (!document.getElementById("vol" + i)) {
         const tdIp = document.createElement("td");
-        tdIp.innerHTML = subnet() + i;
+        tdIp.innerHTML = units.ipOf(i);
 
         const tdVol = document.createElement("td");
         tdVol.setAttribute("id", "vol" + i);
@@ -71,13 +96,13 @@ function showVolume(v, i) {
 class RemoteUnit {
     volume = 0;
     id = 0;
+    ip = "";
     url = "";
 
-    constructor(i) {
-        this.id = i;
-        const host = subnet() + i;
-        say("trying " + host);
-        this.url = "http://" + host + ":" + port;
+    constructor(ip) {
+        this.ip = ip;
+        this.id = ip.split(".")[3];
+        this.url = "http://" + this.ip + ":" + port;
     }
 
     getVolume(callback) {
@@ -117,35 +142,15 @@ class RemoteUnit {
     }
 }
 
-class Units {
-    units = []
-    playing = true;
 
-    add(u) {
-        this.units.push(u);
-    }
-
-    size() {
-        return this.units.length;
-    }
-
-    applyVolume(v, cb) { this.units.map(u => u.applyVolume(v, cb)); }
-    moveVolume(v, cb) { this.units.map(u => u.moveVolume(v, cb)); }
-    postCommand(cmd) { this.units.map(u => u.postCommand(cmd)); }
-    pauseResume() {
-        this.units.map(u => u.postCommand(this.playing ? "pause" : "resume"));
-        this.playing = !this.playing;
-        document.getElementById("pause-resume").innerHTML = this.playing ? "Pause" : "Resume";
-    }
-}
-
-let units = new Units();
 const expected = 1 * document.getElementById("expected").value;
 
 function search() {
     let i = 1;
     const searchProc = setInterval(() => {
-        const u = new RemoteUnit(i);
+        const ip = document.getElementById("subnet").getAttribute("value") + i;
+        say("trying " + ip);
+        const u = new RemoteUnit(ip);
         try {
             u.getVolume((v, i) => {
                 units.add(u);
