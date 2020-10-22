@@ -4,10 +4,17 @@
 <style>
 body {
     font-family: Arial;
+    font-size: 200%;
+}
+input {
+    font-size: 140%;
+}
+th, td {
+    font-size: 200%;
 }
 h4 {
     margin-bottom: 2px;
-    font-size: 110%;
+    font-size: 120%;
 }
 th {
     text-align: left;
@@ -16,18 +23,25 @@ th {
     margin-top: 4px;
     font-size: 80%;
 }
+button {
+    min-width: 200px;
+    height: 100px;
+    font-size: 130%;
+    margin-bottom: 16px;
+    padding: 16px;
+}
 </style>
 </head>
 <body>
 <button id="search">Search</button>
-<input type="text" id="subnet" value="192.168.0.0/24"/><br/>
-interval <input id="interval" type="number" value="250" size="3"/>ms
-expecting <input id="expected" type="number" value="3" size="2"/>
+<input type="text" id="subnet" value="192.168.0.0/24" size="6"/><br/>
+interval <input id="interval" type="number" value="250" size="1"/>ms
+expecting <input id="expected" type="number" value="3" size="1"/>
 <div id="say">awaiting search</div>
 <h4>Devices</h4>
 <div>
 <table>
-<thead><th>IP</th><th>Volume</th></thead>
+<thead><th width="200px">IP</th><th>Volume</th></thead>
 <tbody id="table">
 </tbody>
 </table>
@@ -47,7 +61,7 @@ expecting <input id="expected" type="number" value="3" size="2"/>
 const port = 9966;
 
 function showSize() {
-    say(window.innerWidth + "x" + window.innerHeight + " (ratio " + window.devicePixelRatio + ")");
+    say(window.innerWidth + "x" + window.innerHeight);
 }
 showSize();
 window.onresize = showSize;
