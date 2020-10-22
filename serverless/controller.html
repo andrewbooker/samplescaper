@@ -20,7 +20,10 @@ th {
 </head>
 <body>
 <button id="search">Search</button>
-<input type="text" id="subnet" value="192.168.0.0/24"/> expecting <input id="expected" type="number" value="3" size="3"/>
+<input type="text" id="subnet" value="192.168.0.0/24"/> expecting
+<input id="expected" type="number" value="3" size="2"/><br/>
+interval <input id="interval" type="number" value="250" size="3"/>ms
+<div id="say">awaiting search</div>
 <h4>Devices</h4>
 <div>
 <table>
@@ -40,7 +43,6 @@ th {
 <button id="shutdown">Shutdown</button>
 <button id="update-restart">Update and Restart</button>
 </div>
-<div id="say"></div>
 <script>
 const port = 9966;
 
@@ -64,7 +66,7 @@ function Subnet() {
 
     return {
         possibleAddresses: function() {
-            const cidr = document.getElementById("subnet").getAttribute("value").split("/");
+            const cidr = document.getElementById("subnet").value.split("/");
             const mask = Math.pow(2, 32 - cidr[1]);
             const ip = cidr[0].split(".");
             ip[3] = 0;
@@ -178,8 +180,6 @@ class RemoteUnit {
 }
 
 
-const expected = 1 * document.getElementById("expected").value;
-
 function search() {
     const possible = Subnet().possibleAddresses();
     let i = 1;
@@ -195,14 +195,14 @@ function search() {
         } catch (e) {
             say(e.message)
         }
-        if (i === (possible.length - 1) || expected === units.size()) {
+        if (i === (possible.length - 1) || (1 * document.getElementById("expected").value) === units.size()) {
             clearInterval(searchProc);
             units.applyVolume(70, showVolume);
             say("Found " + units.size() + " unit(s)");
             return;
         }
         ++i;
-    }, 250);
+    }, Math.max(250, document.getElementById("interval").value));
 }
 
 document.getElementById("search").setAttribute("onclick", "search();");
