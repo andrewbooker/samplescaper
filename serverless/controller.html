@@ -20,9 +20,9 @@ th {
 </head>
 <body>
 <button id="search">Search</button>
-<input type="text" id="subnet" value="192.168.0.0/24"/> expecting
-<input id="expected" type="number" value="3" size="2"/><br/>
+<input type="text" id="subnet" value="192.168.0.0/24"/><br/>
 interval <input id="interval" type="number" value="250" size="3"/>ms
+expecting <input id="expected" type="number" value="3" size="2"/>
 <div id="say">awaiting search</div>
 <h4>Devices</h4>
 <div>
@@ -45,6 +45,12 @@ interval <input id="interval" type="number" value="250" size="3"/>ms
 </div>
 <script>
 const port = 9966;
+
+function showSize() {
+    say(window.innerWidth + "x" + window.innerHeight + " (ratio " + window.devicePixelRatio + ")");
+}
+showSize();
+window.onresize = showSize;
 
 function Subnet() {
     function longToIp(num) {
