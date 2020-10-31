@@ -14,13 +14,13 @@ def nextAudioFileFrom(poolDir):
     return os.path.join(poolDir, files[random.randint(0, len(files) - 1)])
 	
 def stretch():
-	s = 0.1 + (2.1 * random.random())
+	s = 0.05 + (1.7 * random.random())
 	if s > 0.7 and s < 1.3:
 		return stretch
 	return s
 
-inDir = os.path.join(sys.argv[1], "samples")
-outDir = os.path.join(sys.argv[1], "modified")
+inDir = sys.argv[1]
+outDir = sys.argv[2]
 
 while True:
 	f = nextAudioFileFrom(inDir)
@@ -41,5 +41,5 @@ while True:
 		out.append(((1.0 - e) * data[p0]) + (e * data[p1]))
 
 	sf.write(os.path.join(outDir, "%s_%.3f.wav" % (os.path.basename(f), s)), out, samplerate)
-	time.sleep(1)
-	
+	time.sleep(2)
+
