@@ -32,9 +32,9 @@ class Linear():
 
 class Sine():
     def __init__(self):
-        self.f = random.random() / 22050
+        self.f = random.random() / 4410
         self.offset = 2 * random.random() * math.pi
-        self.amplitude = 0.5 + (0.5 * random.random())
+        self.amplitude = 0.1 + (0.8 * random.random())
 
     def at(self, i):
         return 1.2 + (self.amplitude * math.sin(self.offset + (i * self.f)))
@@ -71,5 +71,5 @@ while True:
         i += 1
 
     sf.write(os.path.join(outDir, "%s_%s.wav" % (os.path.basename(f), fi.describe())), out, sampleRate)
-    time.sleep(2)
+    time.sleep(10)
 
