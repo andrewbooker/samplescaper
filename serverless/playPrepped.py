@@ -45,6 +45,7 @@ def playOneFrom(poolDir, startedAt, playedDir):
     else:
         sys.stdout.write("%.6f: already stored %s\n\r" % (time.monotonic(), f))
 
+
 def playContinuouslyFrom(shouldStop):
     poolDir = os.path.join(sys.argv[1], "looped")
     print("Playing from", poolDir)
@@ -52,6 +53,7 @@ def playContinuouslyFrom(shouldStop):
     os.mkdir(playedDir)
     startedAt = time.monotonic()
     threads = []
+    start = time.time()
     while not shouldStop.is_set():
         nextSound = threading.Thread(target=playOneFrom, args=(poolDir, startedAt, playedDir), daemon=True)
         nextSound.start()
@@ -63,18 +65,20 @@ def playContinuouslyFrom(shouldStop):
                 threads.remove(t)
 
         time.sleep(random.random() * 10)
+        if (time.time() - start) > (5 * 60):
+            shouldStop.set()
 
     for t in threads:
         t.join()
-
-
-
+    os.system("sudo shutdown now")
 
 
 import threading
 
 class Player():
     def __init__(self):
+        os.system("amixer sset 'Digital' %d%%" % 70)
+        time.sleep(5 * 60)
         pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
         pg.init()
 
