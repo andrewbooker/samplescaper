@@ -124,7 +124,7 @@ class Builder():
 
     def build(self, n):
         frq = freq(n)
-        useGen = random.random() < (1.0 / pow(0.01 * frq, 1.5))
+        useGen = random.random() < (1.0 / pow(0.015 * frq, 1.5))
         fn = "%d_%s_%s.wav" % (n, "ge" if useGen else "si", datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
         waves = assembleWaves(frq, genRandomTemplateFrom(genQuadrants()) if useGen else sineTemplate())
         durSecs = 2 + (5 * random.random())
@@ -160,7 +160,12 @@ import os
 import time
 
 outDir = sys.argv[1]
-notes = [45, 47, 49, 50, 52, 54, 56]
+tonic = 56
+mode = [1, 2, 2, 2, 1, 2, 1]
+notes = [tonic]
+for m in range(len(mode)):
+    notes.append(notes[m] + mode[m])
+
 builder = Builder(outDir)
 
 i = 0

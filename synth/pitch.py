@@ -31,7 +31,7 @@ class Sine():
     def __init__(self):
         self.f = random.random() / 2205
         self.offset = 2 * random.random() * math.pi
-        self.amplitude = 0.05 * random.random()
+        self.amplitude = 0.025 * random.random()
 
     def at(self, i):
         return 1.0 + (self.amplitude * math.sin(self.offset + (i * self.f)))
