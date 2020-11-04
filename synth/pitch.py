@@ -14,10 +14,7 @@ def nextAudioFileFrom(poolDir):
     return os.path.join(poolDir, files[random.randint(0, len(files) - 1)])
     
 def stretch():
-    s = 0.05 + (1.7 * random.random())
-    if s > 0.7 and s < 1.3:
-        return stretch()
-    return s
+    return 0.05 + (0.1 * random.random())
     
 class Linear():
     def __init__(self, dataLength):
@@ -32,12 +29,12 @@ class Linear():
 
 class Sine():
     def __init__(self):
-        self.f = random.random() / 4410
+        self.f = random.random() / 2205
         self.offset = 2 * random.random() * math.pi
-        self.amplitude = 0.1 + (0.8 * random.random())
+        self.amplitude = 0.05 * random.random()
 
     def at(self, i):
-        return 1.2 + (self.amplitude * math.sin(self.offset + (i * self.f)))
+        return 1.0 + (self.amplitude * math.sin(self.offset + (i * self.f)))
 
     def describe(self):
         return "sine_%3f" % self.f
@@ -47,29 +44,32 @@ outDir = sys.argv[2]
 
 while True:
     f = nextAudioFileFrom(inDir)
-    print("using", os.path.basename(f))
-    data, sampleRate = sf.read(f)
+    if f is not None:
+        print("using", os.path.basename(f))
+        data, sampleRate = sf.read(f)
 
-    out = []
-    dataLength = len(data)
-    
-    fi = Linear(dataLength) if random.random() < 0.2 else Sine()
-    print(fi.describe())
-    done = False
-    i = 0
-    while not done:
-        p = i / fi.at(i)
-        p0 = math.floor(p)
-        if p0 >= dataLength or i > (10 * sampleRate):
-            done = True
-        else:
-            p1 = math.ceil(p)
-            if p1 >= dataLength:
-                p1 = p0
-            e = p - p0
-            out.append(((1.0 - e) * data[p0]) + (e * data[p1]))
-        i += 1
+        out = []
+        dataLength = len(data)
+        
+        lin = Linear(dataLength)
+        sin = Sine()
+        print(lin.describe(), sin.describe())
+        pref = "linSine"
+        done = False
+        i = 0
+        while not done:
+            p = i / (lin.at(i) + sin.at(i))
+            p0 = math.floor(p)
+            if p0 >= dataLength or i > (10 * sampleRate):
+                done = True
+            else:
+                p1 = math.ceil(p)
+                if p1 >= dataLength:
+                    p1 = p0
+                e = p - p0
+                out.append(((1.0 - e) * data[p0]) + (e * data[p1]))
+            i += 1
 
-    sf.write(os.path.join(outDir, "%s_%s.wav" % (os.path.basename(f), fi.describe())), out, sampleRate)
+        sf.write(os.path.join(outDir, "%s_%s.wav" % (os.path.basename(f), pref)), out, sampleRate)
     time.sleep(10)
 
