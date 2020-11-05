@@ -47,6 +47,8 @@ def playOneFrom(poolDir, startedAt, playedDir):
 
 
 def playContinuouslyFrom(shouldStop):
+    print("Pausing for 5 mins")
+    time.sleep(5 * 60)
     poolDir = os.path.join(sys.argv[1], "looped")
     print("Playing from", poolDir)
     playedDir = os.path.join(Path(sys.argv[1]).parent, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
@@ -78,7 +80,6 @@ import threading
 class Player():
     def __init__(self):
         os.system("amixer sset 'Digital' %d%%" % 70)
-        time.sleep(5 * 60)
         pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
         pg.init()
 
