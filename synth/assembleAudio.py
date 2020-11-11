@@ -56,12 +56,13 @@ def parseLof(fqfn, substituteDir):
 
 
 inDir = sys.argv[1]
+outFqFn = sys.argv[2]
 files = parseLof(os.path.join(inDir, "inventory.lof"), inDir)
 
 done = (len(files) == 0)
 audioFiles = [AudioFile(f[0], f[1]) for f in files]
 t = 0
-with sf.SoundFile("testmix.wav", "w", samplerate=SAMPLE_RATE, channels=2) as outFile:
+with sf.SoundFile(outFqFn, "w", samplerate=SAMPLE_RATE, channels=2) as outFile:
     started = False
     while not done:
         doneAll = True
