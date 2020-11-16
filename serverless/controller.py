@@ -4,9 +4,6 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import os
 import json
 import re
-import threading
-
-
 from playPrepped import Player
 
 player = Player()
@@ -70,5 +67,27 @@ class Controller(BaseHTTPRequestHandler):
         fn = getattr(self, "_%s" % self.path[1:])()
 
 
-HTTPServer(("0.0.0.0", 9966), Controller).serve_forever()
+def startServer():
+    HTTPServer(("0.0.0.0", 9966), Controller).serve_forever()
+
+import time
+import threading
+
+server = threading.Thread(target=startServer, args=(), daemon=False)
+server.start()
+
+startDelayMins = 1
+playingTimeDelayMins = 1
+print("Server started. Playing starts in %d min(s)" % startDelayMins)
+time.sleep(startDelayMins * 60)
+
+os.system("amixer sset 'Digital' %d%%" % 90)
+player.start()
+print("Player started. Playing stops in %d min(s)" % playingTimeDelayMins)
+time.sleep(playingTimeDelayMins * 60)
+
+print("stopping")
+del player
+#os.system("sudo shutdown now")
+
 

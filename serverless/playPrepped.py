@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import sys
 import random
+import threading
 
 
 def nextAudioFileFrom(poolDir):
@@ -46,9 +47,7 @@ def playOneFrom(poolDir, startedAt, playedDir):
         sys.stdout.write("%.6f: already stored %s\n\r" % (time.monotonic(), f))
 
 
-def playContinuouslyFrom(shouldStop):
-    print("Pausing for 5 mins")
-    time.sleep(5 * 60)
+def playUntil(shouldStop):
     poolDir = os.path.join(sys.argv[1], "looped")
     print("Playing from", poolDir)
     playedDir = os.path.join(Path(sys.argv[1]).parent, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
@@ -67,19 +66,13 @@ def playContinuouslyFrom(shouldStop):
                 threads.remove(t)
 
         time.sleep(random.random() * 10)
-        if (time.time() - start) > (5 * 60):
-            shouldStop.set()
 
     for t in threads:
         t.join()
-    os.system("sudo shutdown now")
 
-
-import threading
 
 class Player():
     def __init__(self):
-        os.system("amixer sset 'Digital' %d%%" % 70)
         pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
         pg.init()
 
@@ -88,7 +81,6 @@ class Player():
 
         self.shouldStop = threading.Event();
         self.thread = None
-        self.resume()
 
     def __del__(self):
         self.pause()
@@ -99,12 +91,15 @@ class Player():
         if self.thread is not None:
             self.thread.join()
 
+    def start(self):
+        self.resume()
+
     def resume(self):
         if not self.shouldStop.is_set() and self.thread is not None:
             return
 
         self.shouldStop.clear()
-        self.thread = threading.Thread(target=playContinuouslyFrom, args=(self.shouldStop,), daemon=True)
+        self.thread = threading.Thread(target=playUntil, args=(self.shouldStop,), daemon=True)
         self.thread.start()
 
 
