@@ -6,6 +6,8 @@ import random
 import datetime
 import shutil
 
+TEMPLATE_LENGTH = 256
+
 def freq(n):
     return math.pow(2, (n - 69)/12.0) * 440
 
@@ -30,15 +32,14 @@ def randomTemplateFrom(quadrants):
     val = 0.0
 
     template = []
-    templateLength = 256
 
-    for i in range(templateLength):
+    for i in range(TEMPLATE_LENGTH):
         quadrant = quadrants[q];
 
         val = anywhereBetween(val, quadrant[1])
         template.append(val)
 
-        qp += 1.0 / templateLength
+        qp += 1.0 / TEMPLATE_LENGTH
         if qp > quadrant[0]:
             val = quadrant[1] 
             q += 1
@@ -48,10 +49,27 @@ def randomTemplateFrom(quadrants):
 
 def sineTemplate():
     template = []
-    templateLength = 256
 
-    for i in range(templateLength):
-        template.append(math.sin(2 * math.pi * i / templateLength))
+    for i in range(TEMPLATE_LENGTH):
+        template.append(math.sin(2 * math.pi * i / TEMPLATE_LENGTH))
+
+    return template
+
+def squareTemplateFrom(quadrants):
+    q = 0
+    qp = 0.0
+    template = []
+
+    for i in range(TEMPLATE_LENGTH):
+        if q < 2:
+            template.append(0.6)
+        else:
+            template.append(-0.6)
+
+        qp += 1.0 / TEMPLATE_LENGTH
+        if qp > quadrants[q][0]:
+            q += 1
+            qp = 0.0
 
     return template
 
@@ -62,14 +80,13 @@ def linearTemplateFrom(quadrants):
     qlp = 0
 
     template = []
-    templateLength = 256
 
-    for i in range(templateLength):
+    for i in range(TEMPLATE_LENGTH):
         quadrant = quadrants[q];
-        ql = quadrant[0] * templateLength
+        ql = quadrant[0] * TEMPLATE_LENGTH
         template.append(val + ((quadrant[1] - val) * (i - qlp) / ql))
 
-        qp += 1.0 / templateLength
+        qp += 1.0 / TEMPLATE_LENGTH
         if qp > quadrant[0]:
             val = quadrant[1]
             q += 1
@@ -85,14 +102,13 @@ def sineTemplateFrom(quadrants):
     qlp = 0
 
     template = []
-    templateLength = 256
 
-    for i in range(templateLength):
+    for i in range(TEMPLATE_LENGTH):
         quadrant = quadrants[q];
-        ql = quadrant[0] * templateLength
+        ql = quadrant[0] * TEMPLATE_LENGTH
         template.append(math.sin((q * 0.5 * math.pi) + (0.5 * math.pi * (i - qlp) / ql)))
 
-        qp += 1.0 / templateLength
+        qp += 1.0 / TEMPLATE_LENGTH
         if qp > quadrant[0]:
             val = quadrant[1]
             q += 1
@@ -165,11 +181,15 @@ def chooseTemplateFrom(frq):
         return ("si", sineTemplate())
 
     quadrants = genQuadrants()
+
     if dice > (0.5 * likelySmallNumber):
         return ("siq", sineTemplateFrom(quadrants))
 
     if dice > (0.25 * likelySmallNumber):
         return ("li", linearTemplateFrom(quadrants))
+
+    if dice > (0.13 * likelySmallNumber):
+        return ("sq", squareTemplateFrom(quadrants))
 
     return ("ge", randomTemplateFrom(quadrants))
 
@@ -190,7 +210,6 @@ class Builder():
         durSecs = 2 + (5 * random.random())
 
         sampleRate = 44100
-        templateLength = 256
 
         denominator = len(waves)
         data = []
