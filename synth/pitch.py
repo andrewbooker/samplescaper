@@ -41,7 +41,7 @@ class Sine():
 
 inDir = sys.argv[1]
 outDir = sys.argv[2]
-xFade = 100
+xFade = 441
 
 while True:
     f = nextAudioFileFrom(inDir)
@@ -71,7 +71,7 @@ while True:
 
         g = 1.0 / xFade
         l = len(out)
-        sample = out[:-xFade] + [(out[-xFade:][s] * (1.0 - (g * s))) + (out[xFade - s - 1] * g * s) for s in range(0, xFade)]
+        sample = out[xFade:-xFade] + [(out[-xFade:][s] * (1.0 - (g * s))) + (out[s] * g * s) for s in range(0, xFade)]
         fn = "%s_%s_%s.wav" % (os.path.basename(f).split(".")[0], lin.describe(), sin.describe())
         print("writing", fn)
         sf.write(os.path.join(outDir, fn), sample, sampleRate)
