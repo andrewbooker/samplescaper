@@ -81,13 +81,11 @@ playingTimeDelayMins = 8
 print("Server started. Playing starts in %d min(s)" % startDelayMins)
 time.sleep(startDelayMins * 60)
 
-os.system("amixer sset 'Digital' %d%%" % 90)
+os.system("amixer sset 'Digital' %d%%" % 85)
 player.start()
 print("Player started. Playing stops in %d min(s)" % playingTimeDelayMins)
 time.sleep(playingTimeDelayMins * 60)
 
 print("stopping")
 del player
-#os.system("sudo shutdown now")
-
-
+os.system("sudo shutdown now")
