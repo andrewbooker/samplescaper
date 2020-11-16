@@ -8,7 +8,7 @@ import math
 import time
 
 def nextAudioFileFrom(poolDir):
-    files = [f for f in filter(lambda f: "wav" in f, os.listdir(poolDir))]
+    files = [f for f in filter(lambda f: ("wav" in f) and ("si" in f), os.listdir(poolDir))]
     if len(files) == 0:
         return None
     return os.path.join(poolDir, files[random.randint(0, len(files) - 1)])
@@ -25,11 +25,11 @@ class Linear():
         return self.intercept + (i * self.gradient)
 
     def describe(self):
-        return "linear_%3f" % (self.intercept + self.gradient)
+        return "lin_%3f" % (self.intercept + self.gradient)
 
 class Sine():
     def __init__(self):
-        self.f = random.random() / 2205
+        self.f = random.random() / 1102.5
         self.offset = 2 * random.random() * math.pi
         self.amplitude = 0.025 * random.random()
 
@@ -37,10 +37,11 @@ class Sine():
         return 1.0 + (self.amplitude * math.sin(self.offset + (i * self.f)))
 
     def describe(self):
-        return "sine_%3f" % self.f
+        return "sin_%3f" % self.f
 
 inDir = sys.argv[1]
 outDir = sys.argv[2]
+xFade = 100
 
 while True:
     f = nextAudioFileFrom(inDir)
@@ -53,8 +54,6 @@ while True:
         
         lin = Linear(dataLength)
         sin = Sine()
-        print(lin.describe(), sin.describe())
-        pref = "linSine"
         done = False
         i = 0
         while not done:
@@ -70,6 +69,11 @@ while True:
                 out.append(((1.0 - e) * data[p0]) + (e * data[p1]))
             i += 1
 
-        sf.write(os.path.join(outDir, "%s_%s.wav" % (os.path.basename(f), pref)), out, sampleRate)
+        g = 1.0 / xFade
+        l = len(out)
+        sample = out[:-xFade] + [(out[-xFade:][s] * (1.0 - (g * s))) + (out[xFade - s - 1] * g * s) for s in range(0, xFade)]
+        fn = "%s_%s_%s.wav" % (os.path.basename(f).split(".")[0], lin.describe(), sin.describe())
+        print("writing", fn)
+        sf.write(os.path.join(outDir, fn), sample, sampleRate)
     time.sleep(10)
 
