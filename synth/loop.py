@@ -27,7 +27,7 @@ class Envelope():
 
 class Pan():
     def __init__(self, sampleRate, numberOfFiles):
-        self.freqHz = 0.5 * (numberOfFiles * 5 * random.random())
+        self.freqHz = 10 * math.log(numberOfFiles + 1) * random.random()
         self.radPerSample = self.freqHz * 2 * math.pi / sampleRate
         self.offset = random.random() * sampleRate / self.freqHz
 
