@@ -76,8 +76,8 @@ import threading
 server = threading.Thread(target=startServer, args=(), daemon=False)
 server.start()
 
-startDelayMins = 1
-playingTimeDelayMins = 1
+startDelayMins = 5
+playingTimeDelayMins = 8
 print("Server started. Playing starts in %d min(s)" % startDelayMins)
 time.sleep(startDelayMins * 60)
 
