@@ -55,6 +55,29 @@ def sineTemplate():
 
     return template
 
+def linearTemplateFrom(quadrants):
+    q = 0
+    qp = 0.0
+    val = 0.0
+    qlp = 0
+
+    template = []
+    templateLength = 256
+
+    for i in range(templateLength):
+        quadrant = quadrants[q];
+        ql = quadrant[0] * templateLength
+        template.append(val + ((quadrant[1] - val) * (i - qlp) / ql))
+
+        qp += 1.0 / templateLength
+        if qp > quadrant[0]:
+            val = quadrant[1]
+            q += 1
+            qp = 0.0
+            qlp += ql
+
+    return template
+
 def sineTemplateFrom(quadrants):
     q = 0
     qp = 0.0
@@ -144,6 +167,9 @@ def chooseTemplateFrom(frq):
     quadrants = genQuadrants()
     if dice > (0.5 * likelySmallNumber):
         return ("siq", sineTemplateFrom(quadrants))
+
+    if dice > (0.25 * likelySmallNumber):
+        return ("li", linearTemplateFrom(quadrants))
 
     return ("ge", randomTemplateFrom(quadrants))
 
