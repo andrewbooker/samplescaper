@@ -47,8 +47,8 @@ def playOneFrom(poolDir, startedAt, playedDir):
         sys.stdout.write("%.6f: already stored %s\n\r" % (time.monotonic(), f))
 
 
-def playUntil(shouldStop):
-    poolDir = os.path.join(sys.argv[1], "looped")
+def playUntil(inDir, shouldStop):
+    poolDir = os.path.join(inDir, "looped")
     print("Playing from", poolDir)
     playedDir = os.path.join(Path(sys.argv[1]).parent, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
     os.mkdir(playedDir)
@@ -72,13 +72,14 @@ def playUntil(shouldStop):
 
 
 class Player():
-    def __init__(self):
+    def __init__(self, inDir, numberOfChannels):
         pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
         pg.init()
 
         random.seed()
-        pg.mixer.set_num_channels(3)
+        pg.mixer.set_num_channels(numberOfChannels)
 
+        self.inDir = inDir
         self.shouldStop = threading.Event();
         self.thread = None
 
@@ -99,7 +100,7 @@ class Player():
             return
 
         self.shouldStop.clear()
-        self.thread = threading.Thread(target=playUntil, args=(self.shouldStop,), daemon=True)
+        self.thread = threading.Thread(target=playUntil, args=(self.inDir, self.shouldStop), daemon=True)
         self.thread.start()
 
 

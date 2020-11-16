@@ -12,5 +12,5 @@ python ~/Documents/samplescaper/synth/synth.py ~/Music/pool 53 &
 python ~/Documents/samplescaper/synth/loop.py ~/Music/pool &
 python ~/Documents/samplescaper/synth/pitch.py ~/Music/samples ~/Music/pool/raw &
 python ~/Documents/samplescaper/synth/recycle.py ~/Music/pool/raw ~/Music/samples &
-python ~/Documents/samplescaper/serverless/controller.py ~/Music/pool &
+python ~/Documents/samplescaper/serverless/controller.py ~/Music/pool 4 &
 ~/Documents/samplescaper/recordAmbient.sh &

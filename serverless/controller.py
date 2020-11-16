@@ -4,9 +4,10 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import os
 import json
 import re
+import sys
 from playPrepped import Player
 
-player = Player()
+player = Player(sys.argv[1], int(sys.argv[2]))
 
 
 class Controller(BaseHTTPRequestHandler):
