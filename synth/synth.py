@@ -239,7 +239,7 @@ import os
 import time
 
 outDir = sys.argv[1]
-tonic = 56
+tonic = int(sys.argv[2])
 mode = [1, 2, 2, 2, 1, 2, 1]
 notes = [tonic]
 for m in range(len(mode)):
