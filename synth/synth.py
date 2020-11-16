@@ -24,7 +24,7 @@ def genQuadrants():
     q.append((r, nodes[-1]))
     return q
 
-def genRandomTemplateFrom(quadrants):
+def randomTemplateFrom(quadrants):
     q = 0
     qp = 0.0
     val = 0.0
@@ -55,6 +55,28 @@ def sineTemplate():
 
     return template
 
+def sineTemplateFrom(quadrants):
+    q = 0
+    qp = 0.0
+    val = 0.0
+    qlp = 0
+
+    template = []
+    templateLength = 256
+
+    for i in range(templateLength):
+        quadrant = quadrants[q];
+        ql = quadrant[0] * templateLength
+        template.append(math.sin((q * 0.5 * math.pi) + (0.5 * math.pi * (i - qlp) / ql)))
+
+        qp += 1.0 / templateLength
+        if qp > quadrant[0]:
+            val = quadrant[1]
+            q += 1
+            qp = 0.0
+            qlp += ql
+
+    return template
 
 class WaveIterator():
     def __init__(self, template, f, vol, sampleRate):
@@ -113,6 +135,18 @@ def assembleWaves(f, template):
 
     return waves
 
+def chooseTemplateFrom(frq):
+    likelySmallNumber = 1.0 / pow(0.015 * frq, 1.5)
+    dice = random.random()
+    if dice > likelySmallNumber:
+        return ("si", sineTemplate())
+
+    quadrants = genQuadrants()
+    if dice > (0.5 * likelySmallNumber):
+        return ("siq", sineTemplateFrom(quadrants))
+
+    return ("ge", randomTemplateFrom(quadrants))
+
 MAX_LIVE_POOL_SIZE = 63
 class Builder():
     def __init__(self, outDir):
@@ -124,9 +158,9 @@ class Builder():
 
     def build(self, n):
         frq = freq(n)
-        useGen = random.random() < (1.0 / pow(0.015 * frq, 1.5))
-        fn = "%d_%s_%s.wav" % (n, "ge" if useGen else "si", datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
-        waves = assembleWaves(frq, genRandomTemplateFrom(genQuadrants()) if useGen else sineTemplate())
+        (pref, template) = chooseTemplateFrom(frq)
+        fn = "%d_%s_%s.wav" % (n, pref, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
+        waves = assembleWaves(frq, template)
         durSecs = 2 + (5 * random.random())
 
         sampleRate = 44100
