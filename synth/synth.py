@@ -7,6 +7,7 @@ import datetime
 import shutil
 
 TEMPLATE_LENGTH = 256
+SAMPLE_RATE = 44100
 
 def freq(n):
     return math.pow(2, (n - 69)/12.0) * 440
@@ -117,11 +118,22 @@ def sineTemplateFrom(quadrants):
 
     return template
 
+class TemplateProvider():
+    def __init__(self, template):
+        self.t = template
+
+    def get(self):
+        return self.t
+
+    def step(self):
+        return None
+
+
 class WaveIterator():
-    def __init__(self, template, f, vol, sampleRate):
+    def __init__(self, template, f, vol):
         self.template = template
-        self.length = len(template)
-        self.stretch = f * self.length / sampleRate
+        self.length = len(template.get())
+        self.stretch = f * self.length / SAMPLE_RATE
         self.pos = 0
         self.vol = vol
     
@@ -130,8 +142,11 @@ class WaveIterator():
         p = ps[0] + (int(ps[1]) % self.length)
         p0 = math.floor(p)
         p1 = (p0 + 1) if p0 < (self.length - 1) else 0
-        v0 = self.template[p0]
-        v1 = self.template[p1]
+        if p1 == 0:
+            self.template.step()
+
+        v0 = self.template.get()[p0]
+        v1 = self.template.get()[p1]
 
         self.pos += 1
         return self.vol * (((p - p0) * v1) + ((p0 + 1 - p) * v0))
@@ -163,14 +178,14 @@ def maxdDetuneCoeffAt(f):
 
 def assembleWaves(f, template):
     waves = []
-    waves.append(WaveIterator(template, f, 0.6 + (0.4 * random.random()), 44100))
+    waves.append(WaveIterator(template, f, 0.6 + (0.4 * random.random())))
 
     for i in range(random.randint(1, 3)):
         r = maxdDetuneCoeffAt(f) * random.random()
         fmUp = f * (1 + r)
         fmDown = f * (1 - r)
-        waves.append(WaveIterator(template, fmUp, 0.6 + (0.4 * random.random()), 44100))
-        waves.append(WaveIterator(template, fmDown, 0.6 + (0.4 * random.random()), 44100))
+        waves.append(WaveIterator(template, fmUp, 0.6 + (0.4 * random.random())))
+        waves.append(WaveIterator(template, fmDown, 0.6 + (0.4 * random.random())))
 
     return waves
 
@@ -206,15 +221,13 @@ class Builder():
         frq = freq(n)
         (pref, template) = chooseTemplateFrom(frq)
         fn = "%d_%s_%s.wav" % (n, pref, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
-        waves = assembleWaves(frq, template)
-        durSecs = 2 + (5 * random.random())
-
-        sampleRate = 44100
+        waves = assembleWaves(frq, TemplateProvider(template))
+        durSecs = 2 + (7 * random.random())
 
         denominator = len(waves)
         data = []
 
-        for i in range(int(sampleRate * durSecs)):
+        for i in range(int(SAMPLE_RATE * durSecs)):
             v = 0.0
             for w in waves:
                 v += w.next()
@@ -223,7 +236,7 @@ class Builder():
 
         print("writing", fn)
         fqfn = os.path.join(self.buildDir, fn)
-        sf.write(fqfn, Loopable(data).create(), sampleRate)
+        sf.write(fqfn, Loopable(data).create(), SAMPLE_RATE)
         print("moving to pool")
         shutil.move(fqfn, self.outDir)
         self.done.append(os.path.join(self.outDir, fn))
