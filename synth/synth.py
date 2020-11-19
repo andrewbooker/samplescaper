@@ -125,16 +125,42 @@ def sineTemplateFrom(quadrants):
 
 class TemplateProvider():
     def __init__(self, templateFunction, quadrants):
-        self.q = quadrants
+        self.sweepSteps = int(1000 * (1.0 + (5 * random.random())))
+        self.pos = 0
+        self.up = True
+        self.endQuadrants = []
+        self.startQuadrants = quadrants
+        self._setEndQuadrants()
         self.tfn = templateFunction
         self.current = []
+        print(self.startQuadrants)
+        print(self.endQuadrants)
         self.step()
+
+    def _setEndQuadrants(self):
+        ql = [q[0] for q in self.startQuadrants]
+        random.shuffle(ql)
+        self.endQuadrants = [(ql[i], self.startQuadrants[i][1]) for i in range(4)]
+        if self.endQuadrants == self.startQuadrants:
+            self._setEndQuadrants()
+
+    def _qvOf(self, i):
+        coeff = self.pos * 1.0 / self.sweepSteps
+        return (self.startQuadrants[i][0] * (1.0 - coeff)) + (self.endQuadrants[i][0] * coeff)
 
     def get(self):
         return self.current
 
     def step(self):
-        self.current = self.tfn(self.q)
+        q = [(self._qvOf(i), self.startQuadrants[i][1]) for i in range(4)]
+        self.current = self.tfn(q)
+
+        if self.pos == self.sweepSteps:
+            self.up = False
+        elif self.pos == 0:
+            self.up = True
+
+        self.pos += 1 if self.up else -1
 
 
 class WaveIterator():
@@ -211,10 +237,12 @@ def chooseTemplateFrom(frq):
     if dice > (0.25 * likelySmallNumber):
         return ("li", TemplateProvider(linearTemplateFrom, quadrants))
 
-    if dice > (0.13 * likelySmallNumber):
+    if dice > (0.0 * likelySmallNumber):
         return ("sq", TemplateProvider(squareTemplateFrom, quadrants))
 
-    return ("ge", TemplateProvider(randomTemplateFrom, quadrants)) # this must work differently, otherwise a new random waveshape will be applied to each cycle
+    # not possible for now
+    # this must work differently, otherwise a new random waveshape will be applied to each cycle
+    return ("ge", TemplateProvider(randomTemplateFrom, quadrants)) 
 
 MAX_LIVE_POOL_SIZE = 63
 class Builder():
@@ -230,7 +258,7 @@ class Builder():
         (pref, templateProvider) = chooseTemplateFrom(frq)
         fn = "%d_%s_%s.wav" % (n, pref, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
         waves = assembleWaves(frq, templateProvider)
-        durSecs = 2 + (7 * random.random())
+        durSecs = 2 + (10 * random.random())
 
         denominator = len(waves)
         data = []
