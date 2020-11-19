@@ -128,21 +128,11 @@ class TemplateProvider():
         self.sweepSteps = int(1000 * (1.0 + (5 * random.random())))
         self.pos = 0
         self.up = True
-        self.endQuadrants = []
         self.startQuadrants = quadrants
-        self._setEndQuadrants()
+        self.endQuadrants = genQuadrants()
         self.tfn = templateFunction
         self.current = []
-        print(self.startQuadrants)
-        print(self.endQuadrants)
         self.step()
-
-    def _setEndQuadrants(self):
-        ql = [q[0] for q in self.startQuadrants]
-        random.shuffle(ql)
-        self.endQuadrants = [(ql[i], self.startQuadrants[i][1]) for i in range(4)]
-        if self.endQuadrants == self.startQuadrants:
-            self._setEndQuadrants()
 
     def _qvOf(self, i):
         coeff = self.pos * 1.0 / self.sweepSteps
