@@ -48,7 +48,7 @@ def randomTemplateFrom(quadrants):
 
     return template
 
-class SineTemplate():
+class PureSineTemplate():
     def __init__(self):
         self.a = []
 
@@ -61,7 +61,7 @@ class SineTemplate():
     def step(self):
         return None
 
-def squareTemplateFrom(quadrants):
+def squareTemplate(quadrants):
     q = 0
     qp = 0.0
     template = []
@@ -79,7 +79,7 @@ def squareTemplateFrom(quadrants):
 
     return template
 
-def linearTemplateFrom(quadrants):
+def linearTemplate(quadrants):
     q = 0
     qp = 0.0
     val = 0.0
@@ -101,7 +101,7 @@ def linearTemplateFrom(quadrants):
 
     return template
 
-def sineTemplateFrom(quadrants):
+def sineTemplate(quadrants):
     q = 0
     qp = 0.0
     val = 0.0
@@ -124,11 +124,11 @@ def sineTemplateFrom(quadrants):
     return template
 
 class TemplateProvider():
-    def __init__(self, templateFunction, quadrants):
+    def __init__(self, templateFunction):
         self.sweepSteps = int(1000 * (1.0 + (5 * random.random())))
         self.pos = 0
         self.up = True
-        self.startQuadrants = quadrants
+        self.startQuadrants = genQuadrants()
         self.endQuadrants = genQuadrants()
         self.tfn = templateFunction
         self.current = []
@@ -154,7 +154,8 @@ class TemplateProvider():
 
 
 class WaveIterator():
-    def __init__(self, template, f, vol):
+    def __init__(self, template, f, vol, isCentreFreq):
+        self.isCentreFreq = isCentreFreq
         self.template = template
         self.length = len(template.get())
         self.stretch = f * self.length / SAMPLE_RATE
@@ -166,8 +167,8 @@ class WaveIterator():
         p = ps[0] + (int(ps[1]) % self.length)
         p0 = math.floor(p)
         p1 = (p0 + 1) if p0 < (self.length - 1) else 0
-        if p1 == 0:
-            self.template.step() # only do this on the master, and maybe make the step freq depenedent
+        if p1 == 0 and self.isCentreFreq:
+            self.template.step()
 
         v0 = self.template.get()[p0]
         v1 = self.template.get()[p1]
@@ -202,14 +203,14 @@ def maxdDetuneCoeffAt(f):
 
 def assembleWaves(f, template):
     waves = []
-    waves.append(WaveIterator(template, f, 0.6 + (0.4 * random.random())))
+    waves.append(WaveIterator(template, f, 0.6 + (0.4 * random.random()), True))
 
     for i in range(random.randint(1, 3)):
         r = maxdDetuneCoeffAt(f) * random.random()
         fmUp = f * (1 + r)
         fmDown = f * (1 - r)
-        waves.append(WaveIterator(template, fmUp, 0.6 + (0.4 * random.random())))
-        waves.append(WaveIterator(template, fmDown, 0.6 + (0.4 * random.random())))
+        waves.append(WaveIterator(template, fmUp, 0.6 + (0.4 * random.random()), False))
+        waves.append(WaveIterator(template, fmDown, 0.6 + (0.4 * random.random()), False))
 
     return waves
 
@@ -217,18 +218,13 @@ def chooseTemplateFrom(frq):
     likelySmallNumber = 1.0 / pow(0.015 * frq, 1.5)
     dice = random.random()
     if dice > likelySmallNumber:
-        return ("si", SineTemplate())
-
-    quadrants = genQuadrants()
+        return ("si", PureSineTemplate()) if dice > 0.5 else ("siq", TemplateProvider(sineTemplate))
 
     if dice > (0.5 * likelySmallNumber):
-        return ("siq", TemplateProvider(sineTemplateFrom, quadrants))
-
-    if dice > (0.25 * likelySmallNumber):
-        return ("li", TemplateProvider(linearTemplateFrom, quadrants))
+        return ("li", TemplateProvider(linearTemplate))
 
     if dice > (0.0 * likelySmallNumber):
-        return ("sq", TemplateProvider(squareTemplateFrom, quadrants))
+        return ("sq", TemplateProvider(squareTemplate))
 
     # not possible for now
     # this must work differently, otherwise a new random waveshape will be applied to each cycle
