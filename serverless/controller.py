@@ -78,11 +78,11 @@ server = threading.Thread(target=startServer, args=(), daemon=False)
 server.start()
 
 startDelayMins = 5
-playingTimeDelayMins = 8
+playingTimeDelayMins = 7
 print("Server started. Playing starts in %d min(s)" % startDelayMins)
 time.sleep(startDelayMins * 60)
 
-os.system("amixer sset 'Digital' %d%%" % 85)
+os.system("amixer sset 'Digital' %d%%" % 75)
 player.start()
 print("Player started. Playing stops in %d min(s)" % playingTimeDelayMins)
 time.sleep(playingTimeDelayMins * 60)
