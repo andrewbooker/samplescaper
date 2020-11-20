@@ -10,7 +10,5 @@ mkdir -p ~/Music/pool/looped
 
 python ~/Documents/samplescaper/synth/synth.py ~/Music/pool 46 &
 python ~/Documents/samplescaper/synth/loop.py ~/Music/pool &
-python ~/Documents/samplescaper/synth/pitch.py ~/Music/samples ~/Music/pool/raw &
-python ~/Documents/samplescaper/synth/recycle.py ~/Music/pool/raw ~/Music/samples &
-python ~/Documents/samplescaper/serverless/controller.py ~/Music/pool 4 &
+python ~/Documents/samplescaper/serverless/controller.py ~/Music/pool 3 &
 ~/Documents/samplescaper/recordAmbient.sh &
