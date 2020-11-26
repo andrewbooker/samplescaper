@@ -56,27 +56,32 @@ def parseLof(fqfn, substituteDir):
 
 
 inDir = sys.argv[1]
-outFqFn = sys.argv[2]
+outDir = sys.argv[2]
 files = parseLof(os.path.join(inDir, "inventory.lof"), inDir)
 
 done = (len(files) == 0)
 audioFiles = [AudioFile(f[0], f[1]) for f in files]
 t = 0
-with sf.SoundFile(outFqFn, "w", samplerate=SAMPLE_RATE, channels=2) as outFile:
-    started = False
-    while not done:
-        doneAll = True
-        b = [[0.0,0.0]] * SAMPLE_RATE
-        for f in audioFiles:
-            if not f.done:
-                doneAll = False
-                if f.occursInBlockStarting(t):
-                    started = True
-                    b = merge(f.nextBlock(t), b)
+outFileL = sf.SoundFile(os.path.join(outDir, "mixdownL.wav"), "w", samplerate=SAMPLE_RATE, channels=1)
+outFileR = sf.SoundFile(os.path.join(outDir, "mixdownR.wav"), "w", samplerate=SAMPLE_RATE, channels=1)
+started = False
+while not done:
+    doneAll = True
+    b = [[0.0,0.0]] * SAMPLE_RATE
+    for f in audioFiles:
+        if not f.done:
+            doneAll = False
+            if f.occursInBlockStarting(t):
+                started = True
+                b = merge(f.nextBlock(t), b)
 
-        outFile.write(b)
-        t += 1
-        done = started and doneAll
+    outFileL.write([s[0] for s in b])
+    outFileR.write([s[1] for s in b])
+    t += 1
+    done = started and doneAll
+
+outFileL.close()
+outFileR.close()
 
 for a in audioFiles:
     del a
