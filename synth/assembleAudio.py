@@ -40,8 +40,11 @@ class AudioFile():
 
             return d
 
+def limitSum(s1, s2):
+    return min(0.99, 0.98 * (s1 + s2))
+
 def merge(b1, b2):
-    return [[b1[i][0] + b2[i][0], b1[i][1] + b2[i][1]] for i in range(len(b1))]
+    return [[limitSum(b1[i][0], b2[i][0]), limitSum(b1[i][1], b2[i][1])] for i in range(len(b1))]
 
 
 def parseLof(fqfn, substituteDir):
@@ -56,14 +59,18 @@ def parseLof(fqfn, substituteDir):
 
 
 inDir = sys.argv[1]
-outDir = sys.argv[2]
+spl = os.path.split(os.path.join(inDir, "."))[0]
+
+outBase = os.path.basename(spl)
+outDir = os.path.dirname(spl)
+print("writing mixdown_%s_(L|R).wav" % outBase, "to", outDir)
 files = parseLof(os.path.join(inDir, "inventory.lof"), inDir)
 
 done = (len(files) == 0)
 audioFiles = [AudioFile(f[0], f[1]) for f in files]
 t = 0
-outFileL = sf.SoundFile(os.path.join(outDir, "mixdownL.wav"), "w", samplerate=SAMPLE_RATE, channels=1)
-outFileR = sf.SoundFile(os.path.join(outDir, "mixdownR.wav"), "w", samplerate=SAMPLE_RATE, channels=1)
+outFileL = sf.SoundFile(os.path.join(outDir, "mixdown_%s_L.wav" % outBase), "w", samplerate=SAMPLE_RATE, channels=1)
+outFileR = sf.SoundFile(os.path.join(outDir, "mixdown_%s_R.wav" % outBase), "w", samplerate=SAMPLE_RATE, channels=1)
 started = False
 while not done:
     doneAll = True
