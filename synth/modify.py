@@ -89,5 +89,10 @@ while True:
         fn = "%s_%s.wav" % (os.path.basename(f).split(".")[0], effect.describe())
         print("writing", fn)
         sf.write(os.path.join(outDir, fn), sample, sampleRate)
+
+    if len(os.listdir(inDir)) > 30:
+        print("dropping", f)
+        os.remove(f)
+
     time.sleep(10)
 
