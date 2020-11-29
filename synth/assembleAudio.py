@@ -40,11 +40,17 @@ class AudioFile():
 
             return d
 
-def limitSum(s1, s2):
-    return min(0.99, 0.98 * (s1 + s2))
+def limit(s):
+    threshold = 0.8
+    assumedMax = max(1.5, s)
+    if abs(s) < threshold:
+        return s
+
+    r = threshold + ((abs(s) - threshold) * (1.0 - threshold) / (assumedMax - threshold))
+    return -r if s < 0 else r
 
 def merge(b1, b2):
-    return [[limitSum(b1[i][0], b2[i][0]), limitSum(b1[i][1], b2[i][1])] for i in range(len(b1))]
+    return [[limit(b1[i][0] + b2[i][0]), limit(b1[i][1] + b2[i][1])] for i in range(len(b1))]
 
 
 def parseLof(fqfn, substituteDir):
