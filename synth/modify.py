@@ -39,17 +39,18 @@ class Sine():
     def describe(self):
         return "sin_%3f" % self.f
 
-class Pitch():
+class Effect():
     def __init__(self):
         self.description = ""
 
     def describe(self):
         return self.description
 
+class Pitch(Effect):
     def appliedTo(self, data, sampleRate):
         out = []
         dataLength = len(data)
-        
+
         lin = Linear(dataLength)
         sin = Sine()
         self.description = "%s_%s" % (lin.describe(), sin.describe())
@@ -67,7 +68,15 @@ class Pitch():
                 e = p - p0
                 out.append(((1.0 - e) * data[p0]) + (e * data[p1]))
             i += 1
-    
+
+        return out
+
+class Multiply(Effect):
+    def appliedTo(self, data, sampleRate):
+        out = []
+        self.description = "multiply"
+        for d in data:
+            out.append(d * abs(d))
         return out
 
 inDir = sys.argv[1]
@@ -80,7 +89,7 @@ while True:
         print("using", os.path.basename(f))
         data, sampleRate = sf.read(f)
 
-        effect = Pitch()
+        effect = Multiply()
         out = effect.appliedTo(data, sampleRate)
 
         g = 1.0 / xFade
