@@ -39,21 +39,20 @@ class Sine():
     def describe(self):
         return "sin_%3f" % self.f
 
-inDir = sys.argv[1]
-outDir = sys.argv[2]
-xFade = 441
+class Pitch():
+    def __init__(self):
+        self.description = ""
 
-while True:
-    f = nextAudioFileFrom(inDir)
-    if f is not None:
-        print("using", os.path.basename(f))
-        data, sampleRate = sf.read(f)
+    def describe(self):
+        return self.description
 
+    def appliedTo(self, data, sampleRate):
         out = []
         dataLength = len(data)
         
         lin = Linear(dataLength)
         sin = Sine()
+        self.description = "%s_%s" % (lin.describe(), sin.describe())
         done = False
         i = 0
         while not done:
@@ -68,11 +67,26 @@ while True:
                 e = p - p0
                 out.append(((1.0 - e) * data[p0]) + (e * data[p1]))
             i += 1
+    
+        return out
+
+inDir = sys.argv[1]
+outDir = sys.argv[2]
+xFade = 441
+
+while True:
+    f = nextAudioFileFrom(inDir)
+    if f is not None:
+        print("using", os.path.basename(f))
+        data, sampleRate = sf.read(f)
+
+        effect = Pitch()
+        out = effect.appliedTo(data, sampleRate)
 
         g = 1.0 / xFade
         l = len(out)
         sample = out[xFade:-xFade] + [(out[-xFade:][s] * (1.0 - (g * s))) + (out[s] * g * s) for s in range(0, xFade)]
-        fn = "%s_%s_%s.wav" % (os.path.basename(f).split(".")[0], lin.describe(), sin.describe())
+        fn = "%s_%s.wav" % (os.path.basename(f).split(".")[0], effect.describe())
         print("writing", fn)
         sf.write(os.path.join(outDir, fn), sample, sampleRate)
     time.sleep(10)
