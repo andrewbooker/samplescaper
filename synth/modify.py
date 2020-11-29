@@ -14,24 +14,29 @@ def nextAudioFileFrom(poolDir):
     return os.path.join(poolDir, files[random.randint(0, len(files) - 1)])
     
 def stretch():
-    return 0.05 + (0.1 * random.random())
+    return 0.05 + (0.1 * (random.random() - 0.5))
     
 class Linear():
-    def __init__(self, dataLength):
-        self.intercept = stretch()
-        self.gradient = (stretch() - self.intercept) / dataLength
+    def __init__(self):
+        self.start = stretch()
+        self.end = stretch()
+        self.gradient = 0
+
+    def over(self, dataLength):
+        self.gradient = (self.end - self.start) / dataLength
+        return self
 
     def at(self, i):
-        return self.intercept + (i * self.gradient)
+        return self.start + (i * self.gradient)
 
     def describe(self):
-        return "lin_%3f" % (self.intercept + self.gradient)
+        return "lin_%3f" % (self.start + self.gradient)
 
 class Sine():
     def __init__(self):
         self.f = random.random() / 1102.5
         self.offset = 2 * random.random() * math.pi
-        self.amplitude = 0.025 * random.random()
+        self.amplitude = 0.008 * random.random()
 
     def at(self, i):
         return 1.0 + (self.amplitude * math.sin(self.offset + (i * self.f)))
@@ -51,13 +56,12 @@ class Pitch(Effect):
         out = []
         dataLength = len(data)
 
-        lin = Linear(dataLength)
-        sin = Sine()
-        self.description = "%s_%s" % (lin.describe(), sin.describe())
+        mod = [Linear().over(dataLength), Sine()]
+        self.description = "_".join([m.describe() for m in mod])
         done = False
         i = 0
         while not done:
-            p = i / (lin.at(i) + sin.at(i))
+            p = i / sum([m.at(i) for m in mod])
             p0 = math.floor(p)
             if p0 >= dataLength or i > (10 * sampleRate):
                 done = True
@@ -111,7 +115,7 @@ while True:
         print("using", os.path.basename(f))
         data, sampleRate = sf.read(f)
 
-        effect = Multiply(f)
+        effect = Multiply(f) if random.random() > 0.5 else Pitch()
         out = effect.appliedTo(data, sampleRate)
 
         g = 1.0 / xFade
