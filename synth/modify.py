@@ -72,11 +72,33 @@ class Pitch(Effect):
         return out
 
 class Multiply(Effect):
+    def __init__(self, fn):
+        self.other = []
+        self.otherFn = ""
+
+        poolDir = os.path.dirname(fn)
+        spl = os.path.basename(fn).split("_")
+        note = None
+        if len(spl) > 1 and spl[0].isnumeric():
+            note = int(spl[0])
+        files = [f for f in filter(lambda f: f not in fn and (f.startswith(str(note)) or f.startswith(str(note + 12)) or f.startswith(str(note - 12))), os.listdir(poolDir))]
+
+        if len(files) > 0:
+            self.otherFn = files[random.randint(0, len(files) - 1)]
+            self.other = sf.read(os.path.join(poolDir, self.otherFn))[0]
+            print("multiplying with", self.otherFn)
+
     def appliedTo(self, data, sampleRate):
         out = []
-        self.description = "multiply"
-        for d in data:
-            out.append(d * abs(d))
+        desc = ["multiply"]
+        o = len(self.other)
+        if o > 0:
+            desc.append(self.otherFn)
+        self.description = "_".join(desc)
+        ld = min(len(data), len(self.other)) if o > 0 else len(data)
+        for d in range(ld):
+            m = abs(self.other[d]) if o > 0 else data[d]
+            out.append(data[d] * m)
         return out
 
 inDir = sys.argv[1]
@@ -89,7 +111,7 @@ while True:
         print("using", os.path.basename(f))
         data, sampleRate = sf.read(f)
 
-        effect = Multiply()
+        effect = Multiply(f)
         out = effect.appliedTo(data, sampleRate)
 
         g = 1.0 / xFade
