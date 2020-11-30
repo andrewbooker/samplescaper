@@ -7,7 +7,10 @@ import re
 import sys
 from playPrepped import Player
 
-player = Player(sys.argv[1], int(sys.argv[2]))
+players = int(sys.argv[2]) if len(sys.argv) > 2 else 3
+startDelayMins = int(sys.argv[3]) if len(sys.argv) > 3 else 5
+playingTimeDelayMins = int(sys.argv[4]) if len(sys.argv) > 4 else 5
+player = Player(sys.argv[1], players)
 
 
 class Controller(BaseHTTPRequestHandler):
@@ -77,8 +80,6 @@ import threading
 server = threading.Thread(target=startServer, args=(), daemon=False)
 server.start()
 
-startDelayMins = 5
-playingTimeDelayMins = 7
 print("Server started. Playing starts in %d min(s)" % startDelayMins)
 time.sleep(startDelayMins * 60)
 
