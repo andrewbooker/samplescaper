@@ -94,11 +94,8 @@ class Multiply(Effect):
 
     def appliedTo(self, data, sampleRate):
         out = []
-        desc = ["multiply"]
         o = len(self.other)
-        if o > 0:
-            desc.append(self.otherFn)
-        self.description = "_".join(desc)
+        self.description = "multiply"
         ld = min(len(data), len(self.other)) if o > 0 else len(data)
         for d in range(ld):
             m = abs(self.other[d]) if o > 0 else data[d]
@@ -115,7 +112,7 @@ while True:
         print("using", os.path.basename(f))
         data, sampleRate = sf.read(f)
 
-        effect = Multiply(f) if random.random() > 0.5 else Pitch()
+        effect = Multiply(f)# if random.random() > 0.5 else Pitch()
         out = effect.appliedTo(data, sampleRate)
 
         g = 1.0 / xFade
