@@ -10,7 +10,7 @@ from playPrepped import Player
 def config(item):
     with open(sys.argv[2]) as conf:
         c = json.load(conf)
-        ret conf[item]
+        return c[item]
 
 player = Player(sys.argv[1], int(config("numberOfChannels")))
 
