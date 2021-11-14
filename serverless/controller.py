@@ -7,10 +7,12 @@ import re
 import sys
 from playPrepped import Player
 
-players = int(sys.argv[2]) if len(sys.argv) > 2 else 3
-startDelayMins = int(sys.argv[3]) if len(sys.argv) > 3 else 5
-playingTimeDelayMins = int(sys.argv[4]) if len(sys.argv) > 4 else 5
-player = Player(sys.argv[1], players)
+def config(item):
+    with open(sys.argv[2]) as conf:
+        c = json.load(conf)
+        ret conf[item]
+
+player = Player(sys.argv[1], int(config("numberOfChannels")))
 
 
 class Controller(BaseHTTPRequestHandler):
@@ -80,14 +82,19 @@ import threading
 server = threading.Thread(target=startServer, args=(), daemon=False)
 server.start()
 
+startDelayMins = int(config("startDelayMins"))
 print("Server started. Playing starts in %d min(s)" % startDelayMins)
 time.sleep(startDelayMins * 60)
 
 os.system("amixer sset 'Digital' %d%%" % 75)
 player.start()
-print("Player started. Playing stops in %d min(s)" % playingTimeDelayMins)
-time.sleep(playingTimeDelayMins * 60)
+playingTimeMins = int(config("playingTimeMins"))
+print("Player started. Playing stops in %d min(s)" % playingTimeMins)
+time.sleep(playingTimeMins * 60)
 
 print("stopping")
 del player
-os.system("sudo shutdown now")
+shutdownDelayMins = int(config("shutdownDelayMins"))
+if shutdownDelayMins > 0:
+    time.sleep(shutdownDelayMins * 60)
+    os.system("sudo shutdown now")
