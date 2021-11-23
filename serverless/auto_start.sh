@@ -14,4 +14,4 @@ python ~/Documents/rotation/motor.py 46 &
 python ~/Documents/samplescaper/synth/synth.py ~/Music/pool 46 &
 python ~/Documents/samplescaper/synth/loop.py ~/Music/pool &
 python ~/Documents/samplescaper/serverless/controller.py ~/Music/pool ~/Documents/samplescaper/serverless/config.json &
-~/Documents/samplescaper/recordAmbient.sh &
+~/Documents/samplescaper/record/ambient.sh &
