@@ -275,7 +275,7 @@ import time
 
 outDir = sys.argv[1]
 tonic = int(sys.argv[2])
-mode = [1, 2, 2, 2, 1, 2, 1]
+mode = [2, 1, 2, 2, 1, 2, 2]
 notes = [tonic]
 for m in range(len(mode)):
     notes.append(notes[m] + mode[m])
