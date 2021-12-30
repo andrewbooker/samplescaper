@@ -7,6 +7,7 @@ then
     do
         ~/Documents/samplescaper/record/assembleAudio.py ~/Music/$f
 	zip -9 -r archives/$f.zip $f
+	rm -rf $f
     done
     exit
 fi
