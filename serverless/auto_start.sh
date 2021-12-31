@@ -21,7 +21,7 @@ mkdir -p ~/Music/pool/factory
 mkdir -p ~/Music/pool/raw
 mkdir -p ~/Music/pool/looped
 
-tonic=48
+tonic=59
 
 #python ~/Documents/samplescaper/synth/modify.py ~/Music/samples ~/Music/pool/raw &
 #python ~/Documents/samplescaper/synth/recycle.py ~/Music/pool/raw ~/Music/samples &

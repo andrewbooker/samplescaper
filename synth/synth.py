@@ -275,7 +275,7 @@ import time
 
 outDir = sys.argv[1]
 tonic = int(sys.argv[2])
-mode = [2, 1, 2, 2, 1, 2, 2]
+mode = [2, 2, 1, 2, 2, 1]
 notes = [tonic]
 for m in range(len(mode)):
     notes.append(notes[m] + mode[m])
@@ -283,15 +283,17 @@ for m in range(len(mode)):
 builder = Builder(outDir)
 
 i = 0
+octave = 0
 start = time.time()
 while True:
     n = notes[i]
-    builder.build(n)
-    builder.build(n + 12)
-    builder.build(n + 24)
+    builder.build(n + (octave * 12))
     i += 1
     if i == len(notes):
         i = 0
+        octave += 1
+        if octave > 2:
+            octave = -1
 
     while (time.time() - start) < 20:
         time.sleep(1)
