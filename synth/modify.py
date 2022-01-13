@@ -18,16 +18,26 @@ def stretch():
     
 class Linear():
     def __init__(self):
-        self.start = 0
-        self.end = 2.0 if random.random() > 0.5 else 0.5
+        self.start = 1.0
+        self.end = 2.0 if random.random() > 0.8 else 0.5
         self.gradient = 0
+        self.bufferStart = 0.1 + (0.3 * random.random())
+        self.bufferEnd = 0.1 + (0.3 * random.random())
+        self.startAt = 0
 
     def over(self, dataLength):
-        self.gradient = (self.end - self.start) / dataLength
+        self.startAt = dataLength * self.bufferStart
+        dl = dataLength * (1 - (self.bufferStart + self.bufferEnd))
+        self.gradient = (self.end - self.start) / dl
         return self
 
     def at(self, i):
-        return self.start + (i * self.gradient)
+        if i < self.startAt:
+            return self.start
+        v = self.start + ((i - self.startAt) * self.gradient)
+        if (self.end > self.start and v > self.end) or (self.end < self.start and v < self.end):
+           return self.end
+        return v
 
     def describe(self):
         return "lin_%3f" % (self.start + self.gradient)
@@ -55,13 +65,14 @@ class Pitch(Effect):
     def appliedTo(self, data, sampleRate):
         out = []
         dataLength = len(data)
+        eff = Linear().over(dataLength)
 
-        mod = [Linear().over(dataLength)]
-        self.description = "_".join([m.describe() for m in mod])
+        self.description = eff.describe()
         done = False
         i = 0
+        p = 0
         while not done:
-            p = i / sum([m.at(i) for m in mod])
+            p += eff.at(i)
             p0 = math.floor(p)
             if p0 >= dataLength or i > (10 * sampleRate):
                 done = True
@@ -119,8 +130,8 @@ while True:
         l = len(out)
         sample = out[xFade:-xFade] + [(out[-xFade:][s] * (1.0 - (g * s))) + (out[s] * g * s) for s in range(0, xFade)]
         fn = "%s_%s.wav" % (os.path.basename(f).split(".")[0], effect.describe())
-        print("writing", fn)
         sf.write(os.path.join(outDir, fn), sample, sampleRate)
+        print("written", fn)
 
     if len(os.listdir(inDir)) > 30:
         print("dropping", f)
