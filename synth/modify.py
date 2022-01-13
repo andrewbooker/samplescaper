@@ -18,8 +18,8 @@ def stretch():
     
 class Linear():
     def __init__(self):
-        self.start = stretch()
-        self.end = stretch()
+        self.start = 0
+        self.end = 2.0 if random.random() > 0.5 else 0.5
         self.gradient = 0
 
     def over(self, dataLength):
@@ -56,7 +56,7 @@ class Pitch(Effect):
         out = []
         dataLength = len(data)
 
-        mod = [Linear().over(dataLength), Sine()]
+        mod = [Linear().over(dataLength)]
         self.description = "_".join([m.describe() for m in mod])
         done = False
         i = 0
@@ -112,7 +112,7 @@ while True:
         print("using", os.path.basename(f))
         data, sampleRate = sf.read(f)
 
-        effect = Multiply(f)# if random.random() > 0.5 else Pitch()
+        effect = Pitch()
         out = effect.appliedTo(data, sampleRate)
 
         g = 1.0 / xFade
