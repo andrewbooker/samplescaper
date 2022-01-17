@@ -1,6 +1,6 @@
 {
     "numberOfChannels": 3,
-    "startDelayMins": 3,
+    "startDelayMins": 6,
     "playingTimeMins": 6,
     "shutdownDelayMins": 1
 }
