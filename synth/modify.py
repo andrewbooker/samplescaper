@@ -22,7 +22,8 @@ class Linear():
         self.end = 2.0 if random.random() > 0.7 else 0.5
         self.gradient = 0
         self.bufferStart = 0.1 + (0.3 * random.random())
-        self.bufferEnd = 0.1 + (0.3 * random.random())
+        rampLength = 0.05 + (0.5 * random.random())
+        self.bufferEnd = 1.0 - self.bufferStart - rampLength
         self.startAt = 0
 
     def over(self, dataLength):
