@@ -20,4 +20,4 @@ while True:
     if f is not None:
         print("copying", f, "to", outDir)
         os.system("cp %s %s" % (f, outDir))
-        time.sleep(10)
+        time.sleep(20)
