@@ -16,15 +16,22 @@ def nextAudioFileFrom(poolDir):
 def stretch():
     return 0.05 + (0.1 * (random.random() - 0.5))
     
+def noteFrom(fn):
+    spl = fn.split("_")
+    if spl[0].isdigit():
+        return int(spl[0])
+    return int(spl[1])
+
+
 class Linear():
     def __init__(self, note):
         self.start = 1.0
-        down = random.random() > 0.5 and note > 57
-        maxRampTime = 0.5 if down else 0.1
-        self.end = 2.0 if down else 0.5
+        down = random.random() > 0.6 and note > 67
+        maxRampTime = 0.3 if down else 0.1
+        self.end = 0.5 if down else 2.0
         self.gradient = 0
         self.bufferStart = 0.1 + (0.3 * random.random())
-        rampLength = 0.05 + (maxRampTime * random.random())
+        rampLength = 0.01 + (maxRampTime * random.random())
         self.bufferEnd = 1.0 - self.bufferStart - rampLength
         self.startAt = 0
 
@@ -66,7 +73,7 @@ class Effect():
 
 class Pitch(Effect):
     def __init__(self, fn):
-        self.note = int(fn.split("_")[0])
+        self.note = noteFrom(fn)
 
     def appliedTo(self, data, sampleRate):
         out = []
