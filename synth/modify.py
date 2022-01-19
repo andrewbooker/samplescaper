@@ -17,12 +17,14 @@ def stretch():
     return 0.05 + (0.1 * (random.random() - 0.5))
     
 class Linear():
-    def __init__(self):
+    def __init__(self, note):
         self.start = 1.0
-        self.end = 2.0 if random.random() > 0.7 else 0.5
+        down = random.random() > 0.7 and note > 57
+        maxRampTime = 0.5 if down else 0.2
+        self.end = 2.0 if down else 0.5
         self.gradient = 0
         self.bufferStart = 0.1 + (0.3 * random.random())
-        rampLength = 0.05 + (0.5 * random.random())
+        rampLength = 0.05 + (maxRampTime * random.random())
         self.bufferEnd = 1.0 - self.bufferStart - rampLength
         self.startAt = 0
 
@@ -63,10 +65,13 @@ class Effect():
         return self.description
 
 class Pitch(Effect):
+    def __init__(self, fn):
+        self.note = int(fn.split("_")[0])
+
     def appliedTo(self, data, sampleRate):
         out = []
         dataLength = len(data)
-        eff = Linear().over(dataLength)
+        eff = Linear(self.note).over(dataLength)
 
         self.description = eff.describe()
         done = False
@@ -124,7 +129,7 @@ while True:
         print("using", os.path.basename(f))
         data, sampleRate = sf.read(f)
 
-        effect = Pitch()
+        effect = Pitch(os.path.basename(f))
         out = effect.appliedTo(data, sampleRate)
 
         g = 1.0 / xFade
