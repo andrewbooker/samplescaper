@@ -19,8 +19,8 @@ def stretch():
 class Linear():
     def __init__(self, note):
         self.start = 1.0
-        down = random.random() > 0.7 and note > 57
-        maxRampTime = 0.5 if down else 0.2
+        down = random.random() > 0.5 and note > 57
+        maxRampTime = 0.5 if down else 0.1
         self.end = 2.0 if down else 0.5
         self.gradient = 0
         self.bufferStart = 0.1 + (0.3 * random.random())
