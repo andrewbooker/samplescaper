@@ -13,5 +13,5 @@ then
 fi
 
 ~/Documents/samplescaper/record/ambient.sh &
-python ~/Documents/rotation/motor.py &
+python ~/Documents/rotation/motor.py ~/Documents/config.json &
 ~/Documents/samplescaper/serverless/start.sh
