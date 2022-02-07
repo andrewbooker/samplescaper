@@ -40,7 +40,8 @@ class AudioFile():
 
             return d
 
-def limit(s):
+def limit(sa):
+    s = 0.8 * sa
     threshold = 0.8
     assumedMax = max(1.5, s)
     if abs(s) < threshold:
