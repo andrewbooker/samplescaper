@@ -5,6 +5,7 @@ import soundfile as sf
 import random
 import datetime
 import shutil
+import json
 
 TEMPLATE_LENGTH = 256
 SAMPLE_RATE = 44100
@@ -273,9 +274,14 @@ import sys
 import os
 import time
 
+def config():
+    with open(sys.argv[2]) as conf:
+        return json.load(conf)
+
 outDir = sys.argv[1]
-tonic = int(sys.argv[2])
-mode = [2, 2, 1, 2, 2, 1]
+conf = config()
+tonic = conf["tonic"]
+mode = conf["mode"]
 notes = [tonic]
 for m in range(len(mode)):
     notes.append(notes[m] + mode[m])

@@ -12,7 +12,7 @@ def config(item):
         c = json.load(conf)
         return c[item]
 
-player = Player(sys.argv[1], int(config("numberOfChannels")))
+player = Player(sys.argv[1], 3)
 
 
 class Controller(BaseHTTPRequestHandler):

@@ -1,0 +1,7 @@
+{
+    "tonic": 63,
+    "mode": [2, 2, 1, 2, 2, 1],
+    "startDelayMins": 6,
+    "playingTimeMins": 5,
+    "shutdownDelayMins": 1
+}
