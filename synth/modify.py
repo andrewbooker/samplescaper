@@ -6,6 +6,8 @@ import os
 import random
 import math
 import time
+import json
+
 
 def nextAudioFileFrom(poolDir):
     files = [f for f in filter(lambda f: ("wav" in f) and ("si" in f), os.listdir(poolDir))]
@@ -22,13 +24,33 @@ def noteFrom(fn):
         return int(spl[0])
     return int(spl[1])
 
+def freq(n):
+    return math.pow(2, (n - 69)/12.0) * 440
+
+def anyIn(a, excluding):
+    i = random.randint(0, len(a) - 1)
+    n = a[i]
+    if n == excluding:
+        return anyIn(a, excluding)
+    return n
+
 
 class Linear():
-    def __init__(self, note):
-        self.start = 1.0
-        down = random.random() > 0.6 and note > 67
-        maxRampTime = 0.3 if down else 0.1
-        self.end = 0.5 if down else 2.0
+    def __init__(self, note, noteRange):
+        octave = note in [tonic, tonic + 12] or random.random() > 0.9
+        maxRampTime = 0.3
+        self.start = 1
+        if octave:
+            down = random.random() > 0.6 and note > 67
+            if down:
+                maxRampTime = 0.1
+            self.end = 0.5 if down else 2.0
+        else:
+            to = anyIn(noteRange, note)
+            print("from", note, "to", to)
+            self.end = freq(to) / freq(note)
+            print(self.end)
+
         self.gradient = 0
         self.bufferStart = 0.1 + (0.3 * random.random())
         rampLength = 0.01 + (maxRampTime * random.random())
@@ -50,7 +72,7 @@ class Linear():
         return v
 
     def describe(self):
-        return "lin_%3f" % (self.start + self.gradient)
+        return ("lin_%3f" % (self.end)).replace(".", "_")
 
 class Sine():
     def __init__(self):
@@ -72,13 +94,14 @@ class Effect():
         return self.description
 
 class Pitch(Effect):
-    def __init__(self, fn):
+    def __init__(self, fn, noteRange):
         self.note = noteFrom(fn)
+        self.noteRange = noteRange
 
     def appliedTo(self, data, sampleRate):
         out = []
         dataLength = len(data)
-        eff = Linear(self.note).over(dataLength)
+        eff = Linear(self.note, self.noteRange).over(dataLength)
 
         self.description = eff.describe()
         done = False
@@ -87,7 +110,7 @@ class Pitch(Effect):
         while not done:
             p += eff.at(i)
             p0 = math.floor(p)
-            if p0 >= dataLength or i > (10 * sampleRate):
+            if p0 >= dataLength or i > (30 * sampleRate):
                 done = True
             else:
                 p1 = math.ceil(p)
@@ -126,17 +149,30 @@ class Multiply(Effect):
             out.append(data[d] * m)
         return out
 
+
+def config():
+    with open(sys.argv[3]) as conf:
+        return json.load(conf)
+
 inDir = sys.argv[1]
 outDir = sys.argv[2]
 xFade = 441
+conf = config()
+tonic = conf["tonic"]
+mode = conf["mode"]
+
+notes = [tonic]
+for m in range(len(mode)):
+    notes.append(notes[m] + mode[m])
+
+print("based on note range", notes)
 
 while True:
     f = nextAudioFileFrom(inDir)
     if f is not None:
         print("using", os.path.basename(f))
         data, sampleRate = sf.read(f)
-
-        effect = Pitch(os.path.basename(f))
+        effect = Pitch(os.path.basename(f), notes)
         out = effect.appliedTo(data, sampleRate)
 
         g = 1.0 / xFade
