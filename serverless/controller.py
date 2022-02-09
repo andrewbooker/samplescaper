@@ -86,7 +86,7 @@ startDelayMins = int(config("startDelayMins"))
 print("Server started. Playing starts in %d min(s)" % startDelayMins)
 time.sleep(startDelayMins * 60)
 
-os.system("amixer sset 'Digital' %d%%" % 76)
+os.system("amixer sset 'Digital' %d%%" % int(config("volume")))
 player.start()
 playingTimeMins = int(config("playingTimeMins"))
 print("Player started. Playing stops in %d min(s)" % playingTimeMins)
