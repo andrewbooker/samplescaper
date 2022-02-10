@@ -37,7 +37,7 @@ def playOneFrom(poolDir, startedAt, playedDir):
         time.sleep(0.1)
         
     if not Path(os.path.join(playedDir, os.path.basename(f))).exists():
-        if len(os.listdir(poolDir)) > 30:
+        if len(os.listdir(poolDir)) > 7:
             sys.stdout.write("%.6f: moving to %s to %s\n\r" % (time.monotonic(), f, playedDir))
             os.system("mv %s %s" % (f, playedDir))
         else:
