@@ -14,7 +14,7 @@ def nextAudioFileFrom(poolDir):
 
 inDir = sys.argv[1]
 outDir = sys.argv[2]
-interval = int(sys.argv[3])
+interval = float(sys.argv[3])
     
 while True:
     f = nextAudioFileFrom(inDir)
