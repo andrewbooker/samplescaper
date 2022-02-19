@@ -1,6 +1,6 @@
 {
-    "tonic": 62,
-    "mode": [2, 1, 2, 2, 1, 2],
+    "tonic": 61,
+    "mode": [2, 2, 2, 1, 2, 2],
     "startDelayMins": 6,
     "playingTimeMins": 5,
     "shutdownDelayMins": 2,
