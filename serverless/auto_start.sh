@@ -5,9 +5,9 @@ then
     cd ~/Music
     for f in `ls -d 20*`
     do
-        ~/Documents/samplescaper/record/assembleAudio.py ~/Music/$f
-	zip -9 -r archives/$f.zip $f
-	rm -rf $f
+        ~/Documents/wavmixer/mix.py $f $f/inventory.lof 0.8
+        zip -9 -r archives/$f.zip $f
+        rm -rf $f
     done
     exit
 fi
