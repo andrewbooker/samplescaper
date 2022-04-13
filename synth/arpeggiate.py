@@ -20,19 +20,26 @@ def outArr(xfBuff, buff):
 inDir = sys.argv[1]
 rawDir = os.path.join(inDir, "raw")
 factoryDir = os.path.join(inDir, "factory")
-outDir = os.path.join(inDir, "looped")
+outDir = os.path.join(inDir, "arp")
 allFiles = os.listdir(rawDir)
 fIdx = len(os.listdir(outDir))
 random.shuffle(allFiles)
 
-toUse = allFiles[:random.randint(3, 11)]
-print("using", len(toUse), "files")
+
+toUseByNote = [(int(f.split("_")[0]), f) for f in allFiles[:random.randint(3, 11)]]
+print("using", len(toUseByNote), "files")
+toUseByNote.sort(key=lambda f: f[0])
+sortedFiles = [f[1] for f in toUseByNote]
+up = sortedFiles[::2]
+down = sortedFiles[1::2]
+down.reverse()
+
+toUse = up + down
 
 inf = [sf.read(os.path.join(rawDir, f))[0] for f in toUse]
 inFiles = [[len(f), f, 0] for f in inf]
 
 sampleRate = 44100
-
 
 start = time.monotonic()
 unitSampleLength = int(sampleRate * (0.05 + (0.1 * random.random())))
