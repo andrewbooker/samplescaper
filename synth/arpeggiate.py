@@ -21,14 +21,14 @@ inDir = sys.argv[1]
 rawDir = os.path.join(inDir, "raw")
 factoryDir = os.path.join(inDir, "factory")
 outDir = os.path.join(inDir, "raw")
+sampleRate = 44100
 
 def run():
     allFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, os.listdir(rawDir))]
     fIdx = len([f for f in filter(lambda fn: "arpeggiated" in fn, os.listdir(outDir))])
     random.shuffle(allFiles)
 
-
-    toUseByNote = [(int(f.split("_")[0]), f) for f in allFiles[:random.randint(3, 11)]]
+    toUseByNote = [(int(f.split("_")[0]), f) for f in allFiles[:random.randint(3, 14)]]
     print("using", len(toUseByNote), "files")
     toUseByNote.sort(key=lambda f: f[0])
     sortedFiles = [f[1] for f in toUseByNote]
@@ -41,12 +41,11 @@ def run():
     inf = [sf.read(os.path.join(rawDir, f))[0] for f in toUse]
     inFiles = [[len(f), f, 0] for f in inf]
 
-    sampleRate = 44100
-
     unitSampleLength = int(sampleRate * (0.05 + (0.1 * random.random())))
     xfadeLength = int(0.01 + (0.4 * random.random()) * unitSampleLength)
     print("unitSampleLength", unitSampleLength)
-    pulses = 20
+    pulses = random.randint(18, 50)
+    print(pulses, "pulses")
 
     fqfn = os.path.join(factoryDir, "arpeggiated_%d.wav" % fIdx)
     outfile = sf.SoundFile(fqfn, "w", samplerate=sampleRate, channels=1)
