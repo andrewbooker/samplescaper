@@ -20,9 +20,9 @@ def outArr(xfBuff, buff):
 inDir = sys.argv[1]
 rawDir = os.path.join(inDir, "raw")
 factoryDir = os.path.join(inDir, "factory")
-outDir = os.path.join(inDir, "arp")
-allFiles = os.listdir(rawDir)
-fIdx = len(os.listdir(outDir))
+outDir = os.path.join(inDir, "raw")
+allFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, os.listdir(rawDir))]
+fIdx = len([f for f in filter(lambda fn: "arpeggiated" in fn, os.listdir(outDir))])
 random.shuffle(allFiles)
 
 
