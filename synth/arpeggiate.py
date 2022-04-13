@@ -28,7 +28,12 @@ def run():
     fIdx = len([f for f in filter(lambda fn: "arpeggiated" in fn, os.listdir(outDir))])
     random.shuffle(allFiles)
 
-    toUseByNote = [(int(f.split("_")[0]), f) for f in allFiles[:random.randint(3, 14)]]
+    numToUse = random.randint(3, 14)
+    if len(allFiles) < numToUse:
+        print("insufficient files to arpeggiate", numToUse)
+        return
+
+    toUseByNote = [(int(f.split("_")[0]), f) for f in allFiles[:numToUse]]
     print("using", len(toUseByNote), "files")
     toUseByNote.sort(key=lambda f: f[0])
     sortedFiles = [f[1] for f in toUseByNote]
