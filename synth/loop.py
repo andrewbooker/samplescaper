@@ -57,6 +57,7 @@ def convert(files, inDir, factoryDir, outDir):
 inDir = os.path.join(sys.argv[1], "raw")
 factoryDir = os.path.join(sys.argv[1], "factory")
 outDir = os.path.join(sys.argv[1], "looped")
+MAX_POOL_SIZE = 30
 
 def convertItems(rawFiles, outDir):
     loopedFiles = [f[7:] for f in os.listdir(outDir)]
@@ -69,6 +70,7 @@ def convertItems(rawFiles, outDir):
             print("failed to create paired loop, file probably still being written")
         return
 
+    l = len(rawFiles)
     for f in rawFiles:
         if f not in loopedFiles:
             try:
@@ -77,6 +79,12 @@ def convertItems(rawFiles, outDir):
                 print("failed to create loop for", f, "probably still being written")
         else:
             print("already done", f)
+
+    if l > MAX_POOL_SIZE:
+        for i in range(l - MAX_POOL_SIZE):
+            f = rawFiles[i]
+            print("deleting", f)
+            os.remove(os.path.join(inDir, f))
     time.sleep(5)
 
 while True:
