@@ -52,7 +52,7 @@ def run():
     pulses = random.randint(18, 50)
     print(pulses, "pulses")
 
-    fqfn = os.path.join(factoryDir, "arpeggiated_%d.wav" % fIdx)
+    fqfn = os.path.join(factoryDir, "arpeggiated_%04d.wav" % fIdx)
     outfile = sf.SoundFile(fqfn, "w", samplerate=sampleRate, channels=1)
 
     print("writing", fqfn)
