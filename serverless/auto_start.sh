@@ -2,6 +2,8 @@
 
 if lsusb -v 2>/dev/null | grep bInterfaceProtocol | grep Keyboard
 then
+    cd ~/Documents/rotation/
+    ./setup.sh home ~/Documents/config.json
     cd ~/Music
     for f in `ls -d 20*`
     do
@@ -12,6 +14,9 @@ then
     exit
 fi
 
+cd ~/Documents/rotation/
+./setup.sh remote ~/Documents/config.json
+cd -
 ~/Documents/samplescaper/record/ambient.sh &
 python ~/Documents/rotation/motor.py ~/Documents/config.json &
 ~/Documents/samplescaper/serverless/start.sh
