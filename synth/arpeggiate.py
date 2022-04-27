@@ -16,6 +16,9 @@ def outArr(xfBuff, buff):
     xb = [((1.0 - (float(i) / l)) * xfBuff[i]) + (float(i) * buff[i] / l) for i in range(l)]
     return xb + buff[l:]
 
+def anyOf(a):
+    return a[random.randint(0, len(a) - 1)]
+
 
 inDir = sys.argv[1]
 rawDir = os.path.join(inDir, "raw")
@@ -28,7 +31,7 @@ def run():
     fIdx = len([f for f in filter(lambda fn: "arpeggiated" in fn, os.listdir(outDir))])
     random.shuffle(allFiles)
 
-    numToUse = random.randint(3, 14)
+    numToUse = anyOf([5, 7, 9, 10, 11, 13, 14])
     if len(allFiles) < numToUse:
         print("insufficient files to arpeggiate", numToUse)
         return
