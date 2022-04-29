@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if lsusb -v 2>/dev/null | grep bInterfaceProtocol | grep Keyboard
+if ! lsusb -v 2>/dev/null | grep Microphone
 then
     cd ~/Documents/rotation/
     ./setup.sh home ~/Documents/config.json
