@@ -18,5 +18,5 @@ cd ~/Documents/rotation/
 ./setup.sh remote ~/Documents/config.json
 cd -
 ~/Documents/samplescaper/record/ambient.sh &
-python ~/Documents/rotation/motor.py ~/Documents/config.json &
+python ~/Documents/rotation/propellorServo.py ~/Documents/config.json &
 ~/Documents/samplescaper/serverless/start.sh
