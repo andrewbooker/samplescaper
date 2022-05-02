@@ -15,6 +15,12 @@ def config(item):
 player = Player(sys.argv[1], 3)
 
 
+def setVolume(v):
+    leftRelativeToRight = 1.3
+    vl = v if leftRelativeToRight > 1 else int(v * leftRelativeToRight)
+    vr = v if leftRelativeToRight < 1 else int(v / leftRelativeToRight)
+    os.system("amixer sset 'Digital' %d%%,%d%%" % (vl, vr))
+
 class Controller(BaseHTTPRequestHandler):
     def _archive(self):
         os.system("zip -r ~/Music/archives/$(date +\"%Y%m%d_%H%M%S\").zip ~/Music/20*")
@@ -63,7 +69,7 @@ class Controller(BaseHTTPRequestHandler):
         data = self.rfile.read(l)
         obj = json.loads(data.decode())
         vol = int(obj["volume"])
-        os.system("amixer sset 'Digital' %d%%" % vol)
+        setVolume(vol)
         self._sendVol(vol)
 
     def do_POST(self):
@@ -86,7 +92,7 @@ startDelayMins = int(config("startDelayMins"))
 print("Server started. Playing starts in %d min(s)" % startDelayMins)
 time.sleep(startDelayMins * 60)
 
-os.system("amixer sset 'Digital' %d%%" % int(config("volume")))
+setVolume(int(config("volume")))
 player.start()
 playingTimeMins = int(config("playingTimeMins"))
 print("Player started. Playing stops in %d min(s)" % playingTimeMins)
