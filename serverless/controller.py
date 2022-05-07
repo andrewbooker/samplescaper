@@ -42,10 +42,10 @@ class Controller(BaseHTTPRequestHandler):
         volume.setTo(40)
 
     def _volDown(self):
-        volume.setTo(currentVol - 5)
+        volume.setTo(volume.volume - 5)
 
     def _volUp(self):
-        volume.setTo(currentVol + 5)
+        volume.setTo(volume.volume + 5)
 
     def _volMax(self):
         volume.setTo(95)
@@ -74,8 +74,8 @@ class Controller(BaseHTTPRequestHandler):
     def do_POST(self):
         self._standardResponse()
         self.end_headers()
-        self.wfile.write(json.dumps({}).encode("utf-8"))
-        fn = getattr(self, "_%s" % self.path[1:])()
+        getattr(self, "_%s" % self.path[1:])()
+        self._sendVol()
 
 
 def startServer():
