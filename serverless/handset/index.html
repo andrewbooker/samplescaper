@@ -74,7 +74,7 @@
 
             setInterval(() => { updateCamera(0); }, 1000);
 
-            const g_server = "http://" + urlBase + masterIp + ":9977/"
+            const g_server = urlBase + masterIp + ":9977/"
 
             function setStats(s) {
                 document.getElementById("indicator-speed").innerHTML = new Number(s.speed).toFixed(2);
