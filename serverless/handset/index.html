@@ -52,15 +52,15 @@
                     <button id="button-volUp"> + </button>
                 </div>
                 <div class="volume">
-                    <button id="button-volMin">min</button>
-                    <button id="button-volMax">max</button>
+                    <button id="button-volMin">Min</button>
+                    <button id="button-volMax">Max</button>
                 </div>
-                <div><button id="button-shutdown">shutdown</button></div>
+                <div><button id="button-shutdown">Shutdown</button></div>
             </div>
         </div>
         <div><img id="img0"/><div>
         <script>
-            const live = true;
+            const live = false;
             const masterIp = live ? 12 : 204;
             const ips = [masterIp, live ? 13 : 78];
             const urlBase = "http://192.168.1."
@@ -112,7 +112,7 @@
                     post.setRequestHeader("Content-Type", "application/json; charset=utf-8");
                     post.onload  = function() {
                         const vol = post.response.volume
-                        document.getElementById("indicator-volume" + i).innerHTML = new Number(vol).toFixed(2);
+                        document.getElementById("indicator-volume" + i).innerHTML = new Number(vol).toFixed(0);
                     };
                     post.send();
                 });
@@ -133,14 +133,14 @@
                     req.responseType = "json";
                     req.open("GET", urlBase + ip + ":9966/", true);
                     req.onload  = function() {
-                        const vol = post.response.volume
-                        document.getElementById("indicator-volume" + i).innerHTML = new Number(vol).toFixed(2);
+                        const vol = req.response.volume;
+                        document.getElementById("indicator-volume" + i).innerHTML = new Number(vol).toFixed(0);
                     };
                     req.send();
                 });
             }
             getVolume();
-            setInterval(getStats, 600);
+            setInterval(getStats, 1001);
         </script>
     </body>
 </html>
