@@ -56,12 +56,13 @@ class Controller(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "null")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
+    def _writeVol(self):
+        self.wfile.write(json.dumps({"volume": volume.volume}).encode("utf-8"))
+
     def _sendVol(self):
         self._standardResponse()
         self.end_headers()
-
-        d = {"volume": volume.volume}
-        self.wfile.write(json.dumps(d).encode("utf-8"))
+        self._writeVol()
 
     def do_OPTIONS(self):
         self._standardResponse()
@@ -75,7 +76,7 @@ class Controller(BaseHTTPRequestHandler):
         self._standardResponse()
         self.end_headers()
         getattr(self, "_%s" % self.path[1:])()
-        self._sendVol()
+        self._writeVol()
 
 
 def startServer():
