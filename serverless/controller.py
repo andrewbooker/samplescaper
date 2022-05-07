@@ -13,14 +13,19 @@ def config(item):
         return c[item]
 
 player = Player(sys.argv[1], 3)
-currentVol = 0
 leftRelativeToRight = 1.3
 
-def setVolume(v):
-    vl = v if leftRelativeToRight > 1 else int(v * leftRelativeToRight)
-    vr = v if leftRelativeToRight < 1 else int(v / leftRelativeToRight)
-    os.system("amixer sset 'Digital' %d%%,%d%%" % (vl, vr))
-    currentVol = v
+class Volume():
+	def __init__(self):
+		self.volume = 0
+
+    def setTo(v):
+        vl = v if leftRelativeToRight > 1 else int(v * leftRelativeToRight)
+        vr = v if leftRelativeToRight < 1 else int(v / leftRelativeToRight)
+        os.system("amixer sset 'Digital' %d%%,%d%%" % (vl, vr))
+        self.volume = v
+
+volume = Volume()
 
 class Controller(BaseHTTPRequestHandler):
     def _shutdown(self):
@@ -34,17 +39,16 @@ class Controller(BaseHTTPRequestHandler):
         player.resume()
 
     def _volMin(self):
-        setVolume(40)
+        volume.setTo(40)
 
     def _volDown(self):
-        setVolume(currentVol - 5)
+        volume.setTo(currentVol - 5)
 
     def _volUp(self):
-        setVolume(currentVol + 5)
+        volume.setTo(currentVol + 5)
 
     def _volMax(self):
-        v = int(100 / leftRelativeToRight) if leftRelativeToRight > 1 else (100 * leftRelativeToRight)
-        setVolume(v)
+        volume.setTo(int(100 / leftRelativeToRight) if leftRelativeToRight > 1 else (100 * leftRelativeToRight))
 
     def _standardResponse(self):
         self.send_response(200)
@@ -56,7 +60,7 @@ class Controller(BaseHTTPRequestHandler):
         self._standardResponse()
         self.end_headers()
 
-        d = {"volume": currentVol}
+        d = {"volume": volume.volume}
         self.wfile.write(json.dumps(d).encode("utf-8"))
 
     def do_OPTIONS(self):
