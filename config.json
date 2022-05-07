@@ -3,6 +3,6 @@
     "mode": [2, 2, 2, 1, 2, 2],
     "startDelayMins": 3,
     "playingTimeMins": 5,
-    "shutdownDelayMins": 2,
+    "shutdownDelayMins": 0,
     "volume": 74
 }
