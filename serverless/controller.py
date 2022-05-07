@@ -92,7 +92,9 @@ startDelayMins = int(config("startDelayMins"))
 print("Server started. Playing starts in %d min(s)" % startDelayMins)
 time.sleep(startDelayMins * 60)
 
-setVolume(int(config("volume")))
+if volume.volume == 0:
+    volume.setTo(int(config("volume")))
+
 player.start()
 playingTimeMins = int(config("playingTimeMins"))
 print("Player started. Playing stops in %d min(s)" % playingTimeMins)
