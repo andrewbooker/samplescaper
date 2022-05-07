@@ -19,7 +19,7 @@ class Volume():
     def __init__(self):
         self.volume = 0
 
-    def setTo(v):
+    def setTo(self, v):
         vl = v if leftRelativeToRight > 1 else int(v * leftRelativeToRight)
         vr = v if leftRelativeToRight < 1 else int(v / leftRelativeToRight)
         os.system("amixer sset 'Digital' %d%%,%d%%" % (vl, vr))
