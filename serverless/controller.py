@@ -48,7 +48,7 @@ class Controller(BaseHTTPRequestHandler):
         volume.setTo(currentVol + 5)
 
     def _volMax(self):
-        volume.setTo(int(100 / leftRelativeToRight) if leftRelativeToRight > 1 else (100 * leftRelativeToRight))
+        volume.setTo(95)
 
     def _standardResponse(self):
         self.send_response(200)
