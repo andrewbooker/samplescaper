@@ -16,8 +16,8 @@ player = Player(sys.argv[1], 3)
 leftRelativeToRight = 1.3
 
 class Volume():
-	def __init__(self):
-		self.volume = 0
+    def __init__(self):
+        self.volume = 0
 
     def setTo(v):
         vl = v if leftRelativeToRight > 1 else int(v * leftRelativeToRight)
