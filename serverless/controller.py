@@ -13,28 +13,19 @@ def config(item):
         return c[item]
 
 player = Player(sys.argv[1], 3)
-
+currentVol = 0
+leftRelativeToRight = 1.3
 
 def setVolume(v):
-    leftRelativeToRight = 1.3
     vl = v if leftRelativeToRight > 1 else int(v * leftRelativeToRight)
     vr = v if leftRelativeToRight < 1 else int(v / leftRelativeToRight)
     os.system("amixer sset 'Digital' %d%%,%d%%" % (vl, vr))
+    currentVol = v
 
 class Controller(BaseHTTPRequestHandler):
-    def _archive(self):
-        os.system("zip -r ~/Music/archives/$(date +\"%Y%m%d_%H%M%S\").zip ~/Music/20*")
-        os.system("rm -rf ~/Music/20*")
-
     def _shutdown(self):
         player.pause()
-        self._archive()
         os.system("sudo shutdown now")
-
-    def _updateAndRestart(self):
-        player.pause()
-        os.system("cd ..; git pull --rebase")
-        os.system("sudo shutdown -r now")
 
     def _pause(self):
         player.pause()
@@ -42,35 +33,39 @@ class Controller(BaseHTTPRequestHandler):
     def _resume(self):
         player.resume()
 
+    def _volMin(self):
+        setVolume(40)
+
+    def _volDown(self):
+        setVolume(currentVol - 5)
+
+    def _volUp(self):
+        setVolume(currentVol + 5)
+
+    def _volMax(self):
+        v = int(100 / leftRelativeToRight) if leftRelativeToRight > 1 else (100 * leftRelativeToRight)
+        setVolume(v)
+
     def _standardResponse(self):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "null")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
-    def _sendVol(self, vol):
+    def _sendVol(self):
         self._standardResponse()
         self.end_headers()
 
-        d = {"volume": vol}
+        d = {"volume": currentVol}
         self.wfile.write(json.dumps(d).encode("utf-8"))
 
     def do_OPTIONS(self):
         self._standardResponse()
-        self.send_header("Access-Control-Allow-Methods", "GET, PUT, POST")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST")
         self.end_headers()
 
     def do_GET(self):
-        sv = os.popen("amixer sget 'Digital'").read().split("\n")[-2]
-        self._sendVol(int(re.search("\[(\d+)%\]", sv).group(1)))
-
-    def do_PUT(self):
-        l = int(self.headers.get("content-length", 0))
-        data = self.rfile.read(l)
-        obj = json.loads(data.decode())
-        vol = int(obj["volume"])
-        setVolume(vol)
-        self._sendVol(vol)
+        self._sendVol()
 
     def do_POST(self):
         self._standardResponse()

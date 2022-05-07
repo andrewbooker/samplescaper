@@ -1,0 +1,146 @@
+<html>
+    <head>
+        <style>
+            body, button {
+                font-size: 200%;
+            }
+            button {
+                border-radius: 20px;
+                padding: 20px;
+                margin: 20px;
+                min-width: 130px;
+            }
+            .indicator {
+                height: 30px;
+            }
+            .controls {
+                display: flex;
+                flex-direction: row;
+            }
+            .buttons {
+                max-width: 50%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .orientation, volume {
+                display: flex;
+                flex-direction: row;
+            }
+        </style>
+    </head>
+    <body>
+        <div>Speed: <span class="indicator" id="indicator-speed"></span></div>
+        <div>Orientation: <span class="indicator" id="indicator-orientation"></span></div>
+        <div>Direction: <span class="indicator" id="indicator-direction"></span></div>
+        <div>Vol1: <span class="indicator" id="indicator-volume0"></span></div>
+        <div>Vol2: <span class="indicator" id="indicator-volume1"></span></div>
+        <div class="controls">
+            <div class="buttons">
+                <div><button id="button-random">Random</button></div>
+                <div><button id="button-ahead">Ahead</button></div>
+                <div class="orientation">
+                    <button id="button-left">Left</button>
+                    <button id="button-right">Right</button>
+                </div>
+                <div><button id="button-stop">Stop</button></div>
+                <div><button id="button-toggleForwardReverse"></button></div>
+            </div>
+            <div class="buttons">
+                <div class="volume">
+                    <button id="button-volDown"> - </button>
+                    <button id="button-volUp"> + </button>
+                </div>
+                <div class="volume">
+                    <button id="button-volMin">min</button>
+                    <button id="button-volMax">max</button>
+                </div>
+                <div><button id="button-shutdown">shutdown</button></div>
+            </div>
+        </div>
+        <div><img id="img0"/><div>
+        <script>
+            const live = true;
+            const masterIp = live ? 12 : 204;
+            const ips = [masterIp, live ? 13 : 78];
+            const urlBase = "http://192.168.1."
+            let enableCameraUpdates = false
+
+            function updateCamera(i) {
+                if (enableCameraUpdates) {
+                    document.getElementById("img" + i).setAttribute("src", urlBase + ips[i] + ":9955?" + new Date().getTime());
+                }
+            }
+
+            setInterval(() => { updateCamera(0); }, 1000);
+
+            const g_server = "http://" + urlBase + masterIp + ":9977/"
+
+            function setStats(s) {
+                document.getElementById("indicator-speed").innerHTML = new Number(s.speed).toFixed(2);
+                document.getElementById("indicator-orientation").innerHTML = new Number(s.pos).toFixed(2);
+                document.getElementById("indicator-direction").innerHTML = s.isForward ? "Forward" : "Reverse";
+                document.getElementById("button-toggleForwardReverse").innerHTML = s.isForward ? "Reverse" : "Forward";
+            }
+
+            function getStats() {
+                const get = new XMLHttpRequest();
+                get.responseType = "json";
+                get.open("GET", g_server, true);
+                get.onload  = function() {
+                    setStats(get.response)
+                };
+                get.send();
+            }
+
+            function postMotorCommand(cmd) {
+                const post = new XMLHttpRequest();
+                post.responseType = "json";
+                post.open("POST", g_server + cmd, true);
+                post.send();
+
+                if (cmd !== "random") {
+                    enableCameraUpdates = true;
+                }
+            }
+
+            function postSoundCommand(cmd) {
+                ips.forEach((ip, i) => {
+                    const post = new XMLHttpRequest();
+                    post.responseType = "json";
+                    post.open("POST", urlBase + ip + ":9966/" + cmd, true);
+                    post.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+                    post.onload  = function() {
+                        const vol = post.response.volume
+                        document.getElementById("indicator-volume" + i).innerHTML = new Number(vol).toFixed(2);
+                    };
+                    post.send();
+                });
+
+            }
+
+            ["random", "ahead", "left", "right", "stop", "toggleForwardReverse"].map(c => {
+                document.getElementById("button-" + c).setAttribute("onclick", "postMotorCommand(\"" + c + "\");");
+            });
+
+            ["volMin", "volDown", "volUp", "volMax", "shutdown"].map(c => {
+                document.getElementById("button-" + c).setAttribute("onclick", "postSoundCommand(\"" + c + "\");");
+            });
+
+            function getVolume() {
+                ips.forEach((ip, i) => {
+                    const req = new XMLHttpRequest();
+                    req.responseType = "json";
+                    req.open("GET", urlBase + ip + ":9966/", true);
+                    req.onload  = function() {
+                        const vol = post.response.volume
+                        document.getElementById("indicator-volume" + i).innerHTML = new Number(vol).toFixed(2);
+                    };
+                    req.send();
+                });
+            }
+            getVolume();
+            setInterval(getStats, 600);
+        </script>
+    </body>
+</html>
