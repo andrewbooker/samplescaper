@@ -1,4 +1,8 @@
 #!/bin/bash
+if v4l2-ctl --list-devices 2>/dev/null | grep video0
+then
+    python ~/Documents/remotecamera/server.py 2>/dev/null &
+fi
 
 if ! lsusb -v 2>/dev/null | grep Microphone
 then
