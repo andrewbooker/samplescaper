@@ -17,4 +17,6 @@ python ~/Documents/samplescaper/synth/synth.py ~/Music/pool ~/Documents/samplesc
 python ~/Documents/samplescaper/synth/arpeggiate.py ~/Music/pool &
 python ~/Documents/samplescaper/synth/loop.py ~/Music/pool &
 python ~/Documents/samplescaper/serverless/controller.py ~/Music/pool ~/Documents/samplescaper/config.json &
+cd ~/Documents/samplescaper/serverless/handset
+./serve.sh &
 
