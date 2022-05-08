@@ -53,7 +53,7 @@ class Controller(BaseHTTPRequestHandler):
     def _standardResponse(self):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "null")
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
     def _writeVol(self):
