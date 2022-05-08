@@ -29,14 +29,17 @@ volume = Volume()
 
 class Controller(BaseHTTPRequestHandler):
     def _shutdown(self):
-        player.pause()
+        if player is not None:
+            player.pause()
         os.system("sudo shutdown now")
 
     def _pause(self):
-        player.pause()
+        if player is not None:
+            player.pause()
 
     def _resume(self):
-        player.resume()
+        if player is not None:
+            player.resume()
 
     def _volMin(self):
         volume.setTo(40)
@@ -102,6 +105,7 @@ time.sleep(playingTimeMins * 60)
 
 print("stopping")
 del player
+player = None
 shutdownDelayMins = int(config("shutdownDelayMins"))
 if shutdownDelayMins > 0:
     time.sleep(shutdownDelayMins * 60)

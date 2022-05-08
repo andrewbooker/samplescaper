@@ -27,14 +27,20 @@
                 display: flex;
                 flex-direction: row;
             }
+            .blue {
+                color: blue;
+            }
+            .amber {
+                color: orange
+            }
         </style>
     </head>
     <body>
         <div>Speed: <span class="indicator" id="indicator-speed"></span></div>
         <div>Orientation: <span class="indicator" id="indicator-orientation"></span></div>
         <div>Direction: <span class="indicator" id="indicator-direction"></span></div>
-        <div>Vol1: <span class="indicator" id="indicator-volume0"></span></div>
-        <div>Vol2: <span class="indicator" id="indicator-volume1"></span></div>
+        <div class="blue">Blue: <span class="indicator blue" id="indicator-volume0"></span></div>
+        <div class="amber">Amber: <span class="indicator amber" id="indicator-volume1"></span></div>
         <div class="controls">
             <div class="buttons">
                 <div><button id="button-random">Random</button></div>
