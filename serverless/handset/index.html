@@ -68,13 +68,10 @@
         <script>
             const masterIp = 13;
             const ips = [masterIp, 12];
-            const urlBase = "http://192.168.1."
-            let enableCameraUpdates = false
+            const urlBase = "http://192.168.1.";
 
             function updateCamera(i) {
-                if (enableCameraUpdates) {
-                    document.getElementById("img" + i).setAttribute("src", urlBase + ips[i] + ":9955?" + new Date().getTime());
-                }
+                document.getElementById("img" + i).setAttribute("src", urlBase + ips[i] + ":9955?" + new Date().getTime());
             }
 
             setInterval(() => { updateCamera(0); }, 1000);
@@ -99,14 +96,12 @@
             }
 
             function postMotorCommand(cmd) {
-                const post = new XMLHttpRequest();
-                post.responseType = "json";
-                post.open("POST", g_server + cmd, true);
-                post.send();
-
-                if (cmd !== "random") {
-                    enableCameraUpdates = true;
-                }
+                ips.forEach((ip, i) => {
+                    const post = new XMLHttpRequest();
+                    post.responseType = "json";
+                    post.open("POST", urlBase + ip + ":9977/" + cmd, true);
+                    post.send();
+                });
             }
 
             function postSoundCommand(cmd) {
