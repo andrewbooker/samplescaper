@@ -13,19 +13,20 @@ def config(item):
         return c[item]
 
 player = Player(sys.argv[1], 3)
-leftRelativeToRight = 1.3
+leftRelativeToRight = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
 
 class Volume():
-    def __init__(self):
+    def __init__(self, leftRelativeToRight):
         self.volume = 0
+        self.lr = leftRelativeToRight
 
     def setTo(self, v):
-        vl = v if leftRelativeToRight > 1 else int(v * leftRelativeToRight)
-        vr = v if leftRelativeToRight < 1 else int(v / leftRelativeToRight)
+        vl = v if leftRelativeToRight > 1 else int(v * self.lr)
+        vr = v if leftRelativeToRight < 1 else int(v / self.lr)
         os.system("amixer sset 'Digital' %d%%,%d%%" % (vl, vr))
         self.volume = v
 
-volume = Volume()
+volume = Volume(leftRelativeToRight)
 
 class Controller(BaseHTTPRequestHandler):
     def _shutdown(self):
