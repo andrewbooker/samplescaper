@@ -22,5 +22,5 @@ cd ~/Documents/rotation/
 ./setup.sh remote ~/Documents/config.json
 cd -
 ~/Documents/samplescaper/record/ambient.sh
-python ~/Documents/rotation/propellorServo.py $(jq .isPilot ~/Documents/static.json) &
+python ~/Documents/rotation/propellorServo.py $(jq .isPilot ~/Documents/static.json) $(jq .propellorRandomInterval ~/Documents/static.json) &
 ~/Documents/samplescaper/serverless/start.sh
