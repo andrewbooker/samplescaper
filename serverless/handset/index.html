@@ -39,21 +39,10 @@
         </style>
     </head>
     <body>
-        <table>
-            <tbody id="tbody"></tbody>
-        </table>
-
         <div class="controls">
-            <div class="buttons">
-                <div><button id="button-random">Random</button></div>
-                <div><button id="button-ahead">Ahead</button></div>
-                <div class="orientation">
-                    <button id="button-left">Left</button>
-                    <button id="button-right">Right</button>
-                </div>
-                <div><button id="button-stop">Stop</button></div>
-                <div><button id="button-toggleForwardReverse"></button></div>
-            </div>
+            <table>
+                <tbody id="tbody"></tbody>
+            </table>
             <div class="buttons">
                 <div class="volume">
                     <button id="button-volDown"> - </button>
@@ -63,19 +52,18 @@
                     <button id="button-volMin">Min</button>
                     <button id="button-volMax">Max</button>
                 </div>
+                <div><img id="img0"/><div>
                 <div><button id="button-shutdown">Shutdown</button></div>
             </div>
         </div>
-        <div><img id="img0"/><div>
         <script>
             const masterIp = 13;
             const ips = [masterIp, 12];
             const urlBase = "http://192.168.1.";
+            const tbody = document.getElementById("tbody");
 
             (function setupIndicators() {
-                const items = ["speed", "orientation", "direction", "volume"];
-                const tbody = document.getElementById("tbody");
-                items.forEach(s => {
+                ["speed", "orientation", "direction", "volume"].forEach(s => {
                     const row = document.createElement("tr");
                     const label = document.createElement("td");
                     label.innerHTML = s;
@@ -86,6 +74,26 @@
                         indicator.setAttribute("id", "indicator-" + s + i);
                         indicator.className = "indicator " + c;
                         row.appendChild(indicator);
+                    });
+
+                    tbody.appendChild(row);
+                });
+            })();
+
+            (function setUpMotorControls() {
+                ["random", "ahead", "left", "right", "stop", "toggleForwardReverse"].forEach(b => {
+                    const row = document.createElement("tr");
+                    const empty = document.createElement("td");
+                    row.appendChild(empty);
+                    ["blue", "amber"].forEach((c, i) => {
+                        const td = document.createElement("td");
+                        if (c !== "amber" || ["random", "stop"].includes(b)) {
+                            const button = document.createElement("button");
+                            button.setAttribute("id", "button-" + b + i);
+                            button.innerHTML = (b === "toggleForwardReverse" ? "reverse" : b)
+                            td.appendChild(button)
+                        }
+                        row.appendChild(td);
                     });
 
                     tbody.appendChild(row);
@@ -103,7 +111,7 @@
                 document.getElementById("indicator-orientation" + i).innerHTML = new Number(s.pos).toFixed(2);
                 document.getElementById("indicator-direction" + i).innerHTML = s.isForward ? "Forward" : "Reverse";
                 if (i === 0) {
-                    document.getElementById("button-toggleForwardReverse").innerHTML = s.isForward ? "Reverse" : "Forward";
+                    document.getElementById("button-toggleForwardReverse0").innerHTML = s.isForward ? "Reverse" : "Forward";
                 }
             }
 
@@ -113,21 +121,17 @@
                     get.responseType = "json";
                     get.open("GET", urlBase + ip + ":9977/", true);
                     get.onload  = function() {
-                        setStats(get.response)
+                        setStats(get.response, i)
                     };
                     get.send();
                 });
             }
 
-            function postMotorCommand(cmd) {
-                ips.forEach((ip, i) => {
-                    if (i === 0 || ["stop", "random"].includes(cmd)) {
-                        const post = new XMLHttpRequest();
-                        post.responseType = "json";
-                        post.open("POST", urlBase + ip + ":9977/" + cmd, true);
-                        post.send();
-                    }
-                });
+            function postMotorCommand(cmd, i) {
+                const post = new XMLHttpRequest();
+                post.responseType = "json";
+                post.open("POST", urlBase + ips[i] + ":9977/" + cmd, true);
+                post.send();
             }
 
             function postSoundCommand(cmd) {
@@ -142,11 +146,15 @@
                     };
                     post.send();
                 });
-
             }
 
             ["random", "ahead", "left", "right", "stop", "toggleForwardReverse"].map(c => {
-                document.getElementById("button-" + c).setAttribute("onclick", "postMotorCommand(\"" + c + "\");");
+                [0, 1].forEach(i => {
+                    const b = document.getElementById("button-" + c + i);
+                    if (b) {
+                        b.setAttribute("onclick", "postMotorCommand(\"" + c + "\", " + i + ");");
+                    }
+                });
             });
 
             ["volMin", "volDown", "volUp", "volMax", "shutdown"].map(c => {
