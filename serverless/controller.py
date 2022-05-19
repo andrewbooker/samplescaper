@@ -52,7 +52,7 @@ class Controller(BaseHTTPRequestHandler):
         volume.setTo(volume.volume + 5)
 
     def _volMax(self):
-        volume.setTo(95)
+        volume.setTo(100)
 
     def _standardResponse(self):
         self.send_response(200)
