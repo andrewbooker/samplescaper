@@ -87,7 +87,7 @@
                     row.appendChild(empty);
                     ["blue", "amber"].forEach((c, i) => {
                         const td = document.createElement("td");
-                        if (c !== "amber" || ["random", "stop"].includes(b)) {
+                        if (c === "blue" || ["random", "stop"].includes(b)) {
                             const button = document.createElement("button");
                             button.setAttribute("id", "button-" + b + i);
                             button.innerHTML = (b === "toggleForwardReverse" ? "reverse" : b);
