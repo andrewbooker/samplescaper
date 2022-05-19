@@ -41,11 +41,7 @@
     <body>
         <div class="controls">
             <table>
-                <tbody id="tbody">
-                    <tr>
-                        <th></th><th class="blue">Blue</th><th class="amber">Amber</th>
-                    </tr>
-                </tbody>
+                <tbody id="tbody"></tbody>
             </table>
             <div class="buttons">
                 <div class="volume">
@@ -94,8 +90,9 @@
                         if (c !== "amber" || ["random", "stop"].includes(b)) {
                             const button = document.createElement("button");
                             button.setAttribute("id", "button-" + b + i);
-                            button.innerHTML = (b === "toggleForwardReverse" ? "reverse" : b)
-                            td.appendChild(button)
+                            button.innerHTML = (b === "toggleForwardReverse" ? "reverse" : b);
+                            button.className = c;
+                            td.appendChild(button);
                         }
                         row.appendChild(td);
                     });
