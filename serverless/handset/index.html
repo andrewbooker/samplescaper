@@ -109,7 +109,6 @@
             setInterval(() => { updateCamera(0); }, 1000);
 
             function setStats(s, i) {
-                document.getElementById("indicator-state" + i).innerHTML = s.state;
                 document.getElementById("indicator-speed" + i).innerHTML = new Number(s.speed).toFixed(2);
                 document.getElementById("indicator-orientation" + i).innerHTML = new Number(s.pos).toFixed(2);
                 document.getElementById("indicator-direction" + i).innerHTML = s.isForward ? "Forward" : "Reverse";
@@ -198,8 +197,8 @@
                     req.responseType = "json";
                     req.open("GET", urlBase + ip + ":9966/", true);
                     req.onload  = function() {
-                        const vol = req.response.volume;
-                        document.getElementById("indicator-volume" + i).innerHTML = new Number(vol).toFixed(0);
+                        document.getElementById("indicator-volume" + i).innerHTML = new Number(req.response.volume).toFixed(0);
+                        document.getElementById("indicator-state" + i).innerHTML = req.response.state;
                     };
                     req.send();
                 });
