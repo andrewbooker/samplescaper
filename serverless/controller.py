@@ -30,6 +30,12 @@ class PlayState():
     def __init__(self):
         self.state = "not ready"
 
+    def get(self):
+        return self.state
+
+    def set(self, s):
+        self.state = s
+
 volume = Volume(leftRelativeToRight)
 playState = PlayState()
 
@@ -43,17 +49,17 @@ class Controller(BaseHTTPRequestHandler):
     def _play(self):
         if player is not None:
             player.start()
-            playState.state = "playing"
+            playState.set("playing")
 
     def _pause(self):
         if player is not None:
             player.pause()
-            playState.state = "paused"
+            playState.set("paused")
 
     def _resume(self):
         if player is not None:
             player.resume()
-            playState.state = "playing"
+            playState.set("playing")
 
     def _volMin(self):
         volume.setTo(40)
@@ -74,7 +80,7 @@ class Controller(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
     def _writeState(self):
-        self.wfile.write(json.dumps({"volume": volume.volume, "state": playState.state}).encode("utf-8"))
+        self.wfile.write(json.dumps({"volume": volume.volume, "state": playState.get()}).encode("utf-8"))
 
     def _sendVol(self):
         self._standardResponse()
@@ -112,7 +118,7 @@ time.sleep(startDelayMins * 60)
 if volume.volume == 0:
     volume.setTo(int(config("volume")))
 
-playState.state = "ready"
+playState.set("ready")
 
 playingTimeMins = int(config("playingTimeMins"))
 if playingTimeMins > 0:
