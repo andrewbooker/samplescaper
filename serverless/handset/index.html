@@ -1,7 +1,7 @@
 <html>
     <head>
         <style>
-            body, button, th, .label {
+            body, button, th, .label, td {
                 font-size: 200%;
             }
             .label {
@@ -44,6 +44,7 @@
                 <tbody id="tbody"></tbody>
             </table>
             <div class="buttons">
+                <div><button id="button-play">start</button></div>
                 <div class="volume">
                     <button id="button-volDown"> - </button>
                     <button id="button-volUp"> + </button>
@@ -63,7 +64,7 @@
             const tbody = document.getElementById("tbody");
 
             (function setupIndicators() {
-                ["speed", "orientation", "direction", "volume"].forEach(s => {
+                ["state", "speed", "orientation", "direction", "volume"].forEach(s => {
                     const row = document.createElement("tr");
                     const label = document.createElement("td");
                     label.innerHTML = s;
@@ -108,6 +109,7 @@
             setInterval(() => { updateCamera(0); }, 1000);
 
             function setStats(s, i) {
+                document.getElementById("indicator-state" + i).innerHTML = s.state;
                 document.getElementById("indicator-speed" + i).innerHTML = new Number(s.speed).toFixed(2);
                 document.getElementById("indicator-orientation" + i).innerHTML = new Number(s.pos).toFixed(2);
                 document.getElementById("indicator-direction" + i).innerHTML = s.isForward ? "Forward" : "Reverse";
@@ -161,6 +163,34 @@
             ["volMin", "volDown", "volUp", "volMax", "shutdown"].map(c => {
                 document.getElementById("button-" + c).setAttribute("onclick", "postSoundCommand(\"" + c + "\");");
             });
+
+            const play = (function() {
+                let state = "stopped";
+
+                return {
+                    changeState: function() {
+                        const button = document.getElementById("button-play");
+                        if (state === "paused") {
+                            postSoundCommand("resume");
+                            state = "playing";
+                            button.innerHTML = "pause"
+                            return;
+                        }
+                        if (state === "playing") {
+                            postSoundCommand("pause");
+                            state = "paused";
+                            button.innerHTML = "resume"
+                            return;
+                        }
+                        if (state === "stopped") {
+                            postSoundCommand("play");
+                            state = "playing";
+                            button.innerHTML = "pause"
+                        }
+                    }
+                };
+            })();
+            document.getElementById("button-play").setAttribute("onclick", "play.changeState();");
 
             function getVolume() {
                 ips.forEach((ip, i) => {

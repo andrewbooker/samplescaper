@@ -26,7 +26,13 @@ class Volume():
         os.system("amixer sset 'Digital' %d%%,%d%%" % (vl, vr))
         self.volume = v
 
+class PlayState():
+    def __init__(self):
+        self.state = "not ready"
+
 volume = Volume(leftRelativeToRight)
+playState = PlayState()
+
 
 class Controller(BaseHTTPRequestHandler):
     def _shutdown(self):
@@ -34,13 +40,20 @@ class Controller(BaseHTTPRequestHandler):
             player.pause()
         os.system("sudo shutdown now")
 
+    def _play(self):
+        if player is not None:
+            player.start()
+            playState.state = "playing"
+
     def _pause(self):
         if player is not None:
             player.pause()
+            playState.state = "paused"
 
     def _resume(self):
         if player is not None:
             player.resume()
+            playState.state = "playing"
 
     def _volMin(self):
         volume.setTo(40)
@@ -60,13 +73,13 @@ class Controller(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
-    def _writeVol(self):
-        self.wfile.write(json.dumps({"volume": volume.volume}).encode("utf-8"))
+    def _writeState(self):
+        self.wfile.write(json.dumps({"volume": volume.volume, "state": playState.state}).encode("utf-8"))
 
     def _sendVol(self):
         self._standardResponse()
         self.end_headers()
-        self._writeVol()
+        self._writeState()
 
     def do_OPTIONS(self):
         self._standardResponse()
@@ -80,7 +93,7 @@ class Controller(BaseHTTPRequestHandler):
         self._standardResponse()
         self.end_headers()
         getattr(self, "_%s" % self.path[1:])()
-        self._writeVol()
+        self._writeState()
 
 
 def startServer():
@@ -93,21 +106,25 @@ server = threading.Thread(target=startServer, args=(), daemon=False)
 server.start()
 
 startDelayMins = int(config("startDelayMins"))
-print("Server started. Playing starts in %d min(s)" % startDelayMins)
+print("Server started. ready in %d min(s)" % startDelayMins)
 time.sleep(startDelayMins * 60)
 
 if volume.volume == 0:
     volume.setTo(int(config("volume")))
 
-player.start()
-playingTimeMins = int(config("playingTimeMins"))
-print("Player started. Playing stops in %d min(s)" % playingTimeMins)
-time.sleep(playingTimeMins * 60)
+playState.state = "ready"
 
-print("stopping")
-del player
-player = None
-shutdownDelayMins = int(config("shutdownDelayMins"))
-if shutdownDelayMins > 0:
-    time.sleep(shutdownDelayMins * 60)
-    os.system("sudo shutdown now")
+playingTimeMins = int(config("playingTimeMins"))
+if playingTimeMins > 0
+    player.start()
+    print("Player started. Playing stops in %d min(s)" % playingTimeMins)
+    time.sleep(playingTimeMins * 60)
+
+    print("stopping")
+    del player
+    player = None
+    shutdownDelayMins = int(config("shutdownDelayMins"))
+    if shutdownDelayMins > 0:
+        time.sleep(shutdownDelayMins * 60)
+        os.system("sudo shutdown now")
+
