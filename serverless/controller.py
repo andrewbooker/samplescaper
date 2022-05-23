@@ -115,7 +115,7 @@ if volume.volume == 0:
 playState.state = "ready"
 
 playingTimeMins = int(config("playingTimeMins"))
-if playingTimeMins > 0
+if playingTimeMins > 0:
     player.start()
     print("Player started. Playing stops in %d min(s)" % playingTimeMins)
     time.sleep(playingTimeMins * 60)
