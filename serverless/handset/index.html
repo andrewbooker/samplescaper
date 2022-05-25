@@ -7,10 +7,14 @@
             .label {
                 text-align: right;
             }
+            td {
+                text-align: center;
+            }
             button {
+                font-size: 140%;
                 border-radius: 20px;
                 padding: 20px;
-                margin: 20px;
+                margin: 5px;
                 min-width: 130px;
             }
             .indicator {
@@ -40,7 +44,7 @@
     </head>
     <body>
         <div class="controls">
-            <table>
+            <table cellspacing="0" cellpadding="0">
                 <tbody id="tbody"></tbody>
             </table>
             <div class="buttons">
@@ -81,19 +85,41 @@
                 });
             })();
 
+            function motorButton(b, i, c) {
+                const button = document.createElement("button");
+                button.setAttribute("id", "button-" + b + i);
+                switch (b) {
+                    case "toggleForwardReverse":
+                        button.innerHTML = "reverse";
+                        break;
+                    case "increase":
+                        button.innerHTML = "+";
+                        break;
+                    case "decrease":
+                        button.innerHTML = "-";
+                        break;
+                    default:
+                        button.innerHTML = b;
+                }
+                button.className = c;
+                return button;
+            }
+
             (function setUpMotorControls() {
-                ["random", "ahead", "left", "right", "stop", "toggleForwardReverse"].forEach(b => {
+                ["random", "ahead", ["decrease", "increase"], ["left", "right"], "stop", "toggleForwardReverse"].forEach(b => {
                     const row = document.createElement("tr");
                     const empty = document.createElement("td");
                     row.appendChild(empty);
                     ["blue", "amber"].forEach((c, i) => {
                         const td = document.createElement("td");
                         if (c === "blue" || ["random", "stop"].includes(b)) {
-                            const button = document.createElement("button");
-                            button.setAttribute("id", "button-" + b + i);
-                            button.innerHTML = (b === "toggleForwardReverse" ? "reverse" : b);
-                            button.className = c;
-                            td.appendChild(button);
+                            if (Array.isArray(b)) {
+                                b.forEach(ctl => {
+                                    td.appendChild(motorButton(ctl, i, c));
+                                });
+                            } else {
+                                td.appendChild(motorButton(b, i, c));
+                            }
                         }
                         row.appendChild(td);
                     });
