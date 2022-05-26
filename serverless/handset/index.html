@@ -13,9 +13,9 @@
             button {
                 font-size: 140%;
                 border-radius: 20px;
-                padding: 20px;
+                padding: 20px 10px 20px 10px;
                 margin: 5px;
-                min-width: 130px;
+                min-width: 80px;
             }
             .indicator {
                 height: 30px;
@@ -185,9 +185,17 @@
                 });
             });
 
-            ["volMin", "volDown", "volUp", "volMax", "shutdown"].map(c => {
+            ["volMin", "volDown", "volUp", "volMax"].map(c => {
                 document.getElementById("button-" + c).setAttribute("onclick", "postSoundCommand(\"" + c + "\");");
             });
+
+            function postShutdown() {
+                const result = window.confirm("Shutdown - are you sure?");
+                if (result) {
+                    postSoundCommand("shutdown")
+                }
+            }
+            document.getElementById("button-shutdown").setAttribute("onclick", "postShutdown();");
 
             const play = (function() {
                 let state = "stopped";
