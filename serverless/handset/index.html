@@ -112,7 +112,7 @@
                     row.appendChild(empty);
                     ["blue", "amber"].forEach((c, i) => {
                         const td = document.createElement("td");
-                        if (c === "blue" || ["random", "stop"].includes(b)) {
+                        if (c === "blue" || b[0].endsWith("crease") || ["random", "stop"].includes(b)) {
                             if (Array.isArray(b)) {
                                 b.forEach(ctl => {
                                     td.appendChild(motorButton(ctl, i, c));
