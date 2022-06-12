@@ -26,6 +26,30 @@ factoryDir = os.path.join(inDir, "factory")
 outDir = os.path.join(inDir, "raw")
 sampleRate = 44100
 
+class NoteChooser():
+    def up(self):
+        return []
+
+    def down(self):
+        return []
+
+class CombUpDown(NoteChooser):
+    def __init__(self, allFiles, numberToUse):
+        toUseByNote = [(int(f.split("_")[0]), f) for f in allFiles[:numberToUse]]
+
+        toUseByNote.sort(key=lambda f: f[0])
+        sortedFiles = [f[1] for f in toUseByNote]
+        self.u = sortedFiles[::2]
+        self.d = sortedFiles[1::2]
+        if random.random() > 0.5:
+            self.d.reverse()
+
+    def up(self):
+        return self.u
+
+    def down(self):
+        return self.d
+
 def run():
     allFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, os.listdir(rawDir))]
     fIdx = len([f for f in filter(lambda fn: "arpeggiated" in fn, os.listdir(outDir))])
@@ -35,16 +59,9 @@ def run():
     if len(allFiles) < numToUse:
         print("insufficient files to arpeggiate", numToUse)
         return
-
-    toUseByNote = [(int(f.split("_")[0]), f) for f in allFiles[:numToUse]]
-    print("using", len(toUseByNote), "files")
-    toUseByNote.sort(key=lambda f: f[0])
-    sortedFiles = [f[1] for f in toUseByNote]
-    up = sortedFiles[::2]
-    down = sortedFiles[1::2]
-    down.reverse()
-
-    toUse = up + down
+    print("using", numToUse, "files")
+    chooser = CombUpDown(allFiles, numToUse)
+    toUse = chooser.up() + chooser.down()
 
     inf = [sf.read(os.path.join(rawDir, f))[0] for f in toUse]
     inFiles = [[len(f), f, 0] for f in inf]
