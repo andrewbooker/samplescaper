@@ -31,7 +31,7 @@ def run():
     fIdx = len([f for f in filter(lambda fn: "arpeggiated" in fn, os.listdir(outDir))])
     random.shuffle(allFiles)
 
-    numToUse = anyOf([5, 7, 9, 10, 11, 13, 14])
+    numToUse = anyOf([5, 7, 9, 10, 11])
     if len(allFiles) < numToUse:
         print("insufficient files to arpeggiate", numToUse)
         return
@@ -49,8 +49,8 @@ def run():
     inf = [sf.read(os.path.join(rawDir, f))[0] for f in toUse]
     inFiles = [[len(f), f, 0] for f in inf]
 
-    unitSampleLength = int(sampleRate * (0.05 + (0.1 * random.random())))
-    xfadeLength = int(0.01 + (0.4 * random.random()) * unitSampleLength)
+    unitSampleLength = int(sampleRate * (0.05 + (0.2 * random.random())))
+    xfadeLength = int(0.02 + (0.4 * random.random()) * unitSampleLength)
     print("unitSampleLength", unitSampleLength)
     pulses = random.randint(18, 50)
     print(pulses, "pulses")
