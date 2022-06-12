@@ -68,7 +68,7 @@
             const tbody = document.getElementById("tbody");
 
             (function setupIndicators() {
-                ["state", "speed", "orientation", "direction", "volume"].forEach(s => {
+                ["state", "speedR", "speedL", "direction", "volume"].forEach(s => {
                     const row = document.createElement("tr");
                     const label = document.createElement("td");
                     label.innerHTML = s;
@@ -135,8 +135,8 @@
             setInterval(() => { updateCamera(0); }, 1000);
 
             function setStats(s, i) {
-                document.getElementById("indicator-speed" + i).innerHTML = new Number(s.speed).toFixed(2);
-                document.getElementById("indicator-orientation" + i).innerHTML = new Number(s.pos).toFixed(2);
+                document.getElementById("indicator-speedR" + i).innerHTML = new Number(s.speedR).toFixed(2);
+                document.getElementById("indicator-speedL" + i).innerHTML = new Number(s.speedL).toFixed(2);
                 document.getElementById("indicator-direction" + i).innerHTML = s.isForward ? "Forward" : "Reverse";
                 if (i === 0) {
                     document.getElementById("button-toggleForwardReverse0").innerHTML = s.isForward ? "Reverse" : "Forward";
