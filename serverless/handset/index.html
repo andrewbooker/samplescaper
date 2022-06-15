@@ -66,7 +66,12 @@
         </div>
         <script>
             const masterIp = 13;
-            const ips = [masterIp, 12, 14];
+            const units = [
+                { ip: masterIp, colour: "blue" },
+                //{ ip: 12, colour: "amber" },
+                { ip: 14, colour: "pink" }
+            ];
+            const ips = units.map(u => u.ip);
             const urlBase = "http://192.168.1.";
             const tbody = document.getElementById("tbody");
 
@@ -77,7 +82,7 @@
                     label.innerHTML = s;
                     label.className = "label";
                     row.appendChild(label);
-                    ["blue", "amber", "pink"].forEach((c, i) => {
+                    units.map(u => u.colour).forEach((c, i) => {
                         const indicator = document.createElement("td");
                         indicator.setAttribute("id", "indicator-" + s + i);
                         indicator.className = "indicator " + c;
@@ -113,7 +118,7 @@
                     const row = document.createElement("tr");
                     const empty = document.createElement("td");
                     row.appendChild(empty);
-                    ["blue", "amber", "pink"].forEach((c, i) => {
+                    units.map(u => u.colour).forEach((c, i) => {
                         const td = document.createElement("td");
                         if (c === "blue" || b[0].endsWith("crease") || ["random", "stop"].includes(b)) {
                             if (Array.isArray(b)) {
@@ -180,7 +185,7 @@
             }
 
             ["random", "ahead", "left", "right", "stop", "increase", "decrease", "toggleForwardReverse"].map(c => {
-                [0, 1, 2].forEach(i => {
+                units.forEach((u, i) => {
                     const b = document.getElementById("button-" + c + i);
                     if (b) {
                         b.setAttribute("onclick", "postMotorCommand(\"" + c + "\", " + i + ");");
