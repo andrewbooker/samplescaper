@@ -76,7 +76,7 @@
             const tbody = document.getElementById("tbody");
 
             (function setupIndicators() {
-                ["state", "speedR", "speedL", "direction", "volume"].forEach(s => {
+                ["speedR", "speedL", "direction", "state", "volume"].forEach(s => {
                     const row = document.createElement("tr");
                     const label = document.createElement("td");
                     label.innerHTML = s;
@@ -97,9 +97,6 @@
                 const button = document.createElement("button");
                 button.setAttribute("id", "button-" + b + i);
                 switch (b) {
-                    case "toggleForwardReverse":
-                        button.innerHTML = "reverse";
-                        break;
                     case "increase":
                         button.innerHTML = "+";
                         break;
@@ -114,7 +111,7 @@
             }
 
             (function setUpMotorControls() {
-                ["random", "ahead", ["decrease", "increase"], ["left", "right"], "stop", "toggleForwardReverse"].forEach(b => {
+                ["random", "ahead", ["decrease", "increase"], ["left", "right"], "stop", "reverse"].forEach(b => {
                     const row = document.createElement("tr");
                     const empty = document.createElement("td");
                     row.appendChild(empty);
@@ -146,9 +143,6 @@
                 document.getElementById("indicator-speedR" + i).innerHTML = new Number(s.speedR).toFixed(2);
                 document.getElementById("indicator-speedL" + i).innerHTML = new Number(s.speedL).toFixed(2);
                 document.getElementById("indicator-direction" + i).innerHTML = s.isForward ? "Forward" : "Reverse";
-                if (i === 0) {
-                    document.getElementById("button-toggleForwardReverse0").innerHTML = s.isForward ? "Reverse" : "Forward";
-                }
             }
 
             function getStats() {
@@ -184,7 +178,7 @@
                 });
             }
 
-            ["random", "ahead", "left", "right", "stop", "increase", "decrease", "toggleForwardReverse"].map(c => {
+            ["random", "ahead", "left", "right", "stop", "increase", "decrease", "reverse"].map(c => {
                 units.forEach((u, i) => {
                     const b = document.getElementById("button-" + c + i);
                     if (b) {
