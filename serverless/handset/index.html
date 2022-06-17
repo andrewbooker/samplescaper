@@ -111,7 +111,7 @@
             }
 
             (function setUpMotorControls() {
-                ["random", "ahead", ["decrease", "increase"], ["left", "right"], "stop", "reverse"].forEach(b => {
+                [["decrease", "increase"], "random", "ahead", ["left", "right"], "stop", "reverse"].forEach(b => {
                     const row = document.createElement("tr");
                     const empty = document.createElement("td");
                     row.appendChild(empty);
