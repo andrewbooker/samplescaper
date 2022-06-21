@@ -16,7 +16,7 @@ mkdir -p ~/Music/pool/looped
 python ~/Documents/samplescaper/synth/synth.py ~/Music/pool ~/Documents/samplescaper/config.json &
 python ~/Documents/samplescaper/synth/arpeggiate.py ~/Music/pool &
 python ~/Documents/samplescaper/synth/loop.py ~/Music/pool &
-python ~/Documents/samplescaper/serverless/controller.py ~/Music/pool ~/Documents/samplescaper/config.json $(jq .leftRelativeToRight ~/Documents/static.json) &
+python ~/Documents/samplescaper/serverless/controller.py ~/Music/pool ~/Documents/samplescaper/config.json $(jq .leftRelativeToRight ~/Documents/static.json) $(jq .audioDevice ~/Documents/static.json) &
 cd ~/Documents/samplescaper/serverless/handset
 ./serve.sh &
 

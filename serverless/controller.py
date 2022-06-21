@@ -14,6 +14,7 @@ def config(item):
 
 player = Player(sys.argv[1], 3)
 leftRelativeToRight = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
+audioDevice = sys.argv[4] if len(sys.argv) > 4 else "Digital"
 
 class Volume():
     def __init__(self, leftRelativeToRight):
@@ -23,7 +24,7 @@ class Volume():
     def setTo(self, v):
         vl = v if leftRelativeToRight > 1 else int(v * self.lr)
         vr = v if leftRelativeToRight < 1 else int(v / self.lr)
-        os.system("amixer sset 'Digital' %d%%,%d%%" % (vl, vr))
+        os.system("amixer sset '%s' %d%%,%d%%" % (audioDevice,  vl, vr))
         self.volume = v
 
 class PlayState():
