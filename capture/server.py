@@ -74,6 +74,11 @@ class SampleCaptureServer(BaseHTTPRequestHandler):
         else:
             controller.stopRecording()
         self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+        self.wfile.write(json.dumps({}).encode("utf-8"))
 
 def startServer():
     HTTPServer(("0.0.0.0", 9009), SampleCaptureServer).serve_forever()
