@@ -15,7 +15,7 @@ def checkImport(lib):
 checkImport("mediautils")
 from mediautils.audiodevices import UsbAudioDevices
 
-from utils.sampleRecording import Controller
+from capture.sampleRecording import Controller
 
 if len(sys.argv) < 2:
     print("please supply output directory (will be created if necessary)")

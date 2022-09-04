@@ -15,7 +15,7 @@ checkImport("mediautils")
 from mediautils.audiodevices import UsbAudioDevices
 from mediautils.mididevices import UsbMidiDevices, MidiOut
 
-from utils.sampleRecording import Controller
+from capture.sampleRecording import Controller
 
 
 #### same as simpleCapture
