@@ -5,7 +5,7 @@ import time
 import os
 import queue
 import sounddevice as sd
-from utils.LoopableSample import LoopableSample
+from capture.LoopableSample import LoopableSample
 
 
 class Buffer():

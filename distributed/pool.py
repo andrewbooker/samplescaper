@@ -20,7 +20,7 @@ def checkImport(lib):
 
 checkImport("mediautils")
 from mediautils.audiodevices import UsbAudioDevices
-from utils.LoopableSample import LoopableSample
+from capture.LoopableSample import LoopableSample # this has been broken since being moved into distributed
 from utils.LevelMonitor import LevelMonitor
 
 SAMPLE_RATE = 44100.0

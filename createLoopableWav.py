@@ -3,7 +3,7 @@
 import sys
 import os
 
-from utils.LoopableSample import LoopableSample
+from capture.LoopableSample import LoopableSample
 
 inDir = sys.argv[1]
 outDir = sys.argv[2]
