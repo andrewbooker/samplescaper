@@ -2,10 +2,13 @@
 
 import datetime
 import time
-import os
 import queue
 import sounddevice as sd
-from .LoopableSample import LoopableSample
+import sys
+import os
+parentDir = os.path.dirname(os.getcwd())
+sys.path.append(parentDir)
+from capture.LoopableSample import LoopableSample
 
 
 class Buffer():
