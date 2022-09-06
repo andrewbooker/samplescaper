@@ -46,6 +46,7 @@ class Controller():
     def _recordingStart(self, note):
         if self.stopCmdThread:
             self.stopCmdThread.join()
+            self.stopCmdThread = None
         while self.recording.isWriting:
             time.sleep(0.1)
         print("starting recording")
@@ -87,7 +88,13 @@ class Controller():
         self.stopCmdThread.start()
 
 
-controller = Controller(2, sys.argv[1])
+audioIdx = 0
+lookFor = "Edirol"
+for d in sd.query_devices():
+    if lookFor.lower() in d["name"].lower() and int(d["max_input_channels"]) > 0:
+        audioIdx = int(d["index"])
+
+controller = Controller(audioIdx, sys.argv[1])
 
 class SampleCaptureServer(BaseHTTPRequestHandler):
     def do_GET(self):
