@@ -5,6 +5,7 @@ import json
 import sounddevice as sd
 import os
 import sys
+import time
 parentDir = os.path.dirname(os.getcwd())
 sys.path.append(parentDir)
 from capture.sampleRecording import Buffer, SampleRecorder
@@ -26,10 +27,11 @@ class Controller():
 
         print("ready to record to %s" % outDir)
         self.recordThread.start()
+        self.startCmdThread = None
+        self.stopCmdThread = None
+        self.recordingStarted = None
 
     def __del__(self):
-        print("stopping recording")
-        self.shouldRecordClip.clear()
         print("stopping stream")
         self.shouldStop.set()
         print("stopping thread")
@@ -41,18 +43,51 @@ class Controller():
             self.sampleNumber.value = n
         print("next sample number %d" % self.sampleNumber.value)
 
-    def startRecording(self, note):
+    def _recordingStart(self, note):
+        if self.stopCmdThread:
+            self.stopCmdThread.join()
+        while self.recording.isWriting:
+            time.sleep(0.1)
+        print("starting recording")
         self._setNumber(note)
         self.shouldRecordClip.set()
-        print("starting at queue size %d..." % self.buffer.q.qsize())
+        self.recording.shouldWrite = True
+        self.recordingStarted = time.time()
+
+    def _recordingStop(self):
+        self.startCmdThread.join()
+        self.startCmdThread = None
+        dt = time.time() - self.recordingStarted
+        if dt < 1.0:
+            print("abandoning recording after %.2fs" % dt)
+            self.recording.shouldWrite = False
+            self.shouldRecordClip.clear()
+            return
+
+        if not self.shouldRecordClip.is_set():
+            print("received stop command but recording was not started")
+            return
+
+        print("stopping recording after %.2fs" % dt)
+        self.shouldRecordClip.clear()
+
+    def startRecording(self, note):
+        if self.startCmdThread is not None:
+            print("ignoring repeat start command")
+            return
+        self.startCmdThread = threading.Thread(target=self._recordingStart, args=(note,), daemon=True)
+        self.startCmdThread.start()
 
     def stopRecording(self):
-        self.shouldRecordClip.clear()
-        print("stopped at queue size %d..." % self.buffer.q.qsize())
+        if self.startCmdThread is None:
+            print("received stop command before start command")
+            return
+
+        self.stopCmdThread = threading.Thread(target=self._recordingStop, args=(), daemon=True)
+        self.stopCmdThread.start()
 
 
-# 7 = USB audio device
-controller = Controller(7, sys.argv[1])
+controller = Controller(2, sys.argv[1])
 
 class SampleCaptureServer(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -62,7 +97,8 @@ class SampleCaptureServer(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
         resp = {
-            "is_recording": controller.shouldRecordClip.is_set()
+            "is_recording": controller.shouldRecordClip.is_set(),
+            "is_writing": controller.recording.isWriting
         }
         self.wfile.write(json.dumps(resp).encode("utf-8"))
 

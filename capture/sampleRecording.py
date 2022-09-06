@@ -26,6 +26,8 @@ class SampleRecorder():
         self.buffer = buffer
         self.dirOut = "%s/%s" % (dirOut, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
         os.makedirs(self.dirOut)
+        self.isWriting = False
+        self.shouldWrite = True
 
     def start(self, sampleNumber, shouldStop, shouldRecordClip):
         stream = sd.InputStream(samplerate=44100.0, device=self.device, channels=1, callback=self.buffer.make(), blocksize=512)
@@ -39,16 +41,20 @@ class SampleRecorder():
             if out is not None:
                 if not shouldRecordClip.is_set():
                     stream.stop()
-                    out.addBuffer(self.buffer.q.get())
+                    if self.shouldWrite:
+                        self.isWriting = True
+                        out.addBuffer(self.buffer.q.get())
 
-                    outDir = "%s/%d" % (self.dirOut, sampleNumber.value)
-                    if not os.path.exists(outDir):
-                        os.makedirs(outDir)
-                    fqfn = "%s/sample_%s.wav" % (outDir, fn)
-                    print("Writing to %s" % fqfn)
-                    out.create(fqfn)
+                        outDir = "%s/%d" % (self.dirOut, sampleNumber.value)
+                        if not os.path.exists(outDir):
+                            os.makedirs(outDir)
+                        fqfn = "%s/sample_%s.wav" % (outDir, fn)
+                        print("Writing to %s" % fqfn)
+                        out.create(fqfn)
+                        fn += 1
+
                     out = None
-                    fn += 1
+                    self.isWriting = False
                     print("ready")
                 else:
                     out.addBuffer(self.buffer.q.get())
