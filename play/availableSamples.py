@@ -2,7 +2,7 @@
 
 import os
 import sys
-parentDir = os.path.dirname(os.getcwd())
+parentDir = os.path.dirname(os.path.dirname(os.getcwd()))
 sys.path.append(parentDir)
 if not os.path.exists(os.path.join(parentDir, "compositionutils")):
     print("compositionutils library not found.")

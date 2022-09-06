@@ -2,7 +2,7 @@
 
 
 
-from utils.AvailableSamples import files
+from availableSamples import files
 
 import sounddevice as sd
 import soundfile as sf

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from utils.AvailableSamples import scale, files
 
 import pygame as pg
 import time
@@ -9,7 +8,7 @@ import math
 import sys
 import threading
 from datetime import datetime
-
+from availableSamples import scale, files
 
 
 
