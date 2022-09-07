@@ -103,8 +103,7 @@ class NeverStop():
     def is_set(self):
         return False
 
-poolDir = os.path.join(sys.argv[1], "raw")
-
+poolDir = sys.argv[1]
 pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
 pg.init()
 
