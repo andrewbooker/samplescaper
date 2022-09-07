@@ -22,7 +22,7 @@ class Controller():
         self.shouldStop = threading.Event()
         self.shouldRecordClip = threading.Event()
 
-        self.recording = SampleRecorder(audioDevice, outDir, self.buffer)
+        self.recording = SampleRecorder(audioDevice, outDir, self.buffer, False)
         self.recordThread = threading.Thread(target = self.recording.start, args = (self.sampleNumber, self.shouldStop, self.shouldRecordClip), daemon = True)
 
         print("ready to record to %s" % outDir)

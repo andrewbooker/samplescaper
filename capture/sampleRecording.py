@@ -21,11 +21,12 @@ class Buffer():
         return handle
 
 class SampleRecorder():
-    def __init__(self, device, dirOut, buffer):
+    def __init__(self, device, dirOut, sampleBuffer, subfoldersPerNote):
         self.device = device
-        self.buffer = buffer
-        self.dirOut = "%s/%s" % (dirOut, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
-        os.makedirs(self.dirOut)
+        self.buffer = sampleBuffer
+        self.subfoldersPerNote = subfoldersPerNote
+        self.dirOut = dirOut
+        self.fileNameStem = datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S")
         self.isWriting = False
         self.shouldWrite = True
 
@@ -45,10 +46,22 @@ class SampleRecorder():
                         self.isWriting = True
                         out.addBuffer(self.buffer.q.get())
 
-                        outDir = "%s/%d" % (self.dirOut, sampleNumber.value)
-                        if not os.path.exists(outDir):
-                            os.makedirs(outDir)
-                        fqfn = "%s/sample_%s.wav" % (outDir, fn)
+                        outDir = [self.dirOut]
+                        fName = []
+                        if self.subfoldersPerNote:
+                            outDir.append(self.fileNameStem)
+                            outDir.append(str(sampleNumber.value))
+                            d = os.path.join(*outDir)
+                            if not os.path.exists(d):
+                                os.makedirs(d)
+                        else:
+                            fName.append(str(sampleNumber.value))
+                            fName.append(self.fileNameStem)
+
+                        fName.append("%03d.wav" % fn)
+                        outDir.append("_".join(fName))
+
+                        fqfn = os.path.join(*outDir)
                         print("Writing to %s" % fqfn)
                         out.create(fqfn)
                         fn += 1
@@ -74,7 +87,7 @@ class Controller():
         self.shouldStop = threading.Event()
         self.shouldRecordClip = threading.Event()
         
-        self.recording = SampleRecorder(audioDevice, outDir, self.buffer)
+        self.recording = SampleRecorder(audioDevice, outDir, self.buffer, True)
         self.recordThread = threading.Thread(target = self.recording.start, args = (self.sampleNumber, self.shouldStop, self.shouldRecordClip), daemon = True)
 
         print("ready to record to %s" % outDir)
