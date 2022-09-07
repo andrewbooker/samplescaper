@@ -9,6 +9,7 @@ import os
 import sys
 import random
 import json
+import subprocess
 
 
 def nextAudioFile():
@@ -31,10 +32,17 @@ class AudioFileServer(BaseHTTPRequestHandler):
         return None
 
 
-class StaticHtmlServer(SimpleHTTPRequestHandler):
+class StaticHtmlServer(BaseHTTPRequestHandler):
     def do_GET(self):
-        self.path = "./client.html"
-        return SimpleHTTPRequestHandler.do_GET(self)
+        with open("./client.html", "r") as f:
+            localIp = subprocess.check_output("hostname -I | cut -d' ' -f1", shell=True).decode().split("\n")[0]
+            text = f.read().replace("localhost", localIp)
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.send_header("Content-Length", len(text))
+            self.end_headers()
+            self.wfile.write(text.encode())
+        return None
 
 
 class Discoverer(BaseHTTPRequestHandler):

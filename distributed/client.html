@@ -3,6 +3,7 @@
 <button id="start">Start</button>
 <div id="container"></div>
 </body>
+<script>const host = "localhost";</script>
 <script>
 let seed = 1;
 function random() {
@@ -37,7 +38,7 @@ players.push({});
 function reset(e) {
     e.state = "notStarted";
     e.env = new Envelope(1 + random(), 5 + (10 * random()));
-    e.audio = new Audio("http://localhost:3064?" + random());
+    e.audio = new Audio("http://" + host + ":3064?" + random());
     e.audio.loop = true;  
     e.audio.volume = 0.0;    
     e.audio.play();
@@ -62,7 +63,5 @@ document.getElementById("start").onclick = function() {
         });
     }, 10);
 };
-
-
 </script>
 <html>
