@@ -30,29 +30,29 @@ class SampleRecorder():
         self.isWriting = False
         self.shouldWrite = True
 
-    def writeFileFrom(self, out, sampleNumber, fn):
+    @staticmethod
+    def writeFileFrom(instance, out, sampleNumber, fn):
         l = out.length() / 44100.0
         print("buffer length %.02fs" % l)
         if l < 1.0:
             print("too short to bother with. Abandoning.")
             return
 
-        if self.shouldWrite:
-            self.isWriting = True
+        if instance.shouldWrite:
             print("writing %03d" % fn)
-            out.addBuffer(self.buffer.q.get())
+            out.addBuffer(instance.buffer.q.get())
 
-            outDir = [self.dirOut]
+            outDir = [instance.dirOut]
             fName = []
-            if self.subfoldersPerNote:
-                outDir.append(self.fileNameStem)
+            if instance.subfoldersPerNote:
+                outDir.append(instance.fileNameStem)
                 outDir.append(str(sampleNumber.value))
                 d = os.path.join(*outDir)
                 if not os.path.exists(d):
                     os.makedirs(d)
             else:
                 fName.append(str(sampleNumber.value))
-                fName.append(self.fileNameStem)
+                fName.append(instance.fileNameStem)
 
             fName.append("%03d.wav" % fn)
             outDir.append("_".join(fName))
@@ -62,8 +62,6 @@ class SampleRecorder():
             out.create(fqfn)
         else:
             print("should not write")
-
-        self.isWriting = False
 
     def start(self, sampleNumber, shouldStop, shouldRecordClip):
         stream = sd.InputStream(samplerate=44100.0, device=self.device, channels=1, callback=self.buffer.make(), blocksize=512)
@@ -77,9 +75,11 @@ class SampleRecorder():
             if out is not None:
                 if not shouldRecordClip.is_set():
                     stream.stop()
-                    self.writeFileFrom(out, sampleNumber, fn)
+                    self.isWriting = True
+                    SampleRecorder.writeFileFrom(self, out, sampleNumber, fn)
                     fn += 1
                     out = None
+                    self.isWriting = False
                     print("ready")
                 else:
                     out.addBuffer(self.buffer.q.get())
