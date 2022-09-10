@@ -34,7 +34,7 @@ class Controller():
     def __del__(self):
         print("stopping stream")
         self.shouldStop.set()
-        print("stopping thread")
+        print("stopping recording thread")
         self.recordThread.join()
         print("stopping recording server controller...")
 
@@ -56,8 +56,16 @@ class Controller():
         self.recordingStarted = time.time()
 
     def _recordingStop(self):
+        print("received stop command after %.2fs" % (time.time() - self.recordingStarted))
+        if self.recording.isWriting:
+            print("still writing previous sample. Abandoning current.")
+
         self.startCmdThread.join()
         self.startCmdThread = None
+        if self.recordingStarted is None:
+            print("start command not complete - start time not set")
+            return
+
         dt = time.time() - self.recordingStarted
         if dt < 1.0:
             print("abandoning recording after %.2fs" % dt)
@@ -66,7 +74,7 @@ class Controller():
             return
 
         if not self.shouldRecordClip.is_set():
-            print("received stop command but recording was not started")
+            print("but recording has not begun after %.2fs" % dt)
             return
 
         print("stopping recording after %.2fs" % dt)
@@ -97,6 +105,9 @@ for d in sd.query_devices():
 controller = Controller(audioIdx, sys.argv[1])
 
 class SampleCaptureServer(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass
+
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")

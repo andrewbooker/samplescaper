@@ -16,14 +16,17 @@ class LoopableSample():
         (data, ignore) = sf.read(file, dtype="float32")
         self.addBuffer(data[2 * 4410:])
         return self
+
+    def length(self):
+        return len(self.data) - (5 * 4410)
             
     def create(self, outFile):
-        length = len(self.data) - (5 * 4410)
-        halfWay = math.floor(length / 2)
+        l = self.length()
+        halfWay = math.floor(l / 2)
         xFade = math.floor(0.75 * halfWay)
         out = []
 
-        for s in range(length - xFade):
+        for s in range(l - xFade):
             p = s + xFade - halfWay
             if s < (halfWay - xFade):
                 out.append(self.data[s + halfWay])
