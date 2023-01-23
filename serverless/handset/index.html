@@ -177,8 +177,8 @@
                     post.open("POST", urlBase + ip + ":9966/" + cmd, true);
                     post.setRequestHeader("Content-Type", "application/json; charset=utf-8");
                     post.onload  = function() {
-                        const vol = post.response.volume
-                        document.getElementById("indicator-volume" + i).innerHTML = new Number(vol).toFixed(0);
+                        document.getElementById("indicator-volume" + i).innerHTML = new Number(post.response.volume).toFixed(0);
+                        document.getElementById("indicator-state" + i).innerHTML = post.response.state;
                     };
                     post.send();
                 });
