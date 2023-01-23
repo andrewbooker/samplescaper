@@ -76,15 +76,15 @@
             const tbody = document.getElementById("tbody");
 
             (function setupIndicators() {
-                ["speedR", "speedL", "direction", "state", "volume"].forEach(s => {
+                [["speedFwdRev", "&#8645;"], ["speedSideways", "&#8646;"], ["direction", "dir"], ["state", "state"], ["volume", "&#128264;"]].forEach(s => {
                     const row = document.createElement("tr");
                     const label = document.createElement("td");
-                    label.innerHTML = s;
+                    label.innerHTML = s[1];
                     label.className = "label";
                     row.appendChild(label);
                     units.map(u => u.colour).forEach((c, i) => {
                         const indicator = document.createElement("td");
-                        indicator.setAttribute("id", "indicator-" + s + i);
+                        indicator.setAttribute("id", "indicator-" + s[0] + i);
                         indicator.className = "indicator " + c;
                         row.appendChild(indicator);
                     });
@@ -103,6 +103,12 @@
                     case "decrease":
                         button.innerHTML = "-";
                         break;
+                    case "clockwise":
+                        button.innerHTML = "&#8635;";
+                        break;
+                    case "antiClockwise":
+                        button.innerHTML = "&#8634;";
+                        break;
                     default:
                         button.innerHTML = b;
                 }
@@ -111,7 +117,7 @@
             }
 
             (function setUpMotorControls() {
-                [["decrease", "increase"], "random", "ahead", ["left", "right"], "stop", "reverse"].forEach(b => {
+                [["decrease", "increase"], "random", "ahead", ["antiClockwise", "clockwise"], "stop", "reverse"].forEach(b => {
                     const row = document.createElement("tr");
                     const empty = document.createElement("td");
                     row.appendChild(empty);
@@ -140,8 +146,8 @@
             setInterval(() => { updateCamera(0); }, 1000);
 
             function setStats(s, i) {
-                document.getElementById("indicator-speedR" + i).innerHTML = new Number(s.speedR).toFixed(2);
-                document.getElementById("indicator-speedL" + i).innerHTML = new Number(s.speedL).toFixed(2);
+                document.getElementById("indicator-speedFwdRev" + i).innerHTML = new Number(s.speedFwdRev).toFixed(2);
+                document.getElementById("indicator-speedSideways" + i).innerHTML = new Number(s.speedSideways).toFixed(2);
                 document.getElementById("indicator-direction" + i).innerHTML = s.isForward ? "Forward" : "Reverse";
             }
 
@@ -178,7 +184,7 @@
                 });
             }
 
-            ["random", "ahead", "left", "right", "stop", "increase", "decrease", "reverse"].map(c => {
+            ["random", "ahead", "clockwise", "antiClockwise", "stop", "increase", "decrease", "reverse"].map(c => {
                 units.forEach((u, i) => {
                     const b = document.getElementById("button-" + c + i);
                     if (b) {
