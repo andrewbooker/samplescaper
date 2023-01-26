@@ -18,11 +18,11 @@ def nextAudioFileFrom(poolDir):
 def stretch():
     return 0.05 + (0.1 * (random.random() - 0.5))
     
-def noteFrom(fn):
+def noteFrom(fn, tonic):
     spl = fn.split("_")
     if spl[0].isdigit():
         return int(spl[0])
-    return int(spl[1])
+    return tonic
 
 def freq(n):
     return math.pow(2, (n - 69)/12.0) * 440
@@ -95,7 +95,7 @@ class Effect():
 
 class Pitch(Effect):
     def __init__(self, fn, noteRange):
-        self.note = noteFrom(fn)
+        self.note = noteFrom(fn, noteRange[0])
         self.noteRange = noteRange
 
     def appliedTo(self, data, sampleRate):
