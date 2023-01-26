@@ -6,6 +6,7 @@ import random
 import soundfile as sf
 import time
 import shutil
+import json
 
 
 def outArr(xfBuff, buff):
@@ -19,12 +20,16 @@ def outArr(xfBuff, buff):
 def anyOf(a):
     return a[random.randint(0, len(a) - 1)]
 
+def config():
+    with open(sys.argv[2]) as conf:
+        return json.load(conf)
 
 inDir = sys.argv[1]
 rawDir = os.path.join(inDir, "raw")
 factoryDir = os.path.join(inDir, "factory")
 outDir = os.path.join(inDir, "raw")
 sampleRate = 44100
+numsToUse = config()["arpeggiate"]
 
 class NoteChooser():
     def up(self):
@@ -54,8 +59,8 @@ def run():
     allFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, os.listdir(rawDir))]
     fIdx = len([f for f in filter(lambda fn: "arpeggiated" in fn, os.listdir(outDir))])
     random.shuffle(allFiles)
+    numToUse = anyOf(numsToUse)
 
-    numToUse = anyOf([5, 7, 9, 10, 11])
     if len(allFiles) < numToUse:
         print("insufficient files to arpeggiate", numToUse)
         return
@@ -93,4 +98,4 @@ def run():
 
 while True:
     run()
-    time.sleep(5)
+    time.sleep(10)
