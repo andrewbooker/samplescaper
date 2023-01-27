@@ -59,7 +59,7 @@ class Arpeggiator():
     def __init__(self):
         self.done = []
 
-    def run():
+    def run(self):
         allFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, os.listdir(rawDir))]
         fIdx = len([f for f in filter(lambda fn: "arpeggiated" in fn, os.listdir(outDir))])
         random.shuffle(allFiles)
