@@ -10,7 +10,7 @@ import json
 
 
 def nextAudioFileFrom(poolDir):
-    files = [f for f in filter(lambda f: ("wav" in f) and ("si" in f), os.listdir(poolDir))]
+    files = [f for f in filter(lambda f: ("wav" in f) and (("si" in f) or ("arpeggiated" in f)), os.listdir(poolDir))]
     if len(files) == 0:
         return None
     return os.path.join(poolDir, files[random.randint(0, len(files) - 1)])
