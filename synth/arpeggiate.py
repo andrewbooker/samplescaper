@@ -29,7 +29,9 @@ rawDir = os.path.join(inDir, "raw")
 factoryDir = os.path.join(inDir, "factory")
 outDir = os.path.join(inDir, "raw")
 sampleRate = 44100
-numsToUse = config()["arpeggiate"]
+conf = config()
+numsToUse = conf["arpeggiate"]
+maxPoolSize = int(conf["maxArpeggiatorPoolSize"]) if "maxArpeggiatorPoolSize" in conf else 30
 
 class NoteChooser():
     def up(self):
@@ -56,12 +58,13 @@ class CombUpDown(NoteChooser):
         return self.d
 
 class Arpeggiator():
-    def __init__(self):
+    def __init__(self, maxPoolSize):
+        self.maxPoolSize = maxPoolSize
         self.done = []
+        self.fIdx = 0
 
     def run(self):
         allFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, os.listdir(rawDir))]
-        fIdx = len([f for f in filter(lambda fn: "arpeggiated" in fn, os.listdir(outDir))])
         random.shuffle(allFiles)
         numToUse = anyOf(numsToUse)
 
@@ -76,12 +79,12 @@ class Arpeggiator():
         inFiles = [[len(f), f, 0] for f in inf]
 
         unitSampleLength = int(sampleRate * (0.05 + (0.2 * random.random())))
-        xfadeLength = int(0.02 + (0.4 * random.random()) * unitSampleLength)
+        xfadeLength = int(0.03 + (0.4 * random.random()) * unitSampleLength)
         print("unitSampleLength", unitSampleLength)
         pulses = random.randint(18, 50)
         print(pulses, "pulses")
 
-        fqfn = os.path.join(factoryDir, "arpeggiated_%04d.wav" % fIdx)
+        fqfn = os.path.join(factoryDir, "arpeggiated_%04d.wav" % self.fIdx)
         outfile = sf.SoundFile(fqfn, "w", samplerate=sampleRate, channels=1)
 
         print("writing", fqfn)
@@ -99,14 +102,15 @@ class Arpeggiator():
         outfile.close()
         shutil.move(fqfn, outDir)
         print("moved to live pool")
+        self.fIdx += 1
         self.done.append(os.path.join(outDir, fqfn))
-        if len(self.done) > 20:
+        if len(self.done) > self.maxPoolSize:
             d = self.done[0]
-            print("dropping", d)
+            print("arpeggiator dropping", d)
             os.remove(d)
             self.done.remove(d)
 
-arp = Arpeggiator()
+arp = Arpeggiator(maxPoolSize)
 while True:
     arp.run()
     time.sleep(10)

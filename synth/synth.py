@@ -231,9 +231,10 @@ def chooseTemplateFrom(frq):
     # this must work differently, otherwise a new random waveshape will be applied to each cycle
     return ("ge", TemplateProvider(randomTemplateFrom, quadrants)) 
 
-MAX_LIVE_POOL_SIZE = 63
+
 class Builder():
-    def __init__(self, outDir):
+    def __init__(self, outDir, maxPoolSize):
+        self.maxPoolSize = maxPoolSize
         self.buildDir = os.path.join(outDir, "factory")
         self.outDir = os.path.join(outDir, "raw")
         files = [os.path.join(self.outDir, f) for f in os.listdir(self.outDir)]
@@ -264,9 +265,9 @@ class Builder():
         shutil.move(fqfn, self.outDir)
         self.done.append(os.path.join(self.outDir, fn))
 
-        if len(self.done) > MAX_LIVE_POOL_SIZE:
+        if len(self.done) > self.maxPoolSize:
             d = self.done[0]
-            print("dropping", d)
+            print("synth dropping", d)
             os.remove(d)
             self.done.remove(d)
 
@@ -286,7 +287,8 @@ notes = [tonic]
 for m in range(len(mode)):
     notes.append(notes[m] + mode[m])
 
-builder = Builder(outDir)
+maxPoolSize = int(conf["maxSynthPoolSize"]) if "maxSynthPoolSize" in conf else 30
+builder = Builder(outDir, maxPoolSize)
 
 i = 0
 octave = 0
