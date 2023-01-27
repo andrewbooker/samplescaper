@@ -55,47 +55,58 @@ class CombUpDown(NoteChooser):
     def down(self):
         return self.d
 
-def run():
-    allFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, os.listdir(rawDir))]
-    fIdx = len([f for f in filter(lambda fn: "arpeggiated" in fn, os.listdir(outDir))])
-    random.shuffle(allFiles)
-    numToUse = anyOf(numsToUse)
+class Arpeggiator():
+    def __init__(self):
+        self.done = []
 
-    if len(allFiles) < numToUse:
-        print("insufficient files to arpeggiate", numToUse)
-        return
-    print("using", numToUse, "files")
-    chooser = CombUpDown(allFiles, numToUse)
-    toUse = chooser.up() + chooser.down()
+    def run():
+        allFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, os.listdir(rawDir))]
+        fIdx = len([f for f in filter(lambda fn: "arpeggiated" in fn, os.listdir(outDir))])
+        random.shuffle(allFiles)
+        numToUse = anyOf(numsToUse)
 
-    inf = [sf.read(os.path.join(rawDir, f))[0] for f in toUse]
-    inFiles = [[len(f), f, 0] for f in inf]
+        if len(allFiles) < numToUse:
+            print("insufficient files to arpeggiate", numToUse)
+            return
+        print("using", numToUse, "files")
+        chooser = CombUpDown(allFiles, numToUse)
+        toUse = chooser.up() + chooser.down()
 
-    unitSampleLength = int(sampleRate * (0.05 + (0.2 * random.random())))
-    xfadeLength = int(0.02 + (0.4 * random.random()) * unitSampleLength)
-    print("unitSampleLength", unitSampleLength)
-    pulses = random.randint(18, 50)
-    print(pulses, "pulses")
+        inf = [sf.read(os.path.join(rawDir, f))[0] for f in toUse]
+        inFiles = [[len(f), f, 0] for f in inf]
 
-    fqfn = os.path.join(factoryDir, "arpeggiated_%04d.wav" % fIdx)
-    outfile = sf.SoundFile(fqfn, "w", samplerate=sampleRate, channels=1)
+        unitSampleLength = int(sampleRate * (0.05 + (0.2 * random.random())))
+        xfadeLength = int(0.02 + (0.4 * random.random()) * unitSampleLength)
+        print("unitSampleLength", unitSampleLength)
+        pulses = random.randint(18, 50)
+        print(pulses, "pulses")
 
-    print("writing", fqfn)
-    xfBuff = []
-    for p in range(pulses):
-        for fd in inFiles:
-            start = fd[2]
-            end = start + unitSampleLength
-            outfile.write(outArr(xfBuff, [fd[1][s] for s in range(start, end)]))
-            xfBuff = [fd[1][s] for s in range(end, end + xfadeLength)]
-            fd[2] += unitSampleLength
-            if (fd[2] + unitSampleLength + xfadeLength) > fd[0]:
-                fd[2] = 0
+        fqfn = os.path.join(factoryDir, "arpeggiated_%04d.wav" % fIdx)
+        outfile = sf.SoundFile(fqfn, "w", samplerate=sampleRate, channels=1)
 
-    outfile.close()
-    shutil.move(fqfn, outDir)
-    print("moved to live pool")
+        print("writing", fqfn)
+        xfBuff = []
+        for p in range(pulses):
+            for fd in inFiles:
+                start = fd[2]
+                end = start + unitSampleLength
+                outfile.write(outArr(xfBuff, [fd[1][s] for s in range(start, end)]))
+                xfBuff = [fd[1][s] for s in range(end, end + xfadeLength)]
+                fd[2] += unitSampleLength
+                if (fd[2] + unitSampleLength + xfadeLength) > fd[0]:
+                    fd[2] = 0
 
+        outfile.close()
+        shutil.move(fqfn, outDir)
+        print("moved to live pool")
+        self.done.append(os.path.join(outDir, fqfn))
+        if len(self.done) > 20:
+            d = self.done[0]
+            print("dropping", d)
+            os.remove(d)
+            self.done.remove(d)
+
+arp = Arpeggiator()
 while True:
-    run()
+    arp.run()
     time.sleep(10)
