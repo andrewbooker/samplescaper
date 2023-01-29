@@ -30,7 +30,7 @@ then
     python ~/Documents/samplescaper/synth/arpeggiate.py ~/Music/pool ~/Documents/samplescaper/config.json &
 fi
 python ~/Documents/samplescaper/synth/loop.py ~/Music/pool &
-python ~/Documents/samplescaper/serverless/controller.py ~/Music/pool ~/Documents/samplescaper/config.json $(jq .leftRelativeToRight ~/Documents/static.json) $(jq .audioDevice ~/Documents/static.json) &
+python ~/Documents/samplescaper/serverless/controller.py ~/Music/pool ~/Documents/samplescaper/config.json $(jq .leftRelativeToRight ~/Documents/static.json) $(jq -r .audioDevice ~/Documents/static.json) &
 cd ~/Documents/samplescaper/serverless/handset
 ./serve.sh &
 

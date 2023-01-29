@@ -15,6 +15,7 @@ def config(item):
 player = Player(sys.argv[1], 3)
 leftRelativeToRight = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
 audioDevice = sys.argv[4] if len(sys.argv) > 4 else "Digital"
+print("using audio device", audioDevice)
 
 class Volume():
     def __init__(self, leftRelativeToRight):
