@@ -6,6 +6,8 @@ import random
 import datetime
 import shutil
 import json
+import os
+import sys
 
 TEMPLATE_LENGTH = 256
 SAMPLE_RATE = 44100
@@ -231,6 +233,11 @@ def chooseTemplateFrom(frq):
     # this must work differently, otherwise a new random waveshape will be applied to each cycle
     return ("ge", TemplateProvider(randomTemplateFrom, quadrants)) 
 
+def deleteFile(d):
+    if os.path.isfile(d) and "444" not in oct(os.stat(d)[0])[-3:]:
+        os.remove(d)
+        return True
+    return False
 
 class Builder():
     def __init__(self, outDir, maxPoolSize):
@@ -267,12 +274,14 @@ class Builder():
 
         if len(self.done) > self.maxPoolSize:
             d = self.done[0]
-            print("synth dropping", d)
-            os.remove(d)
-            self.done.remove(d)
+            if not os.path.isfile(d):
+                print("synth intending to drop", d, "but already removed")
+            elif deleteFile(d):
+                print("synth dropped", d)
+                self.done.remove(d)
+            else:
+                print("arpeggiator could not drop r/o", d)
 
-import sys
-import os
 import time
 
 def config():

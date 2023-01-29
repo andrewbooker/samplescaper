@@ -39,7 +39,12 @@ def pannedSample(vals, pan):
     return [vals[0] * pan, vals[len(vals) - 1] * (1.0 - pan)]
 
 def convert(files, inDir, factoryDir, outDir):
-    fd = [sf.read(os.path.join(inDir, f))[0] for f in files]
+    fqfns = [os.path.join(inDir, f) for f in files]
+    previousModes = [os.stat(f)[0] for f in fqfns]
+    [os.chmod(f, 0o444) for f in fqfns]
+    fd = [sf.read(f)[0] for f in fqfns]
+    for i in range(len(fqfns)):
+        os.chmod(fqfns[i], previousModes[i])
     fileData = [(len(d), d) for d in fd]
 
     sampleRate = 44100
@@ -82,8 +87,12 @@ def convertItems(rawFiles, outDir):
 
     if l == BATCH_SIZE:
         for f in rawFiles:
-            print("deleting", f)
-            os.remove(os.path.join(inDir, f))
+            fqfn = os.path.join(inDir, f)
+            if os.path.exists(fq):
+                print("looper deleting", f)
+                os.remove(fqfn)
+            else:
+                print("looper about to delete", f, "but already deleted")
 
 while True:
     rawFiles = os.listdir(inDir)

@@ -24,6 +24,13 @@ def config():
     with open(sys.argv[2]) as conf:
         return json.load(conf)
 
+def deleteFile(d):
+    if os.path.isfile(d) and "444" not in oct(os.stat(d)[0])[-3:]:
+        os.remove(d)
+        return True
+    return False
+
+
 inDir = sys.argv[1]
 rawDir = os.path.join(inDir, "raw")
 factoryDir = os.path.join(inDir, "factory")
@@ -106,9 +113,13 @@ class Arpeggiator():
         self.done.append(os.path.join(outDir, fqfn))
         if len(self.done) > self.maxPoolSize:
             d = self.done[0]
-            print("arpeggiator dropping", d)
-            os.remove(d)
-            self.done.remove(d)
+            if not os.path.isfile(d):
+                print("arpeggiator intending to drop", d, "but already removed")
+            elif deleteFile(d):
+                print("arpeggiator dropped", d)
+                self.done.remove(d)
+            else:
+                print("arpeggiator could not drop r/o", d)
 
 arp = Arpeggiator(maxPoolSize)
 while True:
