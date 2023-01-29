@@ -113,13 +113,12 @@ import threading
 server = threading.Thread(target=startServer, args=(), daemon=False)
 server.start()
 
-startDelayMins = int(config("startDelayMins"))
-print("Server started. ready in %d min(s)" % startDelayMins)
-time.sleep(startDelayMins * 60)
-
 if volume.volume == 0:
     volume.setTo(int(config("volume")))
 
+startDelayMins = int(config("startDelayMins"))
+print("Server started. ready in %d min(s)" % startDelayMins)
+time.sleep(startDelayMins * 60)
 playState.set("ready")
 
 playingTimeMins = int(config("playingTimeMins"))
