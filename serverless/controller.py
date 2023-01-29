@@ -67,10 +67,10 @@ class Controller(BaseHTTPRequestHandler):
         volume.setTo(40)
 
     def _volDown(self):
-        volume.setTo(volume.volume - 5)
+        volume.setTo(max(volume.volume - 5, 0))
 
     def _volUp(self):
-        volume.setTo(volume.volume + 5)
+        volume.setTo(min(volume.volume + 5, 100))
 
     def _volMax(self):
         volume.setTo(100)
