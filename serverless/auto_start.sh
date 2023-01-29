@@ -4,7 +4,8 @@ then
     python ~/Documents/remotecamera/server.py 2>/dev/null &
 fi
 
-if ! lsusb -v 2>/dev/null | grep Microphone
+raspi-gpio set 26 pu
+if [ $(raspi-gpio get 26 | sed 's/.*level=\([0-1]\).*/\1/') = 0 ]
 then
     cd ~/Documents/rotation/
     ./setup.sh home ~/Documents/config.json
