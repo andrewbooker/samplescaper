@@ -40,11 +40,7 @@ def pannedSample(vals, pan):
 
 def convert(files, inDir, factoryDir, outDir):
     fqfns = [os.path.join(inDir, f) for f in files]
-    previousModes = [os.stat(f)[0] for f in fqfns]
-    [os.chmod(f, 0o444) for f in fqfns]
     fd = [sf.read(f)[0] for f in fqfns]
-    for i in range(len(fqfns)):
-        os.chmod(fqfns[i], previousModes[i])
     fileData = [(len(d), d) for d in fd]
 
     sampleRate = 44100
