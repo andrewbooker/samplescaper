@@ -233,22 +233,20 @@ def chooseTemplateFrom(frq):
     # this must work differently, otherwise a new random waveshape will be applied to each cycle
     return ("ge", TemplateProvider(randomTemplateFrom, quadrants)) 
 
-def deleteFile(d):
-    if os.path.isfile(d) and "444" not in oct(os.stat(d)[0])[-3:]:
-        os.remove(d)
-        return True
-    return False
-
 class Builder():
     def __init__(self, outDir, maxPoolSize):
         self.maxPoolSize = maxPoolSize
         self.buildDir = os.path.join(outDir, "factory")
         self.outDir = os.path.join(outDir, "raw")
-        files = [os.path.join(self.outDir, f) for f in os.listdir(self.outDir)]
-        self.done = sorted(files, key=lambda f: os.path.getmtime(f))
-        print(len(self.done), "files in pool already")
 
     def build(self, n):
+        files = [os.path.join(self.outDir, f) for f in os.listdir(self.outDir)]
+        alreadyInPool = len(files)
+        print(alreadyInPool, "files in pool already")
+        if alreadyInPool >= self.maxPoolSize:
+            print("enough")
+            return
+
         frq = freq(n)
         (pref, templateProvider) = chooseTemplateFrom(frq)
         fn = "%d_%s_%s.wav" % (n, pref, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
@@ -272,15 +270,6 @@ class Builder():
         shutil.move(fqfn, self.outDir)
         self.done.append(os.path.join(self.outDir, fn))
 
-        if len(self.done) > self.maxPoolSize:
-            d = self.done[0]
-            if not os.path.isfile(d):
-                print("synth intending to drop", d, "but already removed")
-            elif deleteFile(d):
-                print("synth dropped", d)
-                self.done.remove(d)
-            else:
-                print("arpeggiator could not drop r/o", d)
 
 import time
 

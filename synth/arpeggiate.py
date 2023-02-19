@@ -24,12 +24,6 @@ def config():
     with open(sys.argv[2]) as conf:
         return json.load(conf)
 
-def deleteFile(d):
-    if os.path.isfile(d) and "444" not in oct(os.stat(d)[0])[-3:]:
-        os.remove(d)
-        return True
-    return False
-
 
 inDir = sys.argv[1]
 rawDir = os.path.join(inDir, "raw")
@@ -71,15 +65,26 @@ class Arpeggiator():
         self.fIdx = 0
 
     def run(self):
-        allFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, os.listdir(rawDir))]
-        random.shuffle(allFiles)
-        numToUse = anyOf(numsToUse)
+        allFiles = os.listdir(rawDir)
+        rawFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, allFiles))]
+        arpeggiatedFiles = [f for f in filter(lambda fn: "arpeggiated" in fn, allFiles))]
+        numberOfArp = len(arpeggiatedFiles)
+        numberOfRaw = len(rawFiles)
+        if numberOfArp > numberOfRaw:
+            print("already have more arpeggiated than raw files")
+            return
+        if (numberOfRaw + numberOfArp) > 30:
+            print("enough files in pool already")
+            return
 
-        if len(allFiles) < numToUse:
+        numToUse = anyOf(numsToUse)
+        if numberOfRaw < numToUse:
             print("insufficient files to arpeggiate", numToUse)
             return
         print("using", numToUse, "files")
-        chooser = CombUpDown(allFiles, numToUse)
+        
+        random.shuffle(rawFiles)
+        chooser = CombUpDown(rawFiles, numToUse)
         toUse = chooser.up() + chooser.down()
 
         inf = [sf.read(os.path.join(rawDir, f))[0] for f in toUse]
@@ -111,15 +116,6 @@ class Arpeggiator():
         print("moved to live pool")
         self.fIdx += 1
         self.done.append(os.path.join(outDir, fqfn))
-        if len(self.done) > self.maxPoolSize:
-            d = self.done[0]
-            if not os.path.isfile(d):
-                print("arpeggiator intending to drop", d, "but already removed")
-            elif deleteFile(d):
-                print("arpeggiator dropped", d)
-                self.done.remove(d)
-            else:
-                print("arpeggiator could not drop r/o", d)
 
 arp = Arpeggiator(maxPoolSize)
 while True:
