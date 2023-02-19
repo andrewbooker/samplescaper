@@ -32,9 +32,15 @@ class Volume():
 
 class PlayState():
     def __init__(self):
-        self.state = "not ready"
+        self.state = "not started"
 
     def get(self):
+        if "not" in self.state:
+            numFiles = len(os.listdir(os.path.join(sys.argv[1], "raw")))
+            if numFiles < 6:
+                return "built %d/%d" % (numFiles, 6)
+            else:
+                self.state = "ready"
         return self.state
 
     def set(self, s):
@@ -117,11 +123,6 @@ server.start()
 
 if volume.volume == 0:
     volume.setTo(int(config("volume")))
-
-startDelayMins = int(config("startDelayMins"))
-print("Server started. ready in %d min(s)" % startDelayMins)
-time.sleep(startDelayMins * 60)
-playState.set("ready")
 
 playingTimeMins = int(config("playingTimeMins"))
 if playingTimeMins > 0:
