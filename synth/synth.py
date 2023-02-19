@@ -278,13 +278,6 @@ def config():
         return json.load(conf)
 
 outDir = sys.argv[1]
-conf = config()
-tonic = conf["tonic"]
-mode = conf["mode"]
-notes = [tonic]
-for m in range(len(mode)):
-    notes.append(notes[m] + mode[m])
-
 maxPoolSize = int(conf["maxSynthPoolSize"]) if "maxSynthPoolSize" in conf else 30
 builder = Builder(outDir, maxPoolSize)
 
@@ -292,6 +285,13 @@ i = 0
 octave = 0
 start = time.time()
 while True:
+    conf = config()
+    tonic = conf["tonic"]
+    mode = conf["mode"]
+    notes = [tonic]
+    for m in range(len(mode)):
+        notes.append(notes[m] + mode[m])
+
     n = notes[i]
     builder.build(n + (octave * 12))
     i += 1

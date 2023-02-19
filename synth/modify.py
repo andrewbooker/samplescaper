@@ -157,18 +157,17 @@ def config():
 inDir = sys.argv[1]
 outDir = sys.argv[2]
 xFade = 441
-conf = config()
-tonic = conf["tonic"]
-mode = conf["mode"]
-
-notes = [tonic]
-for m in range(len(mode)):
-    notes.append(notes[m] + mode[m])
-
-print("based on note range", notes)
 
 while True:
     f = nextAudioFileFrom(inDir)
+    conf = config()
+    tonic = conf["tonic"]
+    mode = conf["mode"]
+    notes = [tonic]
+    for m in range(len(mode)):
+    notes.append(notes[m] + mode[m])
+    print("based on note range", notes)
+
     if f is not None:
         print("using", os.path.basename(f))
         data, sampleRate = sf.read(f)
