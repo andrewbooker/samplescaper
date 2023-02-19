@@ -16,6 +16,7 @@ maxVol = 95
 player = Player(sys.argv[1], 3)
 leftRelativeToRight = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
 audioDevice = sys.argv[4] if len(sys.argv) > 4 else "Digital"
+volumeCoeff = 0.3 if "Master" in audioDevice else 1.0
 print("using audio device", audioDevice)
 
 class Volume():
@@ -26,9 +27,8 @@ class Volume():
     def setTo(self, v):
         vl = v if leftRelativeToRight > 1 else int(v * self.lr)
         vr = v if leftRelativeToRight < 1 else int(v / self.lr)
-        coeff = 0.3 if "Master" in audioDevice else 1.0
-        os.system("amixer sset '%s' %d%%,%d%%" % (audioDevice, vl * coeff, vr * coeff))
-        self.volume = v * coeff
+        os.system("amixer sset '%s' %d%%,%d%%" % (audioDevice, int(vl * volumeCoeff), int(vr * volumeCoeff)))
+        self.volume = v
 
 class PlayState():
     def __init__(self):
@@ -84,7 +84,7 @@ class Controller(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
     def _writeState(self):
-        self.wfile.write(json.dumps({"volume": volume.volume, "state": playState.get()}).encode("utf-8"))
+        self.wfile.write(json.dumps({"volume": int(volume.volume * volumeCoeff), "state": playState.get()}).encode("utf-8"))
 
     def _sendVol(self):
         self._standardResponse()
