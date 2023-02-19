@@ -165,7 +165,7 @@ while True:
     mode = conf["mode"]
     notes = [tonic]
     for m in range(len(mode)):
-    notes.append(notes[m] + mode[m])
+        notes.append(notes[m] + mode[m])
     print("based on note range", notes)
 
     if f is not None:
