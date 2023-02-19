@@ -71,7 +71,6 @@
                     <button id="button-volMin">Min</button>
                     <button id="button-volMax">Max</button>
                 </div>
-                <div><img id="img0"/><div>
                 <div><button id="button-shutdown">Shutdown</button></div>
             </div>
         </div>
@@ -151,10 +150,6 @@
                     tbody.appendChild(row);
                 });
             })();
-
-            function updateCamera(i) {
-                document.getElementById("img" + i).setAttribute("src", urlBase + ips[i] + ":9955?" + new Date().getTime());
-            }
 
             function setStats(s, i) {
                 document.getElementById("indicator-speedFwdRev" + i).innerHTML = new Number(s.speedFwdRev).toFixed(2);
@@ -273,7 +268,6 @@
             setInterval(() => {
                 setDisconnected();
                 getVolume();
-                updateCamera(0);
                 getStats();
             }, 1000);
         </script>

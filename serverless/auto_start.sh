@@ -1,8 +1,4 @@
 #!/bin/bash
-if v4l2-ctl --list-devices 2>/dev/null | grep video0
-then
-    python ~/Documents/remotecamera/server.py 2>/dev/null &
-fi
 
 raspi-gpio set 26 pu
 if [ $(raspi-gpio get 26 | sed 's/.*level=\([0-1]\).*/\1/') = 0 ]
