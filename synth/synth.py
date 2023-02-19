@@ -278,7 +278,8 @@ def config():
         return json.load(conf)
 
 outDir = sys.argv[1]
-maxPoolSize = int(conf["maxSynthPoolSize"]) if "maxSynthPoolSize" in conf else 30
+c = config()
+maxPoolSize = int(c["maxSynthPoolSize"]) if "maxSynthPoolSize" in c else 30
 builder = Builder(outDir, maxPoolSize)
 
 i = 0
