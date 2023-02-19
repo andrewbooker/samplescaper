@@ -1,3 +1,5 @@
+
+
 <html>
     <head>
         <style>
@@ -19,6 +21,7 @@
             }
             .indicator {
                 height: 30px;
+                border-radius: 10px;
             }
             .controls {
                 display: flex;
@@ -42,6 +45,14 @@
             }
             .pink {
                 color: pink
+            }
+            @keyframes connectivity {
+                from {
+                    background-color: green;
+                }
+                to {
+                    background-color: orange;
+                }
             }
         </style>
     </head>
@@ -143,8 +154,6 @@
                 document.getElementById("img" + i).setAttribute("src", urlBase + ips[i] + ":9955?" + new Date().getTime());
             }
 
-            setInterval(() => { updateCamera(0); }, 1000);
-
             function setStats(s, i) {
                 document.getElementById("indicator-speedFwdRev" + i).innerHTML = new Number(s.speedFwdRev).toFixed(2);
                 document.getElementById("indicator-speedSideways" + i).innerHTML = new Number(s.speedSideways).toFixed(2);
@@ -170,16 +179,32 @@
                 post.send();
             }
 
+            function setDisconnected() {
+                ips.forEach((_, i) => {
+                    const disconnected = "background-color: orange;";
+                    ["volume"].forEach(e => {
+                        const el = document.getElementById("indicator-" + e + i);
+                        el.setAttribute("style", disconnected);
+                    });
+                });
+            }
+
+            function displayVolume(i, v, s) {
+                const vol = document.getElementById("indicator-volume" + i)
+                const state = document.getElementById("indicator-state" + i)
+                vol.innerHTML = new Number(v).toFixed(0);
+                state.innerHTML = s;
+                const fade = "animation-name: connectivity; animation-duration: 1s;"
+                vol.setAttribute("style", fade)
+            }
+
             function postSoundCommand(cmd) {
                 ips.forEach((ip, i) => {
                     const post = new XMLHttpRequest();
                     post.responseType = "json";
                     post.open("POST", urlBase + ip + ":9966/" + cmd, true);
                     post.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-                    post.onload  = function() {
-                        document.getElementById("indicator-volume" + i).innerHTML = new Number(post.response.volume).toFixed(0);
-                        document.getElementById("indicator-state" + i).innerHTML = post.response.state;
-                    };
+                    post.onload = () => displayVolume(i, req.response.volume, req.response.state);
                     post.send();
                 });
             }
@@ -238,15 +263,16 @@
                     const req = new XMLHttpRequest();
                     req.responseType = "json";
                     req.open("GET", urlBase + ip + ":9966/", true);
-                    req.onload  = function() {
-                        document.getElementById("indicator-volume" + i).innerHTML = new Number(req.response.volume).toFixed(0);
-                        document.getElementById("indicator-state" + i).innerHTML = req.response.state;
-                    };
+                    req.onload = () => displayVolume(i, req.response.volume, req.response.state);
                     req.send();
                 });
             }
-            getVolume();
-            setInterval(getStats, 1001);
+            setInterval(() => {
+                setDisconnected();
+                getVolume();
+                updateCamera(0);
+                getStats();
+            }, 1000);
         </script>
     </body>
 </html>
