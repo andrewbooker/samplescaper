@@ -66,8 +66,8 @@ class Arpeggiator():
 
     def run(self):
         allFiles = os.listdir(rawDir)
-        rawFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, allFiles))]
-        arpeggiatedFiles = [f for f in filter(lambda fn: "arpeggiated" in fn, allFiles))]
+        rawFiles = [f for f in filter(lambda fn: "arpeggiated" not in fn, allFiles)]
+        arpeggiatedFiles = [f for f in filter(lambda fn: "arpeggiated" in fn, allFiles)]
         numberOfArp = len(arpeggiatedFiles)
         numberOfRaw = len(rawFiles)
         if numberOfArp > numberOfRaw:
