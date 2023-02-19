@@ -58,7 +58,7 @@
     </head>
     <body>
         <div class="controls">
-            <table cellspacing="0" cellpadding="0">
+            <table cellspacing="3" cellpadding="3">
                 <tbody id="tbody"></tbody>
             </table>
             <div class="buttons">
@@ -85,6 +85,8 @@
             const ips = units.map(u => u.ip);
             const urlBase = "http://192.168.1.";
             const tbody = document.getElementById("tbody");
+            const disconnected = "background-color: orange;";
+            const connected = "animation-name: connectivity; animation-duration: 1s;" + disconnected;
 
             (function setupIndicators() {
                 [["speedFwdRev", "&#8645;"], ["speedSideways", "&#8646;"], ["direction", "dir"], ["state", "state"], ["volume", "&#128264;"]].forEach(s => {
@@ -157,7 +159,9 @@
             function setStats(s, i) {
                 document.getElementById("indicator-speedFwdRev" + i).innerHTML = new Number(s.speedFwdRev).toFixed(2);
                 document.getElementById("indicator-speedSideways" + i).innerHTML = new Number(s.speedSideways).toFixed(2);
-                document.getElementById("indicator-direction" + i).innerHTML = s.isForward ? "Forward" : "Reverse";
+                const direction = document.getElementById("indicator-direction" + i);
+                direction.innerHTML = s.isForward ? "Forward" : "Reverse";
+                direction.setAttribute("style", connected);
             }
 
             function getStats() {
@@ -181,8 +185,7 @@
 
             function setDisconnected() {
                 ips.forEach((_, i) => {
-                    const disconnected = "background-color: orange;";
-                    ["volume"].forEach(e => {
+                    ["volume", "direction"].forEach(e => {
                         const el = document.getElementById("indicator-" + e + i);
                         el.setAttribute("style", disconnected);
                     });
@@ -194,8 +197,8 @@
                 const state = document.getElementById("indicator-state" + i)
                 vol.innerHTML = new Number(v).toFixed(0);
                 state.innerHTML = s;
-                const fade = "animation-name: connectivity; animation-duration: 1s;"
-                vol.setAttribute("style", fade)
+
+                vol.setAttribute("style", connected)
             }
 
             function postSoundCommand(cmd) {
