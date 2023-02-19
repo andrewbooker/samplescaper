@@ -268,7 +268,6 @@ class Builder():
         sf.write(fqfn, Loopable(data).create(), SAMPLE_RATE)
         print("moving to pool")
         shutil.move(fqfn, self.outDir)
-        self.done.append(os.path.join(self.outDir, fn))
 
 
 import time
