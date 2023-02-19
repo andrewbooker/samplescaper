@@ -12,6 +12,7 @@ def config(item):
         c = json.load(conf)
         return c[item]
 
+maxVol = 95
 player = Player(sys.argv[1], 3)
 leftRelativeToRight = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
 audioDevice = sys.argv[4] if len(sys.argv) > 4 else "Digital"
@@ -25,8 +26,9 @@ class Volume():
     def setTo(self, v):
         vl = v if leftRelativeToRight > 1 else int(v * self.lr)
         vr = v if leftRelativeToRight < 1 else int(v / self.lr)
-        os.system("amixer sset '%s' %d%%,%d%%" % (audioDevice,  vl, vr))
-        self.volume = v
+        coeff = 0.3 if "Master" in audioDevice else 1.0
+        os.system("amixer sset '%s' %d%%,%d%%" % (audioDevice, vl * coeff, vr * coeff))
+        self.volume = v * coeff
 
 class PlayState():
     def __init__(self):
@@ -70,10 +72,10 @@ class Controller(BaseHTTPRequestHandler):
         volume.setTo(max(volume.volume - 5, 0))
 
     def _volUp(self):
-        volume.setTo(min(volume.volume + 5, 100))
+        volume.setTo(min(volume.volume + 5, maxVol))
 
     def _volMax(self):
-        volume.setTo(100)
+        volume.setTo(maxVol)
 
     def _standardResponse(self):
         self.send_response(200)
