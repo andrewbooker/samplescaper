@@ -88,7 +88,7 @@
             const connected = "animation-name: connectivity; animation-duration: 1s;" + disconnected;
 
             (function setupIndicators() {
-                [["speedFwdRev", "&#8645;"], ["speedSideways", "&#8646;"], ["direction", "dir"], ["state", "state"], ["volume", "&#128264;"]].forEach(s => {
+                [["speedFwdRev", "&#8645;"], ["speedSideways", "&#8646;"], ["direction", "dir"], ["state", "state"], ["volume", "&#128264;"], ["time", "&#8986"]].forEach(s => {
                     const row = document.createElement("tr");
                     const label = document.createElement("td");
                     label.innerHTML = s[1];
@@ -187,13 +187,16 @@
                 });
             }
 
-            function displayVolume(i, v, s) {
+            function displayVolume(i, resp) {
                 const vol = document.getElementById("indicator-volume" + i)
                 const state = document.getElementById("indicator-state" + i)
-                vol.innerHTML = new Number(v).toFixed(0);
-                state.innerHTML = s;
+                const ts = document.getElementById("indicator-time" + i)
+                vol.innerHTML = new Number(resp.volume).toFixed(0);
+                state.innerHTML = resp.state;
+                ts.innerHTML = resp.time;
 
                 vol.setAttribute("style", connected)
+                ts.setAttribute("style", "font-size: 120%;")
             }
 
             function postSoundCommand(cmd) {
@@ -202,7 +205,7 @@
                     post.responseType = "json";
                     post.open("POST", urlBase + ip + ":9966/" + cmd, true);
                     post.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-                    post.onload = () => displayVolume(i, req.response.volume, req.response.state);
+                    post.onload = () => displayVolume(i, req.response);
                     post.send();
                 });
             }
@@ -261,7 +264,7 @@
                     const req = new XMLHttpRequest();
                     req.responseType = "json";
                     req.open("GET", urlBase + ip + ":9966/", true);
-                    req.onload = () => displayVolume(i, req.response.volume, req.response.state);
+                    req.onload = () => displayVolume(i, req.response);
                     req.send();
                 });
             }
