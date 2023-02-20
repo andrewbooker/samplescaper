@@ -5,6 +5,7 @@ import os
 import json
 import re
 import sys
+import datetime
 from playPrepped import Player
 
 def config(item):
@@ -90,7 +91,11 @@ class Controller(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
     def _writeState(self):
-        self.wfile.write(json.dumps({"volume": int(volume.volume * volumeCoeff), "state": playState.get()}).encode("utf-8"))
+        self.wfile.write(json.dumps({
+            "volume": int(volume.volume * volumeCoeff),
+            "state": playState.get(),
+            "time": datetime.datetime.now().strftime("%d %b %Y %H:%M")
+        }).encode("utf-8"))
 
     def _sendVol(self):
         self._standardResponse()
