@@ -31,6 +31,16 @@
                 max-width: 50%;
                 display: flex;
                 flex-direction: column;
+                justify-content: space-between;
+            }
+            .sound {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .system {
+                display: flex;
+                flex-direction: column;
                 align-items: center;
             }
             .orientation, volume {
@@ -62,16 +72,21 @@
                 <tbody id="tbody"></tbody>
             </table>
             <div class="buttons">
-                <div><button id="button-play">start</button></div>
-                <div class="volume">
-                    <button id="button-volDown"> - </button>
-                    <button id="button-volUp"> + </button>
+                <div class="sound">
+                    <div><button id="button-play">start</button></div>
+                    <div class="volume">
+                        <button id="button-volDown"> - </button>
+                        <button id="button-volUp"> + </button>
+                    </div>
+                    <div class="volume">
+                        <button id="button-volMin">Min</button>
+                        <button id="button-volMax">Max</button>
+                    </div>
                 </div>
-                <div class="volume">
-                    <button id="button-volMin">Min</button>
-                    <button id="button-volMax">Max</button>
+                <div class="system">
+                    <div><button id="button-setTime">Set time</button></div>
+                    <div><button id="button-shutdown">Shutdown</button></div>
                 </div>
-                <div><button id="button-shutdown">Shutdown</button></div>
             </div>
         </div>
         <script>
@@ -205,7 +220,7 @@
                     post.responseType = "json";
                     post.open("POST", urlBase + ip + ":9966/" + cmd, true);
                     post.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-                    post.onload = () => displayVolume(i, req.response);
+                    post.onload = () => displayVolume(i, post.response);
                     post.send();
                 });
             }
@@ -257,6 +272,17 @@
                     }
                 };
             })();
+            document.getElementById("button-setTime").setAttribute("onclick", "setTime();");
+
+            function setTime() {
+                ips.forEach((ip, i) => {
+                    const post = new XMLHttpRequest();
+                    post.responseType = "json";
+                    post.open("POST", urlBase + ip + ":9966/setTime", true);
+                    post.setRequestHeader("Current-Time", new Date().toISOString());
+                    post.send();
+                });
+            }
             document.getElementById("button-play").setAttribute("onclick", "play.changeState();");
 
             function getVolume() {
