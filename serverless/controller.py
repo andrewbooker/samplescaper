@@ -84,6 +84,9 @@ class Controller(BaseHTTPRequestHandler):
     def _volMax(self):
         volume.setTo(maxVol)
 
+    def _setTime(self):
+        os.system("sudo date --set %s" % self.headers.get("Current-Time"))
+
     def _standardResponse(self):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -105,6 +108,7 @@ class Controller(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self._standardResponse()
         self.send_header("Access-Control-Allow-Methods", "GET, POST")
+        self.send_header("Access-Control-Allow-Headers", "Current-Time")
         self.end_headers()
 
     def do_GET(self):
