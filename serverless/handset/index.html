@@ -179,6 +179,17 @@
                 const direction = document.getElementById("indicator-direction" + i);
                 direction.innerHTML = s.isForward ? "Forward" : "Reverse";
                 direction.setAttribute("style", connected);
+
+                ["ahead", "clockwise", "antiClockwise", "reverse"].forEach(c => {
+                    const b = document.getElementById("button-" + c + i);
+                    const state = motorStates[i];
+                    if (state[c] === "stopped") {
+                        b.setAttribute("style", "background-color: green");
+                    } else if (state[c] === "setRunning") {
+                        state[c] = "running";
+                        b.setAttribute("style", "background-color: red");
+                    }
+                });
             }
 
             function getStats() {
@@ -205,11 +216,20 @@
                 if (hasState) {
                     state[cmd] = isRunning ? "stopped" : "setRunning";
                 }
+                const pairs = [["ahead", "reverse"], ["clockwise", "antiClockwise"]]
                 Object.keys(state).forEach(k => {
-                    if (k !== cmd) {
-                        state[k] = "stopped";
-                    }
+                    pairs.forEach(p => {
+                        if (cmd === "stop" || (k !== cmd && p.includes(cmd) && p.includes(k))) {
+                            if (state[k] === "running") {
+                                document.getElementById("button-" + k + i).setAttribute("style", "background-color: orange");
+                            }
+                            state[k] = "stopped";
+                        }
+                    });
                 });
+                if (hasState && state[cmd] !== "running") {
+                    document.getElementById("button-" + cmd + i).setAttribute("style", "background-color: orange");
+                }
             }
 
             function setDisconnected() {
