@@ -10,7 +10,7 @@ from playPrepped import Player
 
 configLoc = sys.argv[2]
 def config(item):
-    with open(os.path.join(configLoc, "config.json") as conf:
+    with open(os.path.join(configLoc, "config.json")) as conf:
         c = json.load(conf)
         return c[item]
 
