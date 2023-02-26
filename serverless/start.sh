@@ -14,17 +14,17 @@ mkdir -p ~/Music/pool/looped
 if [ $sweepRaw = 'true' ]
 then
     mkdir -p ~/Music/modifiedRaw
-    python ~/Documents/samplescaper/synth/modify.py ~/Music/modifiedRaw ~/Music/pool/raw ~/Documents/samplescaper/config.json &
+    python ~/Documents/samplescaper/synth/modify.py ~/Music/modifiedRaw ~/Music/pool/raw ~/Documents/samplescaper/key.json &
     python ~/Documents/samplescaper/synth/recycle.py ~/Music/pool/raw ~/Music/modifiedRaw 37.2 &
 fi
 if [ $sweepLooped = 'true' ]
 then
     mkdir -p ~/Music/modifiedLooped
-    python ~/Documents/samplescaper/synth/modify.py ~/Music/modifiedLooped ~/Music/pool/looped ~/Documents/samplescaper/config.json &
+    python ~/Documents/samplescaper/synth/modify.py ~/Music/modifiedLooped ~/Music/pool/looped ~/Documents/samplescaper/key.json &
     python ~/Documents/samplescaper/synth/recycle.py ~/Music/pool/looped ~/Music/modifiedLooped 21.4 &
 fi
 
-python ~/Documents/samplescaper/synth/synth.py ~/Music/pool ~/Documents/samplescaper/config.json &
+python ~/Documents/samplescaper/synth/synth.py ~/Music/pool ~/Documents/samplescaper/key.json ~/Documents/samplescaper/config.json &
 if [ "$arpeggiate" != 'null' ]
 then
     python ~/Documents/samplescaper/synth/arpeggiate.py ~/Music/pool ~/Documents/samplescaper/config.json &

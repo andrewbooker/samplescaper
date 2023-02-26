@@ -272,8 +272,13 @@ class Builder():
 
 import time
 
-def config():
+def keyConfig():
     with open(sys.argv[2]) as conf:
+        return json.load(conf)
+
+
+def config():
+    with open(sys.argv[3]) as conf:
         return json.load(conf)
 
 outDir = sys.argv[1]
@@ -285,9 +290,9 @@ i = 0
 octave = 0
 start = time.time()
 while True:
-    conf = config()
-    tonic = conf["tonic"]
-    mode = conf["mode"]
+    key = keyConfig()
+    tonic = key["tonic"]
+    mode = key["mode"]
     notes = [tonic]
     for m in range(len(mode)):
         notes.append(notes[m] + mode[m])
