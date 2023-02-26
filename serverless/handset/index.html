@@ -102,6 +102,13 @@
             const disconnected = "background-color: orange;";
             const connected = "animation-name: connectivity; animation-duration: 1s;" + disconnected;
 
+            const motorStates = units.map(() => ({
+                ahead: "stopped",
+                reverse: "stopped",
+                clockwise: "stopped",
+                antiClockwise: "stopped"
+            }));
+
             (function setupIndicators() {
                 [["speedFwdRev", "&#8645;"], ["speedSideways", "&#8646;"], ["direction", "dir"], ["state", "state"], ["volume", "&#128264;"], ["time", "&#8986"]].forEach(s => {
                     const row = document.createElement("tr");
@@ -187,10 +194,22 @@
             }
 
             function postMotorCommand(cmd, i) {
+                const state = motorStates[i];
+                const hasState = cmd in state;
+                const isRunning = state[cmd] !== "stopped";
+                const p = hasState && isRunning ? cmd + "Stop" : cmd;
                 const post = new XMLHttpRequest();
                 post.responseType = "json";
-                post.open("POST", urlBase + ips[i] + ":9977/" + cmd, true);
+                post.open("POST", urlBase + ips[i] + ":9977/" + p, true);
                 post.send();
+                if (hasState) {
+                    state[cmd] = isRunning ? "stopped" : "setRunning";
+                }
+                Object.keys(state).forEach(k => {
+                    if (k !== cmd) {
+                        state[k] = "stopped";
+                    }
+                });
             }
 
             function setDisconnected() {
