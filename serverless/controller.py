@@ -33,7 +33,7 @@ maxVol = 95
 player = Player(sys.argv[1], 3)
 leftRelativeToRight = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
 audioDevice = sys.argv[4] if len(sys.argv) > 4 else "Digital"
-volumeCoeff = 0.5 if "Master" in audioDevice else 1.0
+volumeCoeff = 0.7 if "Master" in audioDevice else 1.0
 print("using audio device", audioDevice)
 
 class Volume():
