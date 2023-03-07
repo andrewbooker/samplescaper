@@ -31,5 +31,10 @@ class Volume():
         r = map(lambda t: re.search(Volume.PERCENT, t).group(), v)
         return [int(re.search(Volume.VALUE, v).group()) for v in r]
 
+    def set(self, l, r):
+        os.system("amixer sset '%s' %d%%,%d%%" % (self.deviceName, l, r))
 
-print(Volume().get())
+
+v = Volume()
+v.set(50, 50)
+print(v.get())
