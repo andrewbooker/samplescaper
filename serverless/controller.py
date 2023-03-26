@@ -6,7 +6,7 @@ import json
 import re
 import sys
 import datetime
-from playRamped import Player
+from playPrepped import Player
 
 configLoc = sys.argv[2]
 def config(item):

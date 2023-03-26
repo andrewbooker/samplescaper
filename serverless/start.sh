@@ -2,10 +2,9 @@
 
 arpeggiate=$(jq .arpeggiate ~/Documents/samplescaper/config.json)
 sweepRaw=$(jq .sweepRaw ~/Documents/samplescaper/config.json)
-sweepLooped=$(jq .sweepLooped ~/Documents/samplescaper/config.json)
+sweepLooped=$(jq -r .sweepLooped ~/Documents/samplescaper/config.json)
 
 rm -rf ~/Music/pool
-rm -rf ~/Music/modified*
 mkdir -p ~/Music/archives
 mkdir -p ~/Music/pool/factory
 mkdir -p ~/Music/pool/raw
@@ -13,15 +12,15 @@ mkdir -p ~/Music/pool/looped
 
 if [ $sweepRaw = 'true' ]
 then
-    mkdir -p ~/Music/modifiedRaw
-    python ~/Documents/samplescaper/synth/modify.py ~/Music/modifiedRaw ~/Music/pool/raw ~/Documents/samplescaper/key.json &
-    python ~/Documents/samplescaper/synth/recycle.py ~/Music/pool/raw ~/Music/modifiedRaw 37.2 &
+    mkdir -p ~/Music/pool/modifiedRaw
+    python ~/Documents/samplescaper/synth/modify.py ~/Music/pool/modifiedRaw ~/Music/pool/raw ~/Documents/samplescaper/key.json &
+    python ~/Documents/samplescaper/synth/recycle.py ~/Music/pool/raw ~/Music/pool/modifiedRaw 37.2 &
 fi
-if [ $sweepLooped = 'true' ]
+if [ $sweepLooped ]
 then
-    mkdir -p ~/Music/modifiedLooped
-    python ~/Documents/samplescaper/synth/modify.py ~/Music/modifiedLooped ~/Music/pool/looped ~/Documents/samplescaper/key.json &
-    python ~/Documents/samplescaper/synth/recycle.py ~/Music/pool/looped ~/Music/modifiedLooped 21.4 &
+    mkdir -p ~/Music/pool/modifiedLooped
+    python ~/Documents/samplescaper/synth/modify.py ~/Music/pool/modifiedLooped ~/Music/pool/looped ~/Documents/samplescaper/key.json $sweepLooped &
+    python ~/Documents/samplescaper/synth/recycle.py ~/Music/pool/looped ~/Music/pool/modifiedLooped 21.4 &
 fi
 
 python ~/Documents/samplescaper/synth/synth.py ~/Music/pool ~/Documents/samplescaper/key.json ~/Documents/samplescaper/config.json &

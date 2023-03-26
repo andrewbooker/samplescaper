@@ -75,16 +75,16 @@ class Linear():
         return ("lin_%3f" % (self.end)).replace(".", "_")
 
 class Sine():
-    def __init__(self):
-        self.f = random.random() / 1102.5
+    def __init__(self, dataLength, sampleRate):
+        self.f = 1.0 * sampleRate / dataLength
         self.offset = 2 * random.random() * math.pi
-        self.amplitude = 0.008 * random.random()
+        self.amplitude = 0.3 * random.random()
 
     def at(self, i):
         return 1.0 + (self.amplitude * math.sin(self.offset + (i * self.f)))
 
     def describe(self):
-        return "sin_%3f" % self.f
+        return "sin_%.3f" % self.f
 
 class Effect():
     def __init__(self):
@@ -93,34 +93,45 @@ class Effect():
     def describe(self):
         return self.description
 
-class Pitch(Effect):
+
+def applyPitchTo(data, sampleRate, dataLength, eff):
+    out = []
+
+    done = False
+    i = 0
+    p = 0
+    while not done:
+        p += eff.at(i)
+        p0 = math.floor(p)
+        if p0 >= dataLength or i > (30 * sampleRate):
+            done = True
+        else:
+            p1 = math.ceil(p)
+            if p1 >= dataLength:
+                p1 = p0
+            e = p - p0
+            out.append(((1.0 - e) * data[p0]) + (e * data[p1]))
+        i += 1
+
+    return out
+
+class Sweep(Effect):
     def __init__(self, fn, noteRange):
         self.note = noteFrom(fn, noteRange[0])
         self.noteRange = noteRange
 
     def appliedTo(self, data, sampleRate):
-        out = []
         dataLength = len(data)
         eff = Linear(self.note, self.noteRange).over(dataLength)
-
         self.description = eff.describe()
-        done = False
-        i = 0
-        p = 0
-        while not done:
-            p += eff.at(i)
-            p0 = math.floor(p)
-            if p0 >= dataLength or i > (30 * sampleRate):
-                done = True
-            else:
-                p1 = math.ceil(p)
-                if p1 >= dataLength:
-                    p1 = p0
-                e = p - p0
-                out.append(((1.0 - e) * data[p0]) + (e * data[p1]))
-            i += 1
+        return applyPitchTo(data, sampleRate, dataLength, eff)
 
-        return out
+class Detune(Effect):
+    def appliedTo(self, data, sampleRate):
+        dataLength = len(data)
+        eff = Sine(dataLength, sampleRate)
+        self.description = eff.describe()
+        return applyPitchTo(data, sampleRate, dataLength, eff)
 
 class Multiply(Effect):
     def __init__(self, fn):
@@ -156,30 +167,40 @@ def config():
 
 inDir = sys.argv[1]
 outDir = sys.argv[2]
+effName = sys.argv[4] if len(sys.argv) > 4 else "Sweep"
 xFade = 441
 
 while True:
     f = nextAudioFileFrom(inDir)
-    conf = config()
-    tonic = conf["tonic"]
-    mode = conf["mode"]
-    notes = [tonic]
-    for m in range(len(mode)):
-        notes.append(notes[m] + mode[m])
-    print("based on note range", notes)
 
     if f is not None:
         print("using", os.path.basename(f))
         data, sampleRate = sf.read(f)
-        effect = Pitch(os.path.basename(f), notes)
-        out = effect.appliedTo(data, sampleRate)
+        effect = None
 
-        g = 1.0 / xFade
-        l = len(out)
-        sample = out[xFade:-xFade] + [(out[-xFade:][s] * (1.0 - (g * s))) + (out[s] * g * s) for s in range(0, xFade)]
-        fn = "%s_%s.wav" % (os.path.basename(f).split(".")[0], effect.describe())
-        sf.write(os.path.join(outDir, fn), sample, sampleRate)
-        print("written", fn)
+        if effName == "Sweep":
+            conf = config()
+            tonic = conf["tonic"]
+            mode = conf["mode"]
+            notes = [tonic]
+            for m in range(len(mode)):
+                notes.append(notes[m] + mode[m])
+            print("based on note range", notes)
+            effect = Sweep(os.path.basename(f), notes)
+        elif effName == "Detune":
+            effect = Detune()
+
+        if effect is not None:
+            out = effect.appliedTo(data, sampleRate)
+
+            g = 1.0 / xFade
+            l = len(out)
+            sample = out[xFade:-xFade] + [(out[-xFade:][s] * (1.0 - (g * s))) + (out[s] * g * s) for s in range(0, xFade)]
+            fn = "%s_%s.wav" % (os.path.basename(f).split(".")[0], effect.describe())
+            sf.write(os.path.join(outDir, fn), sample, sampleRate)
+            print("written", fn)
+        else:
+            print("no modification for", effName)
 
     if len(os.listdir(inDir)) > 30:
         print("dropping", f)
