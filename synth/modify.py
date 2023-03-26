@@ -76,15 +76,15 @@ class Linear():
 
 class Sine():
     def __init__(self, dataLength, sampleRate):
-        self.f = 1.0 * sampleRate / dataLength
+        self.f = 2.0 * math.pi / dataLength
         self.offset = 2 * random.random() * math.pi
-        self.amplitude = 0.3 * random.random()
+        self.amplitude = 0.001 + (0.1 * random.random())
 
     def at(self, i):
         return 1.0 + (self.amplitude * math.sin(self.offset + (i * self.f)))
 
     def describe(self):
-        return "sin_%.3f" % self.f
+        return "sin_%.3f" % self.amplitude
 
 class Effect():
     def __init__(self):
