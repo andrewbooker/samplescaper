@@ -8,7 +8,7 @@ then
     cd ~/Music
     for f in `ls -d 20*`
     do
-        ~/Documents/wavmixer/mix.py $f $f/inventory.lof 0.8 $(jq -r .colour ~/Documents/static.json)
+        ~/Documents/wavmixer/mix.py $f $f/inventory.lof 0.7 $(jq -r .colour ~/Documents/static.json)
         zip -9 -r archives/$f.zip $f
         rm -rf $f
     done
