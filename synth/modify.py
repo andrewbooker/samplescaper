@@ -75,16 +75,30 @@ class Linear():
         return ("lin_%3f" % (self.end)).replace(".", "_")
 
 class Sine():
-    def __init__(self, dataLength, sampleRate):
-        self.f = 2.0 * math.pi / dataLength
-        self.offset = 2 * random.random() * math.pi
+    def __init__(self, dataLength):
+        self.dataLength = dataLength
+        self.phase = 0
         self.amplitude = 0.001 + (0.1 * random.random())
+        self.descr = ""
+
+    def forDetune(self):
+        self.freq = 2.0 * math.pi / self.dataLength
+        self.phase = 2 * random.random() * math.pi
+        self.desc = "%.3f" % self.amplitude
+        return self
+
+    def forFreqMod(self):
+        f = 200 + (50000 * random.random())
+        self.freq = f / self.dataLength
+        self.desc = "%.0f" % f
+        self.amplitude = 0.1 + (0.9 * random.random())
+        return self
 
     def at(self, i):
-        return 1.0 + (self.amplitude * math.sin(self.offset + (i * self.f)))
+        return 1.0 + (self.amplitude * math.sin(self.phase + (i * self.freq)))
 
     def describe(self):
-        return "sin_%.3f" % self.amplitude
+        return "sin_%s" % self.desc
 
 class Effect():
     def __init__(self):
@@ -129,7 +143,14 @@ class Sweep(Effect):
 class Detune(Effect):
     def appliedTo(self, data, sampleRate):
         dataLength = len(data)
-        eff = Sine(dataLength, sampleRate)
+        eff = Sine(dataLength).forDetune()
+        self.description = eff.describe()
+        return applyPitchTo(data, sampleRate, dataLength, eff)
+
+class FreqMod(Effect):
+    def appliedTo(self, data, sampleRate):
+        dataLength = len(data)
+        eff = Sine(dataLength).forFreqMod()
         self.description = eff.describe()
         return applyPitchTo(data, sampleRate, dataLength, eff)
 
@@ -189,6 +210,8 @@ while True:
             effect = Sweep(os.path.basename(f), notes)
         elif effName == "Detune":
             effect = Detune()
+        elif effName == "FreqMod":
+            effect = FreqMod()
 
         if effect is not None:
             out = effect.appliedTo(data, sampleRate)
