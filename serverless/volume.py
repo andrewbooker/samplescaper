@@ -20,7 +20,7 @@ class SystemVolume():
         for d in ["Digital", "Master"]:
             if SystemVolume.read(d) is not None:
                 self.deviceName = d
-                print("using", d)
+                print("found audio device '%s'" % d)
                 return
 
     def get(self):
