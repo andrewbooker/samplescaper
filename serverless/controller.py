@@ -7,6 +7,7 @@ import re
 import sys
 import datetime
 from playPrepped import Player
+from volume import SystemVolume
 
 configLoc = sys.argv[2]
 def config(item):
@@ -32,20 +33,26 @@ class Key():
 maxVol = 95
 player = Player(sys.argv[1], 3)
 leftRelativeToRight = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
-audioDevice = sys.argv[4] if len(sys.argv) > 4 else "Digital"
-volumeCoeff = 0.7 if "Master" in audioDevice else 1.0
-print("using audio device", audioDevice)
 
 class Volume():
     def __init__(self, leftRelativeToRight):
-        self.volume = 0
+        self.systemVolume = SystemVolume()
         self.lr = leftRelativeToRight
+        self.volumeCoeff = 0.7 if "Master" in self.systemVolume.deviceName else 1.0
+        self._update()
+        print("using audio device", self.systemVolume.deviceName, "volume coeff", self.volumeCoeff, "current vol", self.volume)
+
+    def _update(self):
+        vols = [v for v in self.systemVolume.get()]
+        vols.sort(reverse=True)
+        self.volume = vols[0] / self.volumeCoeff
 
     def setTo(self, v):
         vl = v if leftRelativeToRight > 1 else int(v * self.lr)
         vr = v if leftRelativeToRight < 1 else int(v / self.lr)
-        os.system("amixer sset '%s' %d%%,%d%%" % (audioDevice, int(vl * volumeCoeff), int(vr * volumeCoeff)))
-        self.volume = v
+
+        self.systemVolume.set(int(vl * self.volumeCoeff), int(vr * self.volumeCoeff))
+        self._update()
 
 class PlayState():
     def __init__(self):
@@ -115,7 +122,7 @@ class Controller(BaseHTTPRequestHandler):
 
     def _writeState(self):
         self.wfile.write(json.dumps({
-            "volume": int(volume.volume * volumeCoeff),
+            "volume": int(volume.volume),
             "state": playState.get(),
             "time": datetime.datetime.now().strftime("%d %b %Y %H:%M"),
             "tonic": key.getTonic()

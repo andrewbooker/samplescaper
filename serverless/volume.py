@@ -1,40 +1,38 @@
-#!/usr/bin/env python
-
 import os
 import re
+from subprocess import PIPE, Popen
 
-class Volume():
-    PERCENT = r"\[\d{2}%\]"
+class SystemVolume():
+    PERCENT = r"\[\d{1,2}%\]"
     VALUE = r"\d+"
 
     @staticmethod
-    def find(deviceName):
-        t = os.popen("amixer sget '%s'" % deviceName).read()
-        if "Unable to find simple control" in t or "Playback channels: Mono" in t:
+    def read(deviceName):
+        p = Popen("amixer sget '%s'" % deviceName, shell=True, stdout=PIPE, stderr=PIPE)
+        (o, e) = p.communicate()
+        t = o.decode()
+        if "Unable to find simple control" in e.decode() or "Playback channels: Mono" in t:
             return None
         return t
 
     def __init__(self):
         self.deviceName = None
         for d in ["Digital", "Master"]:
-            if Volume.find(d) is not None:
+            if SystemVolume.read(d) is not None:
                 self.deviceName = d
+                print("using", d)
                 return
 
     def get(self):
         if self.deviceName is None:
             return []
-        c = Volume.find(self.deviceName)
+        c = SystemVolume.read(self.deviceName)
         if c is None:
             return []
         v = [t for t in filter(lambda t: "[" in t, c.split("\n"))]
-        r = map(lambda t: re.search(Volume.PERCENT, t).group(), v)
-        return [int(re.search(Volume.VALUE, v).group()) for v in r]
+        r = map(lambda t: re.search(SystemVolume.PERCENT, t).group(), v)
+        return [int(re.search(SystemVolume.VALUE, v).group()) for v in r]
 
     def set(self, l, r):
         os.system("amixer sset '%s' %d%%,%d%%" % (self.deviceName, l, r))
 
-
-v = Volume()
-v.set(50, 50)
-print(v.get())
