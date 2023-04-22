@@ -5,6 +5,6 @@
     "maxSynthPoolSize": 30,
     "maxArpeggiatorPoolSize": 20,
     "arpeggiate": [2, 3, 5, 7],
-    "sweepRaw": false,
-    "sweepLooped": true
+    "sweepRaw": "Sweep",
+    "sweepLooped": "Detune"
 }
