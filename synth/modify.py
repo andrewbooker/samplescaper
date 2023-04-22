@@ -78,7 +78,7 @@ class Sine():
     def __init__(self, dataLength):
         self.dataLength = dataLength
         self.phase = 0
-        self.amplitude = 0.001 + (0.1 * random.random())
+        self.amplitude = 0.001 + (0.01 * random.random())
         self.descr = ""
 
     def forDetune(self):
