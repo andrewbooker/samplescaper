@@ -14,7 +14,7 @@ def nextAudioFileFrom(poolDir):
 
 inDir = sys.argv[1]
 outDir = sys.argv[2]
-interval = float(sys.argv[3])
+interval = float(sys.argv[3]) if len(sys.argv) > 3 else (10.0 + (40 * random.random()))
     
 while True:
     f = nextAudioFileFrom(inDir)
