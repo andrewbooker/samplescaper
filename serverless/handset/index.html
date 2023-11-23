@@ -86,6 +86,12 @@
                         <select id="select-tonic"></select>
                         <button id="button-setKey">Set key</button>
                     </div>
+                    <div>
+                        <select id="select-mode"></select>
+                    </div>
+                    <div>
+                        <button id="button-setMode">Set Mode</button>
+                    </div>
                 </div>
                 <div class="system">
                     <div><button id="button-setTime">Set time</button></div>
@@ -124,8 +130,36 @@
                 }
             })();
 
+            (function () {
+                const t = document.getElementById("select-mode");
+                [
+                    "aeolian",
+                    "dorian",
+                    "ionian",
+                    "mixolydian",
+                    "lydian",
+                    "wholetone",
+                    "minorpentatonic",
+                    "majorpentatonic"
+                ].map(m => {
+                    const o = document.createElement("option");
+                    o.setAttribute("value", m);
+                    o.innerHTML = m;
+                    t.appendChild(o);
+                });
+            })();
+
             (function setupIndicators() {
-                [["speedFwdRev", "&#8645;"], ["speedSideways", "&#8646;"], ["direction", "dir"], ["state", "state"], ["volume", "&#128264;"], ["time", "&#8986"], ["tonic", "&#9835;"]].forEach(s => {
+                [
+                    ["speedFwdRev", "&#8645;"],
+                    ["speedSideways", "&#8646;"],
+                    ["direction", "dir"],
+                    ["state", "state"],
+                    ["volume", "&#128264;"],
+                    ["time", "&#8986"],
+                    ["tonic", "&#9835;"],
+                    ["mode", "mode"]
+                ].forEach(s => {
                     const row = document.createElement("tr");
                     const label = document.createElement("td");
                     label.innerHTML = s[1];
@@ -261,11 +295,13 @@
                 const state = document.getElementById("indicator-state" + i)
                 const ts = document.getElementById("indicator-time" + i)
                 const tonic = document.getElementById("indicator-tonic" + i)
+                const mode = document.getElementById("indicator-mode" + i)
 
                 vol.innerHTML = new Number(resp.volume).toFixed(0);
                 state.innerHTML = resp.state;
                 ts.innerHTML = resp.time;
                 tonic.innerHTML = resp.tonic;
+                mode.innerHTML = resp.mode;
 
                 vol.setAttribute("style", connected)
                 ts.setAttribute("style", "font-size: 120%;")
@@ -331,6 +367,7 @@
             })();
             document.getElementById("button-setTime").setAttribute("onclick", "setTime();");
             document.getElementById("button-setKey").setAttribute("onclick", "setKey();");
+            document.getElementById("button-setMode").setAttribute("onclick", "setMode();");
 
             function setTime() {
                 ips.forEach((ip, i) => {
@@ -348,6 +385,16 @@
                     post.responseType = "json";
                     post.open("POST", urlBase + ip + ":9966/setTonic", true);
                     post.setRequestHeader("Tonic", document.getElementById("select-tonic").value);
+                    post.send();
+                });
+            }
+
+            function setMode() {
+                ips.forEach((ip, i) => {
+                    const post = new XMLHttpRequest();
+                    post.responseType = "json";
+                    post.open("POST", urlBase + ip + ":9966/setMode", true);
+                    post.setRequestHeader("Mode", document.getElementById("select-mode").value);
                     post.send();
                 });
             }
