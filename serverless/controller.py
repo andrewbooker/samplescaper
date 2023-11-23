@@ -16,19 +16,44 @@ def config(item):
         return c[item]
 
 class Key():
+    modes = {
+        "aeolian": [2, 1, 2, 2, 1, 2],
+        "dorian": [2, 1, 2, 2, 2, 1],
+        "ionian": [2, 2, 1, 2, 2, 2],
+        "mixolydian": [2, 2, 1, 2, 2, 1],
+        "lydian": [2, 2, 2, 1, 2, 2],
+        "wholetone": [2, 2, 2, 2, 2],
+        "minorpentatonic": [3, 2, 2, 3],
+        "majorpentatonic": [4, 1, 2, 4]
+    }
+
     def __init__(self):
         self.fqFn = os.path.join(configLoc, "key.json")
         conf = open(self.fqFn)
         self.key = json.load(conf)
         conf.close()
 
+    def _write(self):
+        with open(self.fqFn, "w") as conf:
+            conf.write(json.dumps(self.key, indent=4))
+
     def getTonic(self):
         return self.key["tonic"]
 
+    def getMode(self):
+        for m, a in Key.modes.items():
+            if a == self.key["mode"]:
+                return m
+        return [*Key.modes][0]
+
     def setTonic(self, t):
         self.key["tonic"] = t
-        with open(self.fqFn, "w") as conf:
-            conf.write(json.dumps(self.key, indent=4))
+        self._write()
+
+    def setMode(self, m):
+        self.key["mode"] = Key.modes[m]
+        self._write()
+
 
 maxVol = 95
 player = Player(sys.argv[1], 3)
@@ -114,6 +139,9 @@ class Controller(BaseHTTPRequestHandler):
     def _setTonic(self):
         key.setTonic(int(self.headers.get("Tonic")))
 
+    def _setMode(self):
+        key.setMode(self.headers.get("Mode"))
+
     def _standardResponse(self):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -125,7 +153,8 @@ class Controller(BaseHTTPRequestHandler):
             "volume": int(volume.volume),
             "state": playState.get(),
             "time": datetime.datetime.now().strftime("%d %b %Y %H:%M"),
-            "tonic": key.getTonic()
+            "tonic": key.getTonic(),
+            "mode": key.getMode()
         }).encode("utf-8"))
 
     def _sendVol(self):
@@ -138,6 +167,7 @@ class Controller(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST")
         self.send_header("Access-Control-Allow-Headers", "Current-Time")
         self.send_header("Access-Control-Allow-Headers", "Tonic")
+        self.send_header("Access-Control-Allow-Headers", "Mode")
         self.end_headers()
 
     def do_GET(self):
