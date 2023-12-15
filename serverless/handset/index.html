@@ -379,6 +379,18 @@
                 });
             }
 
+            const oneOffSetTime = (function() {
+                var applied = false;
+                return {
+                    apply: function() {
+                        if (!applied) {
+                            setTime();
+                            applied = true;
+                        }
+                    }
+                };
+            })();
+
             function setKey() {
                 ips.forEach((ip, i) => {
                     const post = new XMLHttpRequest();
@@ -411,6 +423,7 @@
                 });
             }
             setInterval(() => {
+                oneOffSetTime.apply();
                 setDisconnected();
                 getVolume();
                 getStats();
