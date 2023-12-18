@@ -45,11 +45,17 @@ class ControllerClient:
             print(e)
         return "not_available"
 
-    def play_sound(self):
+    def _send_to_ctrl(self, cmd):
         try:
-            response = requests.post(f"{self.url}:9966/play")
+            response = requests.post(f"{self.url}:9966/{cmd}")
         except requests.exceptions.ConnectionError as e:
             print(e)
+
+    def play(self):
+        self._send_to_ctrl("play")
+
+    def pause(self):
+        self._send_to_ctrl("pause")
 
     def start_rotation(self):
         try:
@@ -84,14 +90,16 @@ print("listening for auto-start command")
 while should_continue:
     button_pressed = not GPIO.input(BUTTON)
 
-    if state == State.SHUTTING_DOWN:
-        blinker.set_per_second(10)
+    if state == State.SHUTTING_DOWN and controller_client.get_status() == "paused":
         should_continue = False
         print("shutting down")
 
     if state == State.SOUND_STARTED:
         blinker.set_per_second(1)
         if button_pressed:
+            blinker.set_per_second(10)
+            print("Stopping")
+            controller_client.pause()
             state = State.SHUTTING_DOWN
 
     if state == State.MOTOR_STARTED:
@@ -101,7 +109,7 @@ while should_continue:
             state = State.SOUND_STARTED
             print("already playing")
         if controller_status == "ready":
-            controller_client.play_sound()
+            controller_client.play()
             state = State.SOUND_STARTED
             print("playing")
 
