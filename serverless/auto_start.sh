@@ -21,6 +21,7 @@ cd ~/Documents/rotation/
 ./setup.sh remote ~/Documents/config.json
 cd -
 ~/Documents/samplescaper/record/ambient.sh
+python ~/Documents/samplescaper/record/remoteCtlCamera.py &
 python ~/Documents/samplescaper/serverless/detect_auto.py &
 python ~/Documents/rotation/propellorServo.py $(jq .isPilot ~/Documents/static.json) &
 ~/Documents/samplescaper/serverless/start.sh
