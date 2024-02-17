@@ -6,8 +6,8 @@ from enum import Enum
 from threading import Thread
 import requests
 
-LED = 16
-BUTTON = 20
+LED = 26
+BUTTON = 19
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
