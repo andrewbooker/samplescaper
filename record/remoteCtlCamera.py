@@ -33,20 +33,21 @@ last_file = None
 last_size = None
 while True:
     latest = file_status_checker.latest()
-    if last_file is None:
-        last_file, last_size = latest
-        print("found", latest)
-    else:
-        if last_file != latest[0] or last_size < latest[1]:
-            print("Video already running")
-        elif last_file == latest[0] and last_size == latest[1]:
-            print("Video not yet running. Starting...")
-            r = requests.get(camera_url, params=[('custom', '1'), ('cmd', 2001), ('str', 1)])
-            if r.status_code == 200:
-                print("Video started")
-            else:
-                print("Start failed", r.status_code, r.text)
-        exit()
+    if latest is not None:
+        if last_file is None:
+            last_file, last_size = latest
+            print("found", latest)
+        else:
+            if last_file != latest[0] or last_size < latest[1]:
+                print("Video already running")
+            elif last_file == latest[0] and last_size == latest[1]:
+                print("Video not yet running. Starting...")
+                r = requests.get(camera_url, params=[('custom', '1'), ('cmd', 2001), ('str', 1)])
+                if r.status_code == 200:
+                    print("Video started")
+                else:
+                    print("Start failed", r.status_code, r.text)
+            exit()
     time.sleep(1.08482)
-print("done")
+
 
