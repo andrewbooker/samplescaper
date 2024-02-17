@@ -9,21 +9,25 @@ class FileStatusChecker:
         self.folder_url = folder_url
 
     def latest(self):
-        listing_response = requests.get(self.folder_url)
-        if listing_response.status_code != 200:
-            print("cannot list files in remote device", listing_response.status_code)
+        try:
+            listing_response = requests.get(self.folder_url)
+            if listing_response.status_code != 200:
+                print("cannot list files in remote device", listing_response.status_code)
+                return None
+
+            text_lines = listing_response.text.split("\n")
+            files = []
+            for t in text_lines:
+                if "href" in t and "Remove" not in t:
+                    fn = re.search(r"\d{4}_\d{4}_\d{6}", t).group()
+                    size = float(re.search(r"\d+\.\d+\s+MB", t).group().split(" MB")[0])
+                    files.append((fn, size))
+
+            files.sort(key=lambda i: i[0], reverse=True)
+            return files[0]
+        except:
+            print("cannot connect to", self.folder_url)
             return None
-
-        text_lines = listing_response.text.split("\n")
-        files = []
-        for t in text_lines:
-            if "href" in t and "Remove" not in t:
-                fn = re.search(r"\d{4}_\d{4}_\d{6}", t).group()
-                size = float(re.search(r"\d+\.\d+\s+MB", t).group().split(" MB")[0])
-                files.append((fn, size))
-
-        files.sort(key=lambda i: i[0], reverse=True)
-        return files[0]
 
 
 camera_url = "http://192.168.1.254/"
