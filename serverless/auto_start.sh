@@ -1,10 +1,12 @@
 #!/bin/bash
 
-raspi-gpio set 19 pu
-if [ $(raspi-gpio get 19 | sed 's/.*level=\([0-1]\).*/\1/') = 0 ]
+LED=14
+BUTTON=15
+raspi-gpio set $BUTTON pu
+if [ $(raspi-gpio get $BUTTON | sed 's/.*level=\([0-1]\).*/\1/') = 0 ]
 then
-    raspi-gpio set 26 op
-    raspi-gpio set 26 dh
+    raspi-gpio set $LED op
+    raspi-gpio set $LED dh
     cd ~/Documents/rotation/
     ./setup.sh home ~/Documents/config.json
     cd ~/Music
@@ -22,6 +24,6 @@ cd ~/Documents/rotation/
 cd -
 ~/Documents/samplescaper/record/ambient.sh
 python ~/Documents/samplescaper/record/remoteCtlCamera.py &
-python ~/Documents/samplescaper/serverless/detect_auto.py &
+python ~/Documents/samplescaper/serverless/detect_auto.py $LED $BUTTON &
 python ~/Documents/rotation/propellorServo.py $(jq .isPilot ~/Documents/static.json) &
 ~/Documents/samplescaper/serverless/start.sh

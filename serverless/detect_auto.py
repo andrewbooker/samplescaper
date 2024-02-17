@@ -5,9 +5,10 @@ import RPi.GPIO as GPIO
 from enum import Enum
 from threading import Thread
 import requests
+import sys
 
-LED = 26
-BUTTON = 19
+LED = int(sys.argv[1])
+BUTTON = int(sys.argv[2])
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
