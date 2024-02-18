@@ -41,6 +41,11 @@
                 flex-direction: column;
                 align-items: center;
             }
+            .music {
+                background-color: silver;
+                border-radius: 15px;
+                padding: 10px;
+            }
             .orientation, volume {
                 display: flex;
                 flex-direction: row;
@@ -81,9 +86,6 @@
                     </div>
                     <div>
                         <select id="select-mode"></select>
-                    </div>
-                    <div>
-                        <button id="button-setMode">Set Mode</button>
                     </div>
                 </div>
                 <div class="system">
@@ -139,7 +141,7 @@
 
             (function () {
                 const t = document.getElementById("select-tonic");
-                let i = 47;
+                let i = 55;
                 for ( ;i < 71; ++i) {
                     const o = document.createElement("option");
                     o.setAttribute("value", i);
@@ -398,7 +400,6 @@
             })();
             document.getElementById("button-setTime").setAttribute("onclick", "setTime();");
             document.getElementById("button-setKey").setAttribute("onclick", "setKey();");
-            document.getElementById("button-setMode").setAttribute("onclick", "setMode();");
 
             function setTime() {
                 ips().forEach((ip, i) => {
@@ -430,9 +431,7 @@
                     post.setRequestHeader("Tonic", document.getElementById("select-tonic").value);
                     post.send();
                 });
-            }
 
-            function setMode() {
                 ips().forEach((ip, i) => {
                     const post = new XMLHttpRequest();
                     post.responseType = "json";
