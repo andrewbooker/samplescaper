@@ -105,6 +105,7 @@
             ];
 
             var units = [];
+            var motorStates = [];
             const urlBase = "http://192.168.1.";
             const tbody = document.getElementById("tbody");
             const disconnectedColour = "silver";
@@ -127,13 +128,6 @@
                     selectUnits.appendChild(row);
                 });
             })();
-
-            const motorStates = units.map(() => ({
-                ahead: "stopped",
-                reverse: "stopped",
-                clockwise: "stopped",
-                antiClockwise: "stopped"
-            }));
 
             function ips() {
                 return units.map(u => u.ip);
@@ -253,6 +247,34 @@
                 });
                 setUpIndicators();
                 setUpMotorControls();
+                motorStates = units.map(() => ({
+                    ahead: "stopped",
+                    reverse: "stopped",
+                    clockwise: "stopped",
+                    antiClockwise: "stopped"
+                }));
+                ["random", "ahead", "stop", "increase", "decrease", "reverse"].map(c => {
+                    units.forEach((u, i) => {
+                        const b = document.getElementById("button-" + c + i);
+                        if (b) {
+                            b.setAttribute("onclick", "postMotorCommand(\"" + c + "\", " + i + ");");
+                        }
+                    });
+                });
+
+                ["clockwise", "antiClockwise"].map(c => {
+                    units.forEach((u, i) => {
+                        const b = document.getElementById("button-" + c + i);
+                        if (b) {
+                            b.setAttribute("onmousedown", "postMotorCommand(\"" + c + "\", " + i + ");");
+                            b.setAttribute("onmouseup", "postMotorCommand(\"" + c + "\", " + i + ");");
+                        }
+                    });
+                });
+
+                ["volMin", "volDown", "volUp", "volMax"].map(c => {
+                    document.getElementById("button-" + c).setAttribute("onclick", "postSoundCommand(\"" + c + "\");");
+                });
             }
 
             function setStats(s, i) {
@@ -264,12 +286,14 @@
 
                 ["ahead", "clockwise", "antiClockwise", "reverse"].forEach(c => {
                     const b = document.getElementById("button-" + c + i);
-                    const state = motorStates[i];
-                    if (state[c] === "stopped") {
-                        b.setAttribute("style", "background-color: green");
-                    } else if (state[c] === "setRunning") {
-                        state[c] = "running";
-                        b.setAttribute("style", "background-color: red");
+                    if (b) {
+                        const state = motorStates[i];
+                        if (state[c] === "stopped") {
+                            b.setAttribute("style", "background-color: green");
+                        } else if (state[c] === "setRunning") {
+                            state[c] = "running";
+                            b.setAttribute("style", "background-color: red");
+                        }
                     }
                 });
             }
@@ -350,19 +374,6 @@
                     post.send();
                 });
             }
-
-            ["random", "ahead", "clockwise", "antiClockwise", "stop", "increase", "decrease", "reverse"].map(c => {
-                units.forEach((u, i) => {
-                    const b = document.getElementById("button-" + c + i);
-                    if (b) {
-                        b.setAttribute("onclick", "postMotorCommand(\"" + c + "\", " + i + ");");
-                    }
-                });
-            });
-
-            ["volMin", "volDown", "volUp", "volMax"].map(c => {
-                document.getElementById("button-" + c).setAttribute("onclick", "postSoundCommand(\"" + c + "\");");
-            });
 
             function postShutdown() {
                 const result = window.confirm("Shutdown - are you sure?");
