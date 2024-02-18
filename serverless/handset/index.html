@@ -45,26 +45,19 @@
                 display: flex;
                 flex-direction: row;
             }
-            .blue {
-                color: blue;
-            }
-            .amber {
-                color: orange
-            }
-            .pink {
-                color: pink
-            }
             @keyframes connectivity {
                 from {
                     background-color: green;
                 }
                 to {
-                    background-color: orange;
+                    background-color: silver;
                 }
             }
         </style>
     </head>
     <body>
+        <div id="select-units" onclick="onChangeUnitSelection();">
+        </div>
         <div class="controls">
             <table cellspacing="3" cellpadding="3">
                 <tbody id="tbody"></tbody>
@@ -101,18 +94,37 @@
         </div>
         <script>
             const masterIp = 13;
-            const units = [
+            const availableUnits = [
                 { ip: masterIp, colour: "blue" },
-                //{ ip: 12, colour: "amber" },
-                { ip: 14, colour: "pink" }
+                { ip: 12, colour: "orange" },
+                { ip: 14, colour: "pink" },
+                { ip: 19, colour: "aqua" },
+                { ip: 20, colour: "red" },
             ];
-            function ips() {
-                return units.map(u => u.ip);
-            }
+
+            var units = [];
             const urlBase = "http://192.168.1.";
             const tbody = document.getElementById("tbody");
-            const disconnected = "background-color: orange;";
+            const disconnectedColour = "silver";
+            const disconnected = "background-color: " + disconnectedColour + ";";
             const connected = "animation-name: connectivity; animation-duration: 1s;" + disconnected;
+
+            (function() {
+                const selectUnits = document.getElementById("select-units");
+
+                availableUnits.forEach((u, i) => {
+                    row = document.createElement("div");
+                    chk = document.createElement("input");
+                    chk.setAttribute("type", "checkbox");
+                    chk.setAttribute("id", "unit-chk" + i);
+                    label = document.createElement("label");
+                    label.innerHTML = u.colour
+                    label.setAttribute("style", "color: " + u.colour)
+                    row.appendChild(chk);
+                    row.appendChild(label);
+                    selectUnits.appendChild(row);
+                });
+            })();
 
             const motorStates = units.map(() => ({
                 ahead: "stopped",
@@ -120,6 +132,10 @@
                 clockwise: "stopped",
                 antiClockwise: "stopped"
             }));
+
+            function ips() {
+                return units.map(u => u.ip);
+            }
 
             (function () {
                 const t = document.getElementById("select-tonic");
@@ -151,7 +167,8 @@
                 });
             })();
 
-            (function setupIndicators() {
+            function setUpIndicators() {
+                tbody.innerHTML = "";
                 [
                     ["speedFwdRev", "&#8645;"],
                     ["speedSideways", "&#8646;"],
@@ -170,13 +187,14 @@
                     units.map(u => u.colour).forEach((c, i) => {
                         const indicator = document.createElement("td");
                         indicator.setAttribute("id", "indicator-" + s[0] + i);
-                        indicator.className = "indicator " + c;
+                        indicator.className = "indicator";
+                        indicator.setAttribute("style", "color: " + c);
                         row.appendChild(indicator);
                     });
 
                     tbody.appendChild(row);
                 });
-            })();
+            }
 
             function motorButton(b, i, c) {
                 const button = document.createElement("button");
@@ -197,11 +215,11 @@
                     default:
                         button.innerHTML = b;
                 }
-                button.className = c;
+                button.setAttribute("style", "color: " + c);
                 return button;
             }
 
-            (function setUpMotorControls() {
+            function setUpMotorControls() {
                 [["decrease", "increase"], "random", "ahead", ["antiClockwise", "clockwise"], "stop", "reverse"].forEach(b => {
                     const row = document.createElement("tr");
                     const empty = document.createElement("td");
@@ -222,7 +240,18 @@
 
                     tbody.appendChild(row);
                 });
-            })();
+            }
+            
+            function onChangeUnitSelection() {
+                units = [];
+                availableUnits.forEach((u, i) => {
+                    if (document.getElementById("unit-chk" + i).checked) {
+                        units.push(u);
+                    }
+                });
+                setUpIndicators();
+                setUpMotorControls();
+            }
 
             function setStats(s, i) {
                 document.getElementById("indicator-speedFwdRev" + i).innerHTML = new Number(s.speedFwdRev).toFixed(2);
@@ -272,14 +301,14 @@
                     pairs.forEach(p => {
                         if (cmd === "stop" || (k !== cmd && p.includes(cmd) && p.includes(k))) {
                             if (state[k] === "running") {
-                                document.getElementById("button-" + k + i).setAttribute("style", "background-color: orange");
+                                document.getElementById("button-" + k + i).setAttribute("style", "background-color: " + disconnectedColour);
                             }
                             state[k] = "stopped";
                         }
                     });
                 });
                 if (hasState && state[cmd] !== "running") {
-                    document.getElementById("button-" + cmd + i).setAttribute("style", "background-color: orange");
+                    document.getElementById("button-" + cmd + i).setAttribute("style", "background-color: " + disconnectedColour);
                 }
             }
 
