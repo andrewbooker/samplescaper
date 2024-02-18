@@ -106,7 +106,9 @@
                 //{ ip: 12, colour: "amber" },
                 { ip: 14, colour: "pink" }
             ];
-            const ips = units.map(u => u.ip);
+            function ips() {
+                return units.map(u => u.ip);
+            }
             const urlBase = "http://192.168.1.";
             const tbody = document.getElementById("tbody");
             const disconnected = "background-color: orange;";
@@ -242,7 +244,7 @@
             }
 
             function getStats() {
-                ips.forEach((ip, i) => {
+                ips().forEach((ip, i) => {
                     const get = new XMLHttpRequest();
                     get.responseType = "json";
                     get.open("GET", urlBase + ip + ":9977/", true);
@@ -260,7 +262,7 @@
                 const p = hasState && isRunning ? cmd + "Stop" : cmd;
                 const post = new XMLHttpRequest();
                 post.responseType = "json";
-                post.open("POST", urlBase + ips[i] + ":9977/" + p, true);
+                post.open("POST", urlBase + ips()[i] + ":9977/" + p, true);
                 post.send();
                 if (hasState) {
                     state[cmd] = isRunning ? "stopped" : "setRunning";
@@ -282,7 +284,7 @@
             }
 
             function setDisconnected() {
-                ips.forEach((_, i) => {
+                ips().forEach((_, i) => {
                     ["volume", "direction"].forEach(e => {
                         const el = document.getElementById("indicator-" + e + i);
                         el.setAttribute("style", disconnected);
@@ -308,7 +310,7 @@
             }
 
             function postSoundCommand(cmd) {
-                ips.forEach((ip, i) => {
+                ips().forEach((ip, i) => {
                     const post = new XMLHttpRequest();
                     post.responseType = "json";
                     post.open("POST", urlBase + ip + ":9966/" + cmd, true);
@@ -370,7 +372,7 @@
             document.getElementById("button-setMode").setAttribute("onclick", "setMode();");
 
             function setTime() {
-                ips.forEach((ip, i) => {
+                ips().forEach((ip, i) => {
                     const post = new XMLHttpRequest();
                     post.responseType = "json";
                     post.open("POST", urlBase + ip + ":9966/setTime", true);
@@ -392,7 +394,7 @@
             })();
 
             function setKey() {
-                ips.forEach((ip, i) => {
+                ips().forEach((ip, i) => {
                     const post = new XMLHttpRequest();
                     post.responseType = "json";
                     post.open("POST", urlBase + ip + ":9966/setTonic", true);
@@ -402,7 +404,7 @@
             }
 
             function setMode() {
-                ips.forEach((ip, i) => {
+                ips().forEach((ip, i) => {
                     const post = new XMLHttpRequest();
                     post.responseType = "json";
                     post.open("POST", urlBase + ip + ":9966/setMode", true);
@@ -414,7 +416,7 @@
             document.getElementById("button-play").setAttribute("onclick", "play.changeState();");
 
             function getVolume() {
-                ips.forEach((ip, i) => {
+                ips().forEach((ip, i) => {
                     const req = new XMLHttpRequest();
                     req.responseType = "json";
                     req.open("GET", urlBase + ip + ":9966/", true);
