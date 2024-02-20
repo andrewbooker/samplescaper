@@ -50,6 +50,9 @@
                 display: flex;
                 flex-direction: row;
             }
+            #select-units {
+                display: flex;
+            }
             @keyframes connectivity {
                 from {
                     background-color: green;
@@ -98,7 +101,6 @@
             const masterIp = 13;
             const availableUnits = [
                 { ip: masterIp, colour: "blue" },
-                { ip: 12, colour: "orange" },
                 { ip: 14, colour: "pink" },
                 { ip: 19, colour: "aqua" },
                 { ip: 20, colour: "red" },
@@ -114,12 +116,16 @@
 
             (function() {
                 const selectUnits = document.getElementById("select-units");
+                const defaultSelect = ["blue", "pink"];
 
                 availableUnits.forEach((u, i) => {
                     row = document.createElement("div");
                     chk = document.createElement("input");
                     chk.setAttribute("type", "checkbox");
                     chk.setAttribute("id", "unit-chk" + i);
+                    if (defaultSelect.includes(u.colour)) {
+                        chk.setAttribute("checked", "checked")
+                    }
                     label = document.createElement("label");
                     label.innerHTML = u.colour
                     label.setAttribute("style", "color: " + u.colour)
@@ -127,6 +133,7 @@
                     row.appendChild(label);
                     selectUnits.appendChild(row);
                 });
+                onChangeUnitSelection();
             })();
 
             function ips() {
