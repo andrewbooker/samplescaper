@@ -233,6 +233,7 @@ def chooseTemplateFrom(frq):
     # this must work differently, otherwise a new random waveshape will be applied to each cycle
     return ("ge", TemplateProvider(randomTemplateFrom, quadrants)) 
 
+
 class Builder():
     def __init__(self, outDir, maxPoolSize):
         self.maxPoolSize = maxPoolSize
@@ -271,6 +272,7 @@ class Builder():
 
 
 import time
+from random import randint
 
 def keyConfig():
     with open(sys.argv[2]) as conf:
@@ -281,34 +283,45 @@ def config():
     with open(sys.argv[3]) as conf:
         return json.load(conf)
 
-outDir = sys.argv[1]
-c = config()
-maxPoolSize = int(c["maxSynthPoolSize"]) if "maxSynthPoolSize" in c else 30
-builder = Builder(outDir, maxPoolSize)
 
-i = 0
-octave = 0
-start = time.time()
-while True:
+def notesFromConfig():
     key = keyConfig()
     tonic = key["tonic"]
     mode = key["mode"]
     notes = [tonic]
     for m in range(len(mode)):
         notes.append(notes[m] + mode[m])
+    return notes
 
-    n = notes[i]
-    builder.build(n + (octave * 12))
-    i += 1
-    if i == len(notes):
+outDir = sys.argv[1]
+c = config()
+maxPoolSize = int(c["maxSynthPoolSize"]) if "maxSynthPoolSize" in c else 30
+builder = Builder(outDir, maxPoolSize)
+
+done = set()
+i = 0
+octave = 0
+start = time.time()
+
+while True:
+    notes = notesFromConfig()
+
+    if len(done) == len(notes):
+        done.clear()
         i = 0
         octave += 1
         if octave > 2:
             octave = -1
+    else:
+        while i in done:
+            i = randint(0, len(notes))
 
+    builder.build(notes[i] + (octave * 12))
+    done.add(i)
     while (time.time() - start) < 20:
         time.sleep(1)
 
     now = time.time()
     print("generation cycle took %0.1fs" % (now - start))
     start = now
+
