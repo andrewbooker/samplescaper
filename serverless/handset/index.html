@@ -113,6 +113,20 @@
             const disconnectedColour = "silver";
             const disconnected = "background-color: " + disconnectedColour + ";";
             const connected = "animation-name: connectivity; animation-duration: 1s;" + disconnected;
+            const allModes = [
+                "aeolian",
+                "dorian",
+                "ionian",
+                "mixolydian",
+                "lydian",
+                "wholetone",
+                "minorpentatonic",
+                "majorpentatonic"
+            ];
+
+            function randomIntBetween(i0, i1) {
+                return Math.floor(Math.random() * (i1 - i0 + 1) + i0);
+            }
 
             (function() {
                 const selectUnits = document.getElementById("select-units");
@@ -153,16 +167,7 @@
 
             (function () {
                 const t = document.getElementById("select-mode");
-                [
-                    "aeolian",
-                    "dorian",
-                    "ionian",
-                    "mixolydian",
-                    "lydian",
-                    "wholetone",
-                    "minorpentatonic",
-                    "majorpentatonic"
-                ].map(m => {
+                allModes.map(m => {
                     const o = document.createElement("option");
                     o.setAttribute("value", m);
                     o.innerHTML = m;
@@ -382,7 +387,25 @@
                 });
             }
 
+            function setKeyTo(tonic, mode) {
+                const post = new XMLHttpRequest();
+                post.responseType = "json";
+
+                ips().forEach((ip, i) => {
+                    post.open("POST", urlBase + ip + ":9966/setTonic", true);
+                    post.setRequestHeader("Tonic", tonic);
+                    post.send();
+                });
+
+                ips().forEach((ip, i) => {
+                    post.open("POST", urlBase + ip + ":9966/setMode", true);
+                    post.setRequestHeader("Mode", mode);
+                    post.send();
+                });
+            }
+
             function postShutdown() {
+                setKeyTo(randomIntBetween(55, 71), allModes[randomIntBetween(0, allModes.length - 1)]);
                 const result = window.confirm("Shutdown - are you sure?");
                 if (result) {
                     postSoundCommand("shutdown")
@@ -442,21 +465,7 @@
             })();
 
             function setKey() {
-                ips().forEach((ip, i) => {
-                    const post = new XMLHttpRequest();
-                    post.responseType = "json";
-                    post.open("POST", urlBase + ip + ":9966/setTonic", true);
-                    post.setRequestHeader("Tonic", document.getElementById("select-tonic").value);
-                    post.send();
-                });
-
-                ips().forEach((ip, i) => {
-                    const post = new XMLHttpRequest();
-                    post.responseType = "json";
-                    post.open("POST", urlBase + ip + ":9966/setMode", true);
-                    post.setRequestHeader("Mode", document.getElementById("select-mode").value);
-                    post.send();
-                });
+                setKeyTo(document.getElementById("select-tonic").value, document.getElementById("select-mode").value);
             }
 
             document.getElementById("button-play").setAttribute("onclick", "play.changeState();");
