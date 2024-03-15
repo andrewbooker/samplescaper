@@ -393,16 +393,17 @@
             }
 
             function setKeyTo(tonic, mode) {
-                const post = new XMLHttpRequest();
-                post.responseType = "json";
-
                 ips().forEach((ip, i) => {
+                    const post = new XMLHttpRequest();
+                    post.responseType = "json";
                     post.open("POST", urlBase + ip + ":9966/setTonic", true);
                     post.setRequestHeader("Tonic", tonic);
                     post.send();
                 });
 
                 ips().forEach((ip, i) => {
+                    const post = new XMLHttpRequest();
+                    post.responseType = "json";
                     post.open("POST", urlBase + ip + ":9966/setMode", true);
                     post.setRequestHeader("Mode", mode);
                     post.send();
