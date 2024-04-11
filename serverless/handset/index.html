@@ -106,6 +106,7 @@
             const masterIp = 13;
             const availableUnits = [
                 { ip: masterIp, colour: "blue" },
+                { ip: 12, colour: "orange" },
                 { ip: 14, colour: "pink" },
                 { ip: 19, colour: "aqua" },
                 { ip: 20, colour: "red" },
@@ -135,7 +136,7 @@
 
             (function() {
                 const selectUnits = document.getElementById("select-units");
-                const defaultSelect = ["blue", "pink"];
+                const defaultSelect = ["blue", "orange"];
 
                 availableUnits.forEach((u, i) => {
                     row = document.createElement("div");
