@@ -84,7 +84,7 @@ def convertItems(rawFiles, outDir):
     if l == BATCH_SIZE:
         for f in rawFiles:
             fqfn = os.path.join(inDir, f)
-            if os.path.exists(fq):
+            if os.path.exists(fqfn):
                 print("looper deleting", f)
                 os.remove(fqfn)
             else:
