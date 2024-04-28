@@ -20,3 +20,15 @@ echo "static ip_address=192.168.1.${ipn}" >> /etc/dhcpcd.conf
 echo "static routers=192.168.1.254" >> /etc/dhcpcd.conf
 echo "static domain_name_servers=192.168.1.254" >> /etc/dhcpcd.conf
 
+echo '' > ~/Documents/update.sh
+echo "cd rotation" >> ~/Documents/update.sh
+echo "git pull" >> ~/Documents/update.sh
+echo "cd .." >> ~/Documents/update.sh
+echo "cd wavmixer" >> ~/Documents/update.sh
+echo "git pull" >> ~/Documents/update.sh
+echo "cd .." >> ~/Documents/update.sh
+echo "cd samplescaper" >> ~/Documents/update.sh
+echo "git pull" >> ~/Documents/update.sh
+echo "cd .." >> ~/Documents/update.sh
+chmod +x ~/Documents/update.sh
+
