@@ -314,7 +314,7 @@ while True:
             octave = -1
     else:
         while i in done:
-            i = randint(0, len(notes))
+            i = randint(0, len(notes) - 1)
 
     builder.build(notes[i] + (octave * 12))
     done.add(i)
