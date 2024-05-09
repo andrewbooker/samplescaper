@@ -25,12 +25,12 @@ def nextAudioFileFrom(poolDir):
 def playOneFrom(poolDir, startedAt, playedDir):
     channel = pg.mixer.find_channel()
     if channel is None:
-        log.info("%.6f: all channels busy\n\r" % time.time())
+        log.info("%.6f: all channels busy" % time.time())
         return
 
     f = nextAudioFileFrom(poolDir)
     if f is None:
-        log.info("%.6f: No files in %s\n\r" % (time.time(), poolDir))
+        log.info("%.6f: No files in %s" % (time.time(), poolDir))
         return
 
     sound = pg.mixer.Sound(f)
@@ -44,13 +44,13 @@ def playOneFrom(poolDir, startedAt, playedDir):
         
     if not Path(os.path.join(playedDir, os.path.basename(f))).exists():
         if len(os.listdir(poolDir)) > 7:
-            log.info("%.6f: moving to %s to %s\n\r" % (time.monotonic(), f, playedDir))
+            log.info("%.6f: moving to %s to %s" % (time.monotonic(), f, playedDir))
             os.system("mv %s %s" % (f, playedDir))
         else:
-            log.info("%.6f: copying %s to %s\n\r" % (time.monotonic(), f, playedDir))
+            log.info("%.6f: copying %s to %s" % (time.monotonic(), f, playedDir))
             os.system("cp %s %s" % (f, playedDir))
     else:
-        log.info("%.6f: already stored %s\n\r" % (time.monotonic(), f))
+        log.info("%.6f: already stored %s" % (time.monotonic(), f))
 
 
 def playUntil(inDir, shouldStop):
