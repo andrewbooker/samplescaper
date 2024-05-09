@@ -32,3 +32,11 @@ echo "git pull" >> ~/Documents/update.sh
 echo "cd .." >> ~/Documents/update.sh
 chmod +x ~/Documents/update.sh
 
+echo '{' > static.json
+echo '    "isPilot": 0,' >> static.json
+echo '    "colour": "red",' >> static.json
+echo '    "leftRelativeToRight": 1.2' >> static.json
+echo '}' >> static.json
+
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
