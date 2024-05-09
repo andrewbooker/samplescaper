@@ -62,6 +62,9 @@ BATCH_SIZE = 10
 
 def convertItems(rawFiles, outDir):
     loopedFiles = [f[7:] for f in os.listdir(outDir)]
+    if len(loopedFiles) > 30:
+        print("Skipping looped file generation, have enough")
+        return
     takeFirstTwo = (random.random() > 0.2) and (len(rawFiles) > 1)
 
     if takeFirstTwo:
