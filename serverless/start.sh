@@ -9,6 +9,7 @@ mkdir -p ~/Music/archives
 mkdir -p ~/Music/pool/factory
 mkdir -p ~/Music/pool/raw
 mkdir -p ~/Music/pool/looped
+mkdir -p ~/Documents/logs
 
 if [ $sweepRaw != 'null' ]
 then

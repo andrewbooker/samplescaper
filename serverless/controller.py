@@ -9,6 +9,13 @@ import datetime
 from playPrepped import Player
 from volume import SystemVolume
 
+import logging
+ts = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+log_fn = os.path.join(os.getenv("HOME"), "Documents", "logs", f"randomtone_{ts}.log")
+logging.basicConfig(filename=log_fn, encoding="utf-8", level=logging.INFO)
+log = logging.getLogger(__name__)
+
+
 configLoc = sys.argv[2]
 def config(item):
     with open(os.path.join(configLoc, "config.json")) as conf:
@@ -65,7 +72,7 @@ class Volume():
         self.lr = leftRelativeToRight
         self.volumeCoeff = 0.7 if "Master" in self.systemVolume.deviceName else 1.0
         self._update()
-        print("using audio device", self.systemVolume.deviceName, "volume coeff", self.volumeCoeff, "current vol", self.volume)
+        log.info("using audio device", self.systemVolume.deviceName, "volume coeff", self.volumeCoeff, "current vol", self.volume)
 
     def _update(self):
         vols = [v for v in self.systemVolume.get()]
@@ -195,10 +202,10 @@ if volume.volume == 0:
 playingTimeMins = int(config("playingTimeMins"))
 if playingTimeMins > 0:
     player.start()
-    print("Player started. Playing stops in %d min(s)" % playingTimeMins)
+    log.info("Player started. Playing stops in %d min(s)" % playingTimeMins)
     time.sleep(playingTimeMins * 60)
 
-    print("stopping")
+    log.info("stopping")
     del player
     player = None
     shutdownDelayMins = int(config("shutdownDelayMins"))
