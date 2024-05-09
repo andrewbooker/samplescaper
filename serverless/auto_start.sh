@@ -19,6 +19,7 @@ then
     exit
 fi
 
+sudo swapoff -a
 cd ~/Documents/rotation/
 ./setup.sh remote ~/Documents/config.json
 cd -
