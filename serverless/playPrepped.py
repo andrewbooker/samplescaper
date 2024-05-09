@@ -12,7 +12,7 @@ import threading
 import logging
 ts = datetime.datetime.utcnow().strftime("%Y-%m-%d")
 log_fn = os.path.join(os.getenv("HOME"), "Documents", "logs", f"randomtone_{ts}.log")
-logging.basicConfig(filename=log_fn, encoding="utf-8", level=logging.INFO)
+logging.basicConfig(filename=log_fn, level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
@@ -55,7 +55,7 @@ def playOneFrom(poolDir, startedAt, playedDir):
 
 def playUntil(inDir, shouldStop):
     poolDir = os.path.join(inDir, "looped")
-    log.info("Playing from", poolDir)
+    log.info(f"Playing from {poolDir}")
     playedDir = os.path.join(Path(sys.argv[1]).parent, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
     os.mkdir(playedDir)
     startedAt = time.monotonic()

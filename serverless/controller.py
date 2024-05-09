@@ -12,7 +12,7 @@ from volume import SystemVolume
 import logging
 ts = datetime.datetime.utcnow().strftime("%Y-%m-%d")
 log_fn = os.path.join(os.getenv("HOME"), "Documents", "logs", f"randomtone_{ts}.log")
-logging.basicConfig(filename=log_fn, encoding="utf-8", level=logging.INFO)
+logging.basicConfig(filename=log_fn, level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
@@ -72,7 +72,7 @@ class Volume():
         self.lr = leftRelativeToRight
         self.volumeCoeff = 0.7 if "Master" in self.systemVolume.deviceName else 1.0
         self._update()
-        log.info("using audio device", self.systemVolume.deviceName, "volume coeff", self.volumeCoeff, "current vol", self.volume)
+        log.info(f"using audio device {self.systemVolume.deviceName} volume coeff {self.volumeCoeff} current vol {self.volume}")
 
     def _update(self):
         vols = [v for v in self.systemVolume.get()]
@@ -202,7 +202,7 @@ if volume.volume == 0:
 playingTimeMins = int(config("playingTimeMins"))
 if playingTimeMins > 0:
     player.start()
-    log.info("Player started. Playing stops in %d min(s)" % playingTimeMins)
+    log.info(f"Player started. Playing stops in {playingTimeMins} min(s)")
     time.sleep(playingTimeMins * 60)
 
     log.info("stopping")
