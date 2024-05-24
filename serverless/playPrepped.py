@@ -9,10 +9,8 @@ import sys
 import random
 import threading
 
-import logging
-ts = datetime.datetime.utcnow().strftime("%Y-%m-%d")
-log_fn = os.path.join(os.getenv("HOME"), "Documents", "logs", f"randomtone_{ts}.log")
-logging.basicConfig(filename=log_fn, level=logging.INFO)
+from processLogging import *
+
 log = logging.getLogger(__name__)
 
 
