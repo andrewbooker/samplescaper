@@ -9,9 +9,8 @@ import datetime
 from playPrepped import Player
 from volume import SystemVolume
 
-from processLogging import *
-
-log = logging.getLogger(__name__)
+from processLogging import createLog
+log = createLog(__name__)
 
 
 configLoc = sys.argv[2]

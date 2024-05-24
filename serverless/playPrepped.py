@@ -9,9 +9,8 @@ import sys
 import random
 import threading
 
-from processLogging import *
-
-log = logging.getLogger(__name__)
+from processLogging import createLog
+log = createLog(__name__)
 
 
 def nextAudioFileFrom(poolDir):
