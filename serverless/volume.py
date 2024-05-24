@@ -27,7 +27,10 @@ class SystemVolume():
             return "0"
         return pc.group()
 
-    def _device(self):
+    def __init__(self):
+        self.deviceName = None
+
+    def device(self):
         if self.deviceName is None:
             for d in ["Digital", "Master"]:
                 if SystemVolume.read(d) is not None:
@@ -38,11 +41,9 @@ class SystemVolume():
                 log.info("Unable to find audio device")
         return self.deviceName
 
-    def __init__(self):
-        self.deviceName = None
 
     def get(self):
-        dev = self._device()
+        dev = self.device()
         if dev is None:
             log.info("No audio device known when trying to read current volume")
             return []
@@ -54,7 +55,7 @@ class SystemVolume():
         return [int(re.search(SystemVolume.VALUE, v).group()) for v in r]
 
     def set(self, l, r):
-        dev = self._device()
+        dev = self.device()
         if dev is not None:
             os.system("amixer sset '%s' %d%%,%d%%" % (dev, l, r))
 

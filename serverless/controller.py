@@ -67,9 +67,13 @@ class Volume():
     def __init__(self, leftRelativeToRight):
         self.systemVolume = SystemVolume()
         self.lr = leftRelativeToRight
-        self.volumeCoeff = 0.7 if "Master" in self.systemVolume.deviceName else 1.0
+        volume_dev = self.systemVolume.device()
+        self.volumeCoeff = 0.7 if volume_dev is not None and "Master" in volume_dev else 1.0
         self._update()
-        log.info(f"using audio device {self.systemVolume.deviceName} volume coeff {self.volumeCoeff} current vol {self.volume}")
+        if volume_dev is not None:
+            log.info(f"using audio device {volume_dev} volume coeff {self.volumeCoeff} current vol {self.volume}")
+        else:
+            log.info("Volume device not known at startup")
 
     def _update(self):
         vols = [v for v in self.systemVolume.get()]
