@@ -1,7 +1,7 @@
 #!/bin/bash
 ipn=19
 sudo apt-get install -y vim
-sudo apt-get install -y python-pygame
+sudo apt-get install -y python3-pygame
 sudo apt-get install -y jq
 sudo apt-get install -y zip
 sudo ln -fs /usr/bin/python3.7 /usr/bin/python
