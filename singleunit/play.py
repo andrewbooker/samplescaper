@@ -7,7 +7,7 @@ import numpy as np
 
 
 device = int(sys.argv[1]) if len(sys.argv) > 1 else None
-level = float(sys.argv[2]) if len(sys.argv) > 2 else 1.0
+level = float(sys.argv[2]) if len(sys.argv) > 2 else 0.3
 
 if device is None:
     print(sd.query_devices())
@@ -15,25 +15,31 @@ if device is None:
 
 
 samplerate = 44100
-channels = 1
+channels = 2
 blocksize = 1024
 
 class MonoSoundSource:
-    def __init__(self):
+    def __init__(self, freq):
         self.pos = 0
+        self.freq = freq
 
     def read(self, size):
         t = (self.pos + np.arange(size)) / samplerate
         self.pos += size
-        return np.sin(2 * np.pi * 220 * t.reshape(-1, 1))
+        return level * np.sin(2 * np.pi * self.freq * t.reshape(-1, 1))
 
-source = MonoSoundSource()
+source1 = MonoSoundSource(220)
+source2 = MonoSoundSource(441)
 
 def callback(outdata, frames, time, status):
     if status:
         print(status, file=sys.stderr)
 
-    outdata[:] = struct.pack(f"{frames}f", *(source.read(frames)))
+    block = np.dstack((
+        source1.read(frames),
+        source2.read(frames)
+    )).flatten()
+    outdata[:] = struct.pack(f"{frames * channels}f", *block)
 
 with sd.RawOutputStream(samplerate=samplerate, blocksize=blocksize, device=device, channels=channels, dtype="float32", callback=callback):
     input()
