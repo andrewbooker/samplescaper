@@ -15,7 +15,6 @@ if device is None:
 
 
 samplerate = 44100
-channels = 2
 blocksize = 1024
 
 class MonoSoundSource:
@@ -28,20 +27,19 @@ class MonoSoundSource:
         self.pos += size
         return level * np.sin(2 * np.pi * self.freq * t.reshape(-1, 1))
 
-source1 = MonoSoundSource(220)
-source2 = MonoSoundSource(441)
+sources = [
+    MonoSoundSource(220),
+    MonoSoundSource(441)
+]
 
 def callback(outdata, frames, time, status):
     if status:
         print(status, file=sys.stderr)
 
-    block = np.dstack((
-        source1.read(frames),
-        source2.read(frames)
-    )).flatten()
-    outdata[:] = struct.pack(f"{frames * channels}f", *block)
+    block = np.dstack([s.read(frames) for s in sources]).flatten()
+    outdata[:] = struct.pack(f"{len(sources) * frames}f", *block)
 
-with sd.RawOutputStream(samplerate=samplerate, blocksize=blocksize, device=device, channels=channels, dtype="float32", callback=callback):
+with sd.RawOutputStream(samplerate=samplerate, blocksize=blocksize, device=device, channels=len(sources), dtype="float32", callback=callback):
     input()
 
 
