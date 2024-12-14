@@ -36,16 +36,24 @@ class Pan:
 
 
 class LoopFiles:
-    def convert(self, files, inDir, factoryDir, outDir):
+    def __init__(self, inDir, factoryDir, outDir):
+        self.inDir = inDir
+        self.factoryDir = factoryDir
+        self.outDir = outDir
+
+    def convert(self, files):
         pass
 
 class LoopStereo(LoopFiles):
+    def __init__(self, inDir, factoryDir, outDir):
+        super(LoopStereo, self).__init__(inDir, factoryDir, outDir)
+
     @staticmethod
     def pannedSample(vals, pan):
         return [vals[0] * pan, vals[len(vals) - 1] * (1.0 - pan)]
 
-    def convert(self, files, inDir, factoryDir, outDir):
-        fqfns = [os.path.join(inDir, f) for f in files]
+    def convert(self, files):
+        fqfns = [os.path.join(self.inDir, f) for f in files]
         fd = [sf.read(f)[0] for f in fqfns]
         fileData = [(len(d), d) for d in fd]
 
@@ -55,18 +63,13 @@ class LoopStereo(LoopFiles):
         start = time.monotonic()
         print("creating %.2fs" % env.lengthSecs, "file of", env.required, "samples")
 
-        fqfn = os.path.join(factoryDir, "looped_%s" % "__".join(files))
+        fqfn = os.path.join(self.factoryDir, "looped_%s" % "__".join(files))
         sf.write(fqfn, [LoopStereo.pannedSample([env.vol(i) * f[1][i % f[0]] for f in fileData], pan.at(i)) for i in range(0, env.required)], sampleRate)
         print("moving to live pool after %.2fs" % (time.monotonic() - start))
-        shutil.move(fqfn, outDir)
+        shutil.move(fqfn, self.outDir)
 
 
-inDir = os.path.join(sys.argv[1], "raw")
-factoryDir = os.path.join(sys.argv[1], "factory")
-outDir = os.path.join(sys.argv[1], "looped")
-BATCH_SIZE = 10
-
-def convertItems(rawFiles, outDir):
+def convertItems(looper, rawFiles, outDir, batchSize):
     loopedFiles = [f[7:] for f in os.listdir(outDir)]
     if len(loopedFiles) > 30:
         print("Skipping looped file generation, have enough")
@@ -75,7 +78,7 @@ def convertItems(rawFiles, outDir):
 
     if takeFirstTwo:
         try:
-            LoopStereo().convert([f for f in rawFiles][:2], inDir, factoryDir, outDir)
+            looper.convert([f for f in rawFiles][:2])
         except:
             print("failed to create paired loop, file probably still being written")
         return
@@ -84,13 +87,13 @@ def convertItems(rawFiles, outDir):
     for f in rawFiles:
         if f not in loopedFiles:
             try:
-                LoopStereo().convert([f], inDir, factoryDir, outDir)
+                looper.convert([f])
             except:
                 print("failed to create loop for", f, "probably still being written")
         else:
             print("already done", f)
 
-    if l == BATCH_SIZE:
+    if l == batchSize:
         for f in rawFiles:
             fqfn = os.path.join(inDir, f)
             if os.path.exists(fqfn):
@@ -99,9 +102,15 @@ def convertItems(rawFiles, outDir):
             else:
                 print("looper about to delete", f, "but already deleted")
 
+inDir = os.path.join(sys.argv[1], "raw")
+factoryDir = os.path.join(sys.argv[1], "factory")
+outDir = os.path.join(sys.argv[1], "looped")
+BATCH_SIZE = 10
+
 while True:
     rawFiles = os.listdir(inDir)
     random.shuffle(rawFiles)
-    convertItems(rawFiles[:BATCH_SIZE], outDir)
+    looper = LoopStereo(inDir, factoryDir, outDir)
+    convertItems(looper, rawFiles[:BATCH_SIZE], outDir, BATCH_SIZE)
     time.sleep(3)
 
