@@ -19,7 +19,9 @@ if device is None:
 
 
 samplerate = 44100
-blocksize = 1024
+blocksize = 4096
+maxLeadInSecs = 5
+
 
 class MonoSoundSource:
     def __init__(self):
@@ -46,20 +48,24 @@ class MonoWavSource(MonoSoundSource):
         super(MonoWavSource, self).__init__()
         self.inDir = inDir
         self.fileBuffer = None
+        self.blockCountdown = 0
 
     def getFile(self):
-        if self.fileBuffer is None:
-            rawFiles = os.listdir(self.inDir)
-            if len(rawFiles) == 0:
-                return
-            random.shuffle(rawFiles)
-            selected = rawFiles[0]
-            data, _ = sf.read(os.path.join(self.inDir, selected))
-            self.fileBuffer = data
-            print(selected, data[:5])
+        rawFiles = os.listdir(self.inDir)
+        if len(rawFiles) == 0:
+            return
+        random.shuffle(rawFiles)
+        selected = rawFiles[0]
+        leadIn = maxLeadInSecs * random.random()
+        print(selected, f"in {leadIn:.2f}s")
+        data, _ = sf.read(os.path.join(self.inDir, selected))
+        self.fileBuffer = [0.0] * int(leadIn * samplerate)
+        self.fileBuffer.extend(data)
 
     def read(self, size):
-        self.getFile()
+        if self.fileBuffer is None:
+            self.getFile()
+
         ret = self.fileBuffer[self.pos:self.pos + size]
         super().advance(size)
         shortfall = size - len(ret)
@@ -68,6 +74,7 @@ class MonoWavSource(MonoSoundSource):
         self.fileBuffer = None
         self.pos = 0
         return [ret[i] if i < len(ret) else 0.0 for i in range(size)]
+
 
 sources = []
 
