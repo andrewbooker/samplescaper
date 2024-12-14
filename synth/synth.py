@@ -235,22 +235,14 @@ def chooseTemplateFrom(frq):
 
 
 class Builder():
-    def __init__(self, outDir, maxPoolSize):
-        self.maxPoolSize = maxPoolSize
+    def __init__(self, outDir):
         self.buildDir = os.path.join(outDir, "factory")
         self.outDir = os.path.join(outDir, "raw")
 
-    def build(self, n):
-        files = [os.path.join(self.outDir, f) for f in os.listdir(self.outDir)]
-        alreadyInPool = len(files)
-        print(alreadyInPool, "files in pool already")
-        if alreadyInPool >= self.maxPoolSize:
-            print("enough")
-            return
-
-        frq = freq(n)
+    def build(self, note):
+        frq = freq(note)
         (pref, templateProvider) = chooseTemplateFrom(frq)
-        fn = "%d_%s_%s.wav" % (n, pref, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
+        fn = "%d_%s_%s.wav" % (note, pref, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
         waves = assembleWaves(frq, templateProvider)
         durSecs = 2 + (10 * random.random())
 
@@ -296,32 +288,37 @@ def notesFromConfig():
 outDir = sys.argv[1]
 c = config()
 maxPoolSize = int(c["maxSynthPoolSize"]) if "maxSynthPoolSize" in c else 30
-builder = Builder(outDir, maxPoolSize)
+builder = Builder(outDir)
 
 done = set()
 i = 0
 octave = 0
 start = time.time()
+print("Writing to", builder.outDir)
 
 while True:
-    notes = notesFromConfig()
+    files = [os.path.join(builder.outDir, f) for f in os.listdir(builder.outDir)]
+    alreadyInPool = len(files)
+    print(alreadyInPool, "files in pool")
+    if alreadyInPool < maxPoolSize:
+        notes = notesFromConfig()
+        if len(done) == len(notes):
+            done.clear()
+            i = 0
+            octave += 1
+            if octave > 2:
+                octave = -1
+        else:
+            while i in done:
+                i = randint(0, len(notes) - 1)
 
-    if len(done) == len(notes):
-        done.clear()
-        i = 0
-        octave += 1
-        if octave > 2:
-            octave = -1
+        builder.build(notes[i] + (octave * 12))
+        done.add(i)
+        print("generation cycle took %0.1fs" % (time.time() - start))
     else:
-        while i in done:
-            i = randint(0, len(notes) - 1)
+        print("Enough files available")
+        time.sleep(2)
 
-    builder.build(notes[i] + (octave * 12))
-    done.add(i)
-    while (time.time() - start) < 20:
-        time.sleep(1)
+    start = time.time()
 
-    now = time.time()
-    print("generation cycle took %0.1fs" % (now - start))
-    start = now
 
