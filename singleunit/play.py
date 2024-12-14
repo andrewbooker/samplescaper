@@ -18,18 +18,28 @@ samplerate = 44100
 blocksize = 1024
 
 class MonoSoundSource:
-    def __init__(self, freq):
+    def __init__(self):
         self.pos = 0
+
+    def read(self, size):
+        self.pos += size
+        pass
+
+
+class MonoSineSource(MonoSoundSource):
+    def __init__(self, freq):
+        super(MonoSineSource, self).__init__()
         self.freq = freq
 
     def read(self, size):
         t = (self.pos + np.arange(size)) / samplerate
-        self.pos += size
+        super().read(size)
         return level * np.sin(2 * np.pi * self.freq * t.reshape(-1, 1))
 
+
 sources = [
-    MonoSoundSource(220),
-    MonoSoundSource(441)
+    MonoSineSource(220),
+    MonoSineSource(441)
 ]
 
 def callback(outdata, frames, time, status):
