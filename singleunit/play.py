@@ -8,6 +8,7 @@ import numpy as np
 import random
 import os
 import time
+import threading
 
 
 device = int(sys.argv[1]) if len(sys.argv) > 1 else None
@@ -53,6 +54,7 @@ class MonoWavSource(MonoSoundSource):
         super(MonoWavSource, self).__init__()
         self.inDir = inDir
         self.fileBuffer = None
+        self.loading = None
         self.blockCountdown = 0
         self.start = time.time()
         self.hasFinished = False
@@ -73,11 +75,17 @@ class MonoWavSource(MonoSoundSource):
         self.fileBuffer.extend([(level * d) for d in data])
 
     def read(self, size):
+        if self.loading is not None:
+            if self.loading.is_alive():
+                return [0.0] * size
+            self.loading.join()
+
         if self.fileBuffer is None:
             if (time.time() - self.start) > (60 * playingTimeMins):
                 self.hasFinished = True
             else:
-                self.getFile()
+                self.loading = threading.Thread(target=self.getFile, daemon=True)
+                self.loading.start()
             return [0.0] * size
 
         ret = self.fileBuffer[self.pos:self.pos + size]
