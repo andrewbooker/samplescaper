@@ -69,16 +69,16 @@ class MonoWavSource(MonoSoundSource):
         random.shuffle(rawFiles)
         selected = rawFiles[0]
         leadIn = maxLeadInSecs * random.random()
-        print(selected, f"in {leadIn:.2f}s")
         data, _ = sf.read(os.path.join(self.inDir, selected))
         self.fileBuffer = [0.0] * int(leadIn * samplerate)
         self.fileBuffer.extend([(level * d) for d in data])
 
     def read(self, size):
         if self.loading is not None:
-            if self.loading.is_alive():
-                return [0.0] * size
-            self.loading.join()
+            if not self.loading.is_alive():
+                self.loading.join()
+                self.loading = None
+            return [0.0] * size
 
         if self.fileBuffer is None:
             if (time.time() - self.start) > (60 * playingTimeMins):
@@ -102,14 +102,15 @@ sources = []
 
 if inDir is not None:
     sources.extend([
-        MonoWavSource(inDir),
-        MonoWavSource(inDir)
+        MonoWavSource(inDir) for _ in range(8)
     ])
 else:
     sources.extend([
         MonoSineSource(220),
         MonoSineSource(441)
     ])
+
+print("playing", len(sources), "sources")
 
 def callback(outdata, frames, time, status):
     if status:
