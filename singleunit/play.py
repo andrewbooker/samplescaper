@@ -14,7 +14,8 @@ import threading
 device = int(sys.argv[1]) if len(sys.argv) > 1 else None
 level = float(sys.argv[2]) if len(sys.argv) > 2 else 0.3
 inDir = sys.argv[3] if len(sys.argv) > 3 else None
-playingTimeMins = int(sys.argv[4]) if len(sys.argv) > 4 else 3
+channels = int(sys.argv[4]) if len(sys.argv) > 4 else 3
+playingTimeMins = float(sys.argv[5]) if len(sys.argv) > 5 else 3
 
 if device is None:
     print(sd.query_devices())
@@ -66,15 +67,15 @@ class AudioFileLoader:
         self.currently_loading_for.fileBuffer = [0.0] * int(leadIn * samplerate)
         self.currently_loading_for.fileBuffer.extend([(level * d) for d in data])
 
-    def start_loading(self):
+    def start_loading_to(self, source):
+        self.currently_loading_for = source
         self.loading = threading.Thread(target=self.getFile, daemon=True)
         self.loading.start()
 
     def request_file_for(self, source):
-        if self.currently_loading_for is None or (self.currently_loading_for.me != source.me and self.loading is None):
-            self.currently_loading_for = source
-            print("starting loading", self.currently_loading_for.me)
-            self.start_loading()
+        if self.currently_loading_for is None:
+            self.start_loading_to(source)
+            print("loading started for", self.currently_loading_for.me)
             return False
 
         if self.currently_loading_for.me != source.me:
@@ -87,7 +88,7 @@ class AudioFileLoader:
         self.loading = None
         print("finished loading", self.currently_loading_for.me)
         self.currently_loading_for.is_ready = True
-        self.currently_loading_for = source
+        self.currently_loading_for = None
         return True
 
 
@@ -134,7 +135,7 @@ sources = []
 
 if inDir is not None:
     sources.extend([
-        MonoWavSource(loader, i) for i in range(8)
+        MonoWavSource(loader, i) for i in range(channels)
     ])
 else:
     sources.extend([
