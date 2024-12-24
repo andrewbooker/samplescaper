@@ -9,6 +9,8 @@ import random
 import os
 import time
 import threading
+from datetime import datetime
+from pathlib import Path
 
 
 device = int(sys.argv[1]) if len(sys.argv) > 1 else None
@@ -53,19 +55,27 @@ class MonoSineSource(MonoSoundSource):
 class AudioFileLoader:
     def __init__(self, inDir):
         self.inDir = inDir
+        parent_dir = os.path.dirname(inDir)
         self.currently_loading_for = None
         self.loading = None
+        self.done_dir = os.path.join(parent_dir, datetime.now().strftime("%Y%m%d_%H%M%S"))
+        print("Playing files in", inDir)
+        print("Moving played files to", self.done_dir)
+        Path(self.done_dir).mkdir()
 
     def getFile(self):
         rawFiles = os.listdir(self.inDir)
         if len(rawFiles) == 0:
             return
+        print("Choosing from", len(rawFiles), "files")
         random.shuffle(rawFiles)
         selected = rawFiles[0]
         leadIn = maxLeadInSecs * random.random()
-        data, _ = sf.read(os.path.join(self.inDir, selected))
+        file_to_open = os.path.join(self.inDir, selected)
+        data, _ = sf.read(file_to_open)
         self.currently_loading_for.fileBuffer = [0.0] * int(leadIn * samplerate)
         self.currently_loading_for.fileBuffer.extend([(level * d) for d in data])
+        os.rename(file_to_open, os.path.join(self.done_dir, selected))
 
     def start_loading_to(self, source):
         self.currently_loading_for = source
