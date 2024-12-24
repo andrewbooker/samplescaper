@@ -50,7 +50,7 @@ class MonoSineSource(MonoSoundSource):
 
 
 class MonoWavSource(MonoSoundSource):
-    def __init__(self, inDir):
+    def __init__(self, inDir, idx):
         super(MonoWavSource, self).__init__()
         self.inDir = inDir
         self.fileBuffer = None
@@ -58,6 +58,7 @@ class MonoWavSource(MonoSoundSource):
         self.blockCountdown = 0
         self.start = time.time()
         self.hasFinished = False
+        self.me = idx
 
     def isFinished(self):
         return self.hasFinished
@@ -78,31 +79,38 @@ class MonoWavSource(MonoSoundSource):
             if not self.loading.is_alive():
                 self.loading.join()
                 self.loading = None
+                print("loading finished on", self.me)
+            else:
+                print("still loading on", self.me)
             return [0.0] * size
 
         if self.fileBuffer is None:
             if (time.time() - self.start) > (60 * playingTimeMins):
                 self.hasFinished = True
             else:
-                self.loading = threading.Thread(target=self.getFile, daemon=True)
+                self.loading = threading.Thread(target=self.getFile, daemon=False)
                 self.loading.start()
+                print("loading started on", self.me)
             return [0.0] * size
 
         ret = self.fileBuffer[self.pos:self.pos + size]
+        available = len(ret)
         super().advance(size)
-        shortfall = size - len(ret)
-        if shortfall < 1:
+        if available == size:
             return ret
+        print("reached the end on", self.me)
         self.fileBuffer = None
         self.pos = 0
-        return [ret[i] if i < len(ret) else 0.0 for i in range(size)]
+        empty = [0.0] * size
+        empty[:available] = ret
+        return empty
 
 
 sources = []
 
 if inDir is not None:
     sources.extend([
-        MonoWavSource(inDir) for _ in range(8)
+        MonoWavSource(inDir, i) for i in range(8)
     ])
 else:
     sources.extend([
