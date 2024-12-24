@@ -49,19 +49,11 @@ class MonoSineSource(MonoSoundSource):
         return False
 
 
-class MonoWavSource(MonoSoundSource):
-    def __init__(self, inDir, idx):
-        super(MonoWavSource, self).__init__()
+class AudioFileLoader:
+    def __init__(self, inDir):
         self.inDir = inDir
-        self.fileBuffer = None
+        self.currently_loading_for = None
         self.loading = None
-        self.blockCountdown = 0
-        self.start = time.time()
-        self.hasFinished = False
-        self.me = idx
-
-    def isFinished(self):
-        return self.hasFinished
 
     def getFile(self):
         rawFiles = os.listdir(self.inDir)
@@ -71,35 +63,67 @@ class MonoWavSource(MonoSoundSource):
         selected = rawFiles[0]
         leadIn = maxLeadInSecs * random.random()
         data, _ = sf.read(os.path.join(self.inDir, selected))
-        self.fileBuffer = [0.0] * int(leadIn * samplerate)
-        self.fileBuffer.extend([(level * d) for d in data])
+        self.currently_loading_for.fileBuffer = [0.0] * int(leadIn * samplerate)
+        self.currently_loading_for.fileBuffer.extend([(level * d) for d in data])
+
+    def start_loading(self):
+        self.loading = threading.Thread(target=self.getFile, daemon=True)
+        self.loading.start()
+
+    def request_file_for(self, source):
+        if self.currently_loading_for is None or (self.currently_loading_for.me != source.me and self.loading is None):
+            self.currently_loading_for = source
+            print("starting loading", self.currently_loading_for.me)
+            self.start_loading()
+            return False
+
+        if self.currently_loading_for.me != source.me:
+            return False
+
+        if self.loading is not None and self.loading.is_alive():
+            return False
+
+        self.loading.join()
+        self.loading = None
+        print("finished loading", self.currently_loading_for.me)
+        self.currently_loading_for.is_ready = True
+        self.currently_loading_for = source
+        return True
+
+
+loader = AudioFileLoader(inDir)
+
+
+class MonoWavSource(MonoSoundSource):
+    def __init__(self, loader, idx):
+        super(MonoWavSource, self).__init__()
+        self.loader = loader
+        self.fileBuffer = None
+        self.start = time.time()
+        self.hasFinished = False
+        self.me = idx
+        self.is_ready = False
+
+    def isFinished(self):
+        return self.hasFinished
 
     def read(self, size):
-        if self.loading is not None:
-            if not self.loading.is_alive():
-                self.loading.join()
-                self.loading = None
-                print("loading finished on", self.me)
-            else:
-                print("still loading on", self.me)
-            return [0.0] * size
-
-        if self.fileBuffer is None:
+        if not self.is_ready:
+            empty = [0.0] * size
             if (time.time() - self.start) > (60 * playingTimeMins):
                 self.hasFinished = True
-            else:
-                self.loading = threading.Thread(target=self.getFile, daemon=False)
-                self.loading.start()
-                print("loading started on", self.me)
-            return [0.0] * size
+                return empty
+
+            self.loader.request_file_for(self)
+            return empty
 
         ret = self.fileBuffer[self.pos:self.pos + size]
         available = len(ret)
         super().advance(size)
         if available == size:
             return ret
-        print("reached the end on", self.me)
-        self.fileBuffer = None
+        print("reached the end of", self.me)
+        self.is_ready = False
         self.pos = 0
         empty = [0.0] * size
         empty[:available] = ret
@@ -110,7 +134,7 @@ sources = []
 
 if inDir is not None:
     sources.extend([
-        MonoWavSource(inDir, i) for i in range(8)
+        MonoWavSource(loader, i) for i in range(8)
     ])
 else:
     sources.extend([
