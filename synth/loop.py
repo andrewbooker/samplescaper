@@ -104,7 +104,7 @@ class LoopMono(LoopFiles):
 
 def convertItems(looper, rawFiles, outDir, batchSize):
     loopedFiles = [f[7:] for f in os.listdir(outDir)]
-    if len(loopedFiles) > 30:
+    if len(loopedFiles) > 100:
         print("Skipping looped file generation, have enough")
         return
 
