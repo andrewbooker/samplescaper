@@ -1,2 +1,2 @@
-./play.py 6 0.3 ~/Music/pool/looped 1 3
+./play.py 3 0.3 ~/Music/pool/looped 8 1
 ./recycle.sh ~/Music/pool
