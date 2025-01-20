@@ -11,6 +11,7 @@ import time
 import threading
 from datetime import datetime
 from pathlib import Path
+from enum import Enum
 
 
 device = int(sys.argv[1]) if len(sys.argv) > 1 else None
@@ -25,7 +26,7 @@ if device is None:
 
 
 samplerate = 44100
-blocksize = 4096
+blocksize = 16384
 maxLeadInSecs = 5
 
 
@@ -52,6 +53,14 @@ class MonoSineSource(MonoSoundSource):
         return False
 
 
+class Loading(Enum):
+    NotSetUp = 0
+    NotStarted = 1
+    Started = 2
+    AwaitingFinish = 3
+    Finished = 4
+
+
 class AudioFileLoader:
     def __init__(self, inDir):
         self.inDir = inDir
@@ -62,12 +71,13 @@ class AudioFileLoader:
         print("Playing files in", inDir)
         print("Moving played files to", self.done_dir)
         Path(self.done_dir).mkdir()
+        self.load_state = Loading.NotSetUp
 
     def getFile(self):
         rawFiles = os.listdir(self.inDir)
         if len(rawFiles) == 0:
             return
-        print("Choosing from", len(rawFiles), "files")
+        print(self.currently_loading_for.me, "choosing from", len(rawFiles), "files")
         random.shuffle(rawFiles)
         selected = rawFiles[0]
         leadIn = maxLeadInSecs * random.random()
@@ -76,30 +86,35 @@ class AudioFileLoader:
         self.currently_loading_for.fileBuffer = [0.0] * int(leadIn * samplerate)
         self.currently_loading_for.fileBuffer.extend([(level * d) for d in data])
         os.rename(file_to_open, os.path.join(self.done_dir, selected))
-
-    def start_loading_to(self, source):
-        self.currently_loading_for = source
-        self.loading = threading.Thread(target=self.getFile, daemon=True)
-        self.loading.start()
+        #print(self.currently_loading_for.me, "finished loading")
+        self.load_state = Loading.AwaitingFinish
 
     def request_file_for(self, source):
-        if self.currently_loading_for is None:
-            self.start_loading_to(source)
-            print("loading started for", self.currently_loading_for.me)
+        if self.currently_loading_for is not None and self.currently_loading_for.me != source.me:
             return False
 
-        if self.currently_loading_for.me != source.me:
-            return False
-
-        if self.loading is not None and self.loading.is_alive():
-            return False
-
-        self.loading.join()
-        self.loading = None
-        print("finished loading", self.currently_loading_for.me)
-        self.currently_loading_for.is_ready = True
-        self.currently_loading_for = None
-        return True
+        match self.load_state:
+            case Loading.Finished:
+                self.loading = None
+                self.currently_loading_for.is_ready = True
+                self.currently_loading_for = None
+                self.load_state = Loading.NotSetUp
+                return True
+            case Loading.AwaitingFinish:
+                self.loading.join()
+                self.load_state = Loading.Finished
+                return False
+            case Loading.NotStarted:
+                self.loading.start()
+                self.load_state = Loading.Started
+                return False
+            case Loading.NotSetUp:
+                self.currently_loading_for = source
+                self.loading = threading.Thread(target=self.getFile, daemon=True)
+                self.load_state = Loading.NotStarted
+                return False
+            case _:
+                return False
 
 
 loader = AudioFileLoader(inDir)
@@ -133,7 +148,7 @@ class MonoWavSource(MonoSoundSource):
         super().advance(size)
         if available == size:
             return ret
-        print("reached the end of", self.me)
+        print(self.me, "reached the end")
         self.is_ready = False
         self.pos = 0
         empty = [0.0] * size
