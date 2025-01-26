@@ -199,21 +199,26 @@ class Loopable():
 
 
     
-def maxdDetuneCoeffAt(f):
-    c = 0.012
-    m = (c - 0.005) / 1000.0
-    return c - (m * f)
 
-def assembleWaves(f, template):
+
+def assembleWaves(f, volCoeff, template):
+    def maxDetuneCoeffAt(f):
+        c = 0.012
+        m = (c - 0.005) / 1000.0
+        return c - (m * f)
+
+    def vol():
+        return volCoeff * (0.6 + (0.4 * random.random()))
+
     waves = []
-    waves.append(WaveIterator(template, f, 0.6 + (0.4 * random.random()), True))
+    waves.append(WaveIterator(template, f, vol(), True))
 
     for i in range(random.randint(1, 3)):
-        r = maxdDetuneCoeffAt(f) * random.random()
+        r = maxDetuneCoeffAt(f) * random.random()
         fmUp = f * (1 + r)
         fmDown = f * (1 - r)
-        waves.append(WaveIterator(template, fmUp, 0.6 + (0.4 * random.random()), False))
-        waves.append(WaveIterator(template, fmDown, 0.6 + (0.4 * random.random()), False))
+        waves.append(WaveIterator(template, fmUp, vol(), False))
+        waves.append(WaveIterator(template, fmDown, vol(), False))
 
     return waves
 
@@ -241,9 +246,10 @@ class Builder():
 
     def build(self, note):
         frq = freq(note)
+        volCoeff = 1.0
         (pref, templateProvider) = chooseTemplateFrom(frq)
         fn = "%d_%s_%s.wav" % (note, pref, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
-        waves = assembleWaves(frq, templateProvider)
+        waves = assembleWaves(frq, volCoeff, templateProvider)
         durSecs = 2 + (10 * random.random())
 
         denominator = len(waves)
