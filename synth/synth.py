@@ -240,13 +240,14 @@ def chooseTemplateFrom(frq):
 
 
 class Builder():
-    def __init__(self, outDir):
+    def __init__(self, outDir, tonic):
         self.buildDir = os.path.join(outDir, "factory")
         self.outDir = os.path.join(outDir, "raw")
+        self.tonic = tonic
 
     def build(self, note):
         frq = freq(note)
-        volCoeff = 1.0
+        volCoeff = 1.0 if note < self.tonic else 1.0 - (0.5 * (note - self.tonic) / 35)
         (pref, templateProvider) = chooseTemplateFrom(frq)
         fn = "%d_%s_%s.wav" % (note, pref, datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"))
         waves = assembleWaves(frq, volCoeff, templateProvider)
@@ -262,7 +263,7 @@ class Builder():
 
             data.append(v / denominator)
 
-        print("writing", fn)
+        print("writing", fn, f"at volume coefficient", volCoeff)
         fqfn = os.path.join(self.buildDir, fn)
         sf.write(fqfn, Loopable(data).create(), SAMPLE_RATE)
         print("moving to pool")
@@ -294,7 +295,7 @@ def notesFromConfig():
 outDir = sys.argv[1]
 c = config()
 maxPoolSize = int(c["maxSynthPoolSize"]) if "maxSynthPoolSize" in c else 30
-builder = Builder(outDir)
+builder = Builder(outDir, keyConfig()["tonic"])
 
 done = set()
 i = 0
