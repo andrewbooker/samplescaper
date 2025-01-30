@@ -28,7 +28,18 @@ if device is None:
 samplerate = 44100
 blocksize = 16384
 maxLeadInSecs = 5
-
+vols = [
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+]
+allOn = [1.0] * 8
+vols = allOn
 
 class MonoSoundSource:
     def __init__(self):
@@ -84,7 +95,7 @@ class AudioFileLoader:
         file_to_open = os.path.join(self.inDir, selected)
         data, _ = sf.read(file_to_open)
         self.currently_loading_for.fileBuffer = [0.0] * int(leadIn * samplerate)
-        self.currently_loading_for.fileBuffer.extend([(level * d) for d in data])
+        self.currently_loading_for.fileBuffer.extend([(vols[self.currently_loading_for.me] * level * d) for d in data])
         os.rename(file_to_open, os.path.join(self.done_dir, selected))
         #print(self.currently_loading_for.me, "finished loading")
         self.load_state = Loading.AwaitingFinish
