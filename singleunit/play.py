@@ -167,32 +167,36 @@ class MonoWavSource(MonoSoundSource):
         return empty
 
 
-sources = []
+class Player():
+    def __init__(self):
+        self.sources = []
 
-if inDir is not None:
-    sources.extend([
-        MonoWavSource(loader, i) for i in range(channels)
-    ])
-else:
-    sources.extend([
-        MonoSineSource(220),
-        MonoSineSource(441)
-    ])
+        if inDir is not None:
+            self.sources.extend([
+                MonoWavSource(loader, i) for i in range(channels)
+            ])
+        else:
+            self.sources.extend([
+                MonoSineSource(220),
+                MonoSineSource(441)
+            ])
 
-print("playing", len(sources), "sources")
+        self.playing = len(self.sources)
+        print(f"playing {self.playing} sources")
 
-def callback(outdata, frames, time, status):
-    if status:
-        print(status, file=sys.stderr)
+    def play(self):
+        def callback(outdata, frames, time, status):
+            if status:
+                print(status, file=sys.stderr)
 
-    block = np.dstack([s.read(frames) for s in sources]).flatten()
-    outdata[:] = struct.pack(f"{len(sources) * frames}f", *block)
+            block = np.dstack([s.read(frames) for s in self.sources]).flatten()
+            outdata[:] = struct.pack(f"{self.playing * frames}f", *block)
 
-with sd.RawOutputStream(samplerate=samplerate, blocksize=blocksize, device=device, channels=len(sources), dtype="float32", callback=callback):
-    while True:
-        if all([s.isFinished() for s in sources]):
-            print("All sources finished")
-            exit(0)
-        time.sleep(3)
+        with sd.RawOutputStream(samplerate=samplerate, blocksize=blocksize, device=device, channels=self.playing, dtype="float32", callback=callback):
+            while True:
+                if all([s.isFinished() for s in self.sources]):
+                    print("All sources finished")
+                    exit(0)
+                time.sleep(3)
 
-
+Player().play()
