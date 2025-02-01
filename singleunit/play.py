@@ -24,7 +24,7 @@ inDir = sys.argv[3] if len(sys.argv) > 3 else None
 channels = int(sys.argv[4]) if len(sys.argv) > 4 else 3
 
 if device is None:
-    logger.info(sd.query_devices())
+    print(sd.query_devices())
     exit()
 
 
@@ -193,7 +193,7 @@ class Player():
             ])
 
         self.playing = len(self.sources)
-        logger.info(f"playing {self.playing} sources")
+        logger.info(f"ready to play {self.playing} sources")
 
     def status(self):
         if self.loop_player is None:
