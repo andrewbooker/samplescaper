@@ -257,18 +257,19 @@ class Controller(BaseHTTPRequestHandler):
         self._standardResponse()
         self.send_header("Access-Control-Allow-Methods", "GET, POST")
         self.send_header("Access-Control-Allow-Headers", "Current-Time")
-        self.send_header("Access-Control-Allow-Headers", "Tonic")
-        self.send_header("Access-Control-Allow-Headers", "Mode")
         self.end_headers()
 
     def do_POST(self):
         getattr(self, "_%s" % self.path[1:])()
         self._standardResponse()
-        self.wfile.write(json.dumps({}).encode("utf-8"))
+        resp = json.dumps({}).encode("utf-8")
+        self.send_header("Content-Length", str(len(resp)))
         self.end_headers()
+        self.wfile.write(resp)
 
     def _play(self):
         player.play()
+        print("protocol version", self.protocol_version)
 
     def _stop(self):
         player.stop()
@@ -281,4 +282,3 @@ class Controller(BaseHTTPRequestHandler):
 
 
 HTTPServer(("0.0.0.0", 9966), Controller).serve_forever()
-
