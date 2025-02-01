@@ -186,6 +186,14 @@ class Player():
         self.playing = len(self.sources)
         print(f"playing {self.playing} sources")
 
+    def status(self):
+        if self.loop_player is None:
+            return "stopped"
+
+        if all([s.isFinished() for s in self.sources]):
+            return "paused"
+
+        return "playing"
 
     def play(self):
         if self.loop_player is not None:
@@ -262,7 +270,13 @@ class Controller(BaseHTTPRequestHandler):
     def do_POST(self):
         getattr(self, "_%s" % self.path[1:])()
         self._standardResponse()
-        resp = json.dumps({}).encode("utf-8")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def do_GET(self):
+        self._standardResponse()
+        status = {"status": player.status()}
+        resp = json.dumps(status).encode("utf-8")
         self.send_header("Content-Length", str(len(resp)))
         self.end_headers()
         self.wfile.write(resp)
