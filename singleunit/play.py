@@ -26,22 +26,6 @@ if device is None:
     exit()
 
 
-samplerate = 44100
-blocksize = 16384
-maxLeadInSecs = 5
-vols = [
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0
-]
-allOn = [1.0] * 8
-vols = allOn
-
 class MonoSoundSource:
     def __init__(self):
         self.pos = 0
@@ -60,7 +44,7 @@ class MonoSineSource(MonoSoundSource):
         self.freq = freq
 
     def read(self, size):
-        t = (self.pos + np.arange(size)) / samplerate
+        t = (self.pos + np.arange(size)) / 44100
         super().advance(size)
         return level * np.sin(2 * np.pi * self.freq * t.reshape(-1, 1))
 
@@ -77,6 +61,9 @@ class Loading(Enum):
 
 
 class AudioFileLoader:
+    maxLeadInSecs = 5
+    vols = [1.0] * 8
+
     def __init__(self, inDir):
         self.inDir = inDir
         parent_dir = os.path.dirname(inDir)
@@ -95,11 +82,11 @@ class AudioFileLoader:
         print(self.currently_loading_for.me, "choosing from", len(rawFiles), "files")
         random.shuffle(rawFiles)
         selected = rawFiles[0]
-        leadIn = maxLeadInSecs * random.random()
+        leadIn = AudioFileLoader.maxLeadInSecs * random.random()
         file_to_open = os.path.join(self.inDir, selected)
-        data, _ = sf.read(file_to_open)
+        data, samplerate = sf.read(file_to_open)
         self.currently_loading_for.fileBuffer = [0.0] * int(leadIn * samplerate)
-        self.currently_loading_for.fileBuffer.extend([(vols[self.currently_loading_for.me] * level * d) for d in data])
+        self.currently_loading_for.fileBuffer.extend([(AudioFileLoader.vols[self.currently_loading_for.me] * level * d) for d in data])
         os.rename(file_to_open, os.path.join(self.done_dir, selected))
         self.load_state = Loading.AwaitingFinish
 
@@ -179,9 +166,11 @@ class MonoWavSource(MonoSoundSource):
 
 
 class Player():
+    blocksize = 16384
+
     def __init__(self):
         self.should_stop = threading.Event()
-        self.loop_plater = None
+        self.loop_player = None
         self.sources = []
 
         if inDir is not None:
@@ -199,6 +188,13 @@ class Player():
 
 
     def play(self):
+        if self.loop_player is not None:
+            return
+
+        self.should_stop.clear()
+        for s in self.sources:
+            s.signal_to_start()
+
         def callback(outdata, frames, time, status):
             if status:
                 print(status, file=sys.stderr)
@@ -208,7 +204,7 @@ class Player():
 
         def loop():
             print("Playing loop running")
-            with sd.RawOutputStream(samplerate=samplerate, blocksize=blocksize, device=device, channels=self.playing, dtype="float32", callback=callback):
+            with sd.RawOutputStream(samplerate=44100, blocksize=Player.blocksize, device=device, channels=self.playing, dtype="float32", callback=callback):
                 done = False
                 while not done:
                     if self.should_stop.is_set():
@@ -223,6 +219,10 @@ class Player():
 
     def stop(self):
         print("received signal to stop")
+        if self.loop_player is None:
+            print("but not started")
+            return
+
         self.should_stop.set()
         for s in self.sources:
             s.signal_to_stop()
@@ -230,6 +230,7 @@ class Player():
         while self.loop_player.is_alive():
             time.sleep(0.1)
         self.loop_player.join()
+        self.loop_player = None
         print("finished")
 
     def pause(self):
