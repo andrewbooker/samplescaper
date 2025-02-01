@@ -198,18 +198,6 @@ class Player():
         print(f"playing {self.playing} sources")
 
 
-    def stop(self):
-        print("received signal to stop")
-        self.should_stop.set()
-        for s in self.sources:
-            s.signal_to_stop()
-
-        while self.loop_player.is_alive():
-            time.sleep(0.1)
-        self.loop_player.join()
-        print("finished")
-
-
     def play(self):
         def callback(outdata, frames, time, status):
             if status:
@@ -232,6 +220,27 @@ class Player():
 
         self.loop_player = threading.Thread(target=loop, args=(), daemon=False)
         self.loop_player.start()
+
+    def stop(self):
+        print("received signal to stop")
+        self.should_stop.set()
+        for s in self.sources:
+            s.signal_to_stop()
+
+        while self.loop_player.is_alive():
+            time.sleep(0.1)
+        self.loop_player.join()
+        print("finished")
+
+    def pause(self):
+        print("received signal to pause")
+        for s in self.sources:
+            s.signal_to_stop()
+
+    def resume(self):
+        print("received signal to resume")
+        for s in self.sources:
+            s.signal_to_start()
 
 
 player = Player()
@@ -265,6 +274,9 @@ class Controller(BaseHTTPRequestHandler):
 
     def _pause(self):
         player.pause()
+
+    def _resume(self):
+        player.resume()
 
 
 HTTPServer(("0.0.0.0", 9966), Controller).serve_forever()
