@@ -14,6 +14,8 @@ from pathlib import Path
 from enum import Enum
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
+import logging
+
 
 
 device = int(sys.argv[1]) if len(sys.argv) > 1 else None
@@ -22,8 +24,15 @@ inDir = sys.argv[3] if len(sys.argv) > 3 else None
 channels = int(sys.argv[4]) if len(sys.argv) > 4 else 3
 
 if device is None:
-    print(sd.query_devices())
+    logger.info(sd.query_devices())
     exit()
+
+
+logger = logging.getLogger("SingleUnitRandomatones")
+logger.setLevel(logging.INFO)
+fh = logging.FileHandler("/var/log/samplescaper/player.log")
+fh.setLevel(logging.INFO)
+logger.addHandler(fh)
 
 
 class MonoSoundSource:
@@ -70,8 +79,8 @@ class AudioFileLoader:
         self.currently_loading_for = None
         self.loading = None
         self.done_dir = os.path.join(parent_dir, datetime.now().strftime("%Y%m%d_%H%M%S"))
-        print("Playing files in", inDir)
-        print("Moving played files to", self.done_dir)
+        logger.info(f"Playing files in {inDir}")
+        logger.info(f"Moving played files to {self.done_dir}")
         Path(self.done_dir).mkdir()
         self.load_state = Loading.NotSetUp
 
@@ -79,7 +88,7 @@ class AudioFileLoader:
         rawFiles = os.listdir(self.inDir)
         if len(rawFiles) == 0:
             return
-        print(self.currently_loading_for.me, "choosing from", len(rawFiles), "files")
+        logger.info(f"{self.currently_loading_for.me} choosing from {len(rawFiles)} files")
         random.shuffle(rawFiles)
         selected = rawFiles[0]
         leadIn = AudioFileLoader.maxLeadInSecs * random.random()
@@ -157,7 +166,7 @@ class MonoWavSource(MonoSoundSource):
         super().advance(size)
         if available == size:
             return ret
-        print(self.me, "reached the end")
+        logger.info(f"{self.me} reached the end")
         self.is_ready = False
         self.pos = 0
         empty = [0.0] * size
@@ -184,7 +193,7 @@ class Player():
             ])
 
         self.playing = len(self.sources)
-        print(f"playing {self.playing} sources")
+        logger.info(f"playing {self.playing} sources")
 
     def status(self):
         if self.loop_player is None:
@@ -205,13 +214,13 @@ class Player():
 
         def callback(outdata, frames, time, status):
             if status:
-                print(status, file=sys.stderr)
+                logger.info(f"callback issue: {status}")
 
             block = np.dstack([s.read(frames) for s in self.sources]).flatten()
             outdata[:] = struct.pack(f"{self.playing * frames}f", *block)
 
         def loop():
-            print("Playing loop running")
+            logger.info("Playing loop running")
             with sd.RawOutputStream(samplerate=44100, blocksize=Player.blocksize, device=device, channels=self.playing, dtype="float32", callback=callback):
                 done = False
                 while not done:
@@ -219,16 +228,16 @@ class Player():
                         if all([s.isFinished() for s in self.sources]):
                             done = True
                     time.sleep(1)
-                print("Playing loop terminated")
+                logger.info("Playing loop terminated")
                 return
 
         self.loop_player = threading.Thread(target=loop, args=(), daemon=False)
         self.loop_player.start()
 
     def stop(self):
-        print("received signal to stop")
+        logger.info("received signal to stop")
         if self.loop_player is None:
-            print("but not started")
+            logger.info("but not started")
             return
 
         self.should_stop.set()
@@ -239,15 +248,15 @@ class Player():
             time.sleep(0.1)
         self.loop_player.join()
         self.loop_player = None
-        print("finished")
+        logger.info("finished")
 
     def pause(self):
-        print("received signal to pause")
+        logger.info("received signal to pause")
         for s in self.sources:
             s.signal_to_stop()
 
     def resume(self):
-        print("received signal to resume")
+        logger.info("received signal to resume")
         for s in self.sources:
             s.signal_to_start()
 
@@ -283,7 +292,6 @@ class Controller(BaseHTTPRequestHandler):
 
     def _play(self):
         player.play()
-        print("protocol version", self.protocol_version)
 
     def _stop(self):
         player.stop()
