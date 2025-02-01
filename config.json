@@ -2,7 +2,7 @@
     "playingTimeMins": 0,
     "shutdownDelayMins": 0,
     "volume": 74,
-    "maxSynthPoolSize": 100,
+    "maxSynthPoolSize": 30,
     "maxArpeggiatorPoolSize": 20,
     "arpeggiate": [2, 3, 5, 7],
     "sweepRaw": "Sweep",
