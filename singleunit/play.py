@@ -12,13 +12,14 @@ import threading
 from datetime import datetime
 from pathlib import Path
 from enum import Enum
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import json
 
 
 device = int(sys.argv[1]) if len(sys.argv) > 1 else None
 level = float(sys.argv[2]) if len(sys.argv) > 2 else 0.3
 inDir = sys.argv[3] if len(sys.argv) > 3 else None
 channels = int(sys.argv[4]) if len(sys.argv) > 4 else 3
-playingTimeMins = float(sys.argv[5]) if len(sys.argv) > 5 else 3
 
 if device is None:
     print(sd.query_devices())
@@ -47,6 +48,9 @@ class MonoSoundSource:
 
     def advance(self, size):
         self.pos += size
+        pass
+
+    def signal_to_stop(self):
         pass
 
 
@@ -97,7 +101,6 @@ class AudioFileLoader:
         self.currently_loading_for.fileBuffer = [0.0] * int(leadIn * samplerate)
         self.currently_loading_for.fileBuffer.extend([(vols[self.currently_loading_for.me] * level * d) for d in data])
         os.rename(file_to_open, os.path.join(self.done_dir, selected))
-        #print(self.currently_loading_for.me, "finished loading")
         self.load_state = Loading.AwaitingFinish
 
     def request_file_for(self, source):
@@ -137,18 +140,26 @@ class MonoWavSource(MonoSoundSource):
         self.loader = loader
         self.fileBuffer = None
         self.start = time.time()
-        self.hasFinished = False
         self.me = idx
         self.is_ready = False
+        self.should_stop = False
+        self.has_stopped = False
 
     def isFinished(self):
-        return self.hasFinished
+        return self.has_stopped
+
+    def signal_to_stop(self):
+        self.should_stop = True
+
+    def signal_to_start(self):
+        self.should_stop = False
+        self.has_stopped = False
 
     def read(self, size):
         if not self.is_ready:
             empty = [0.0] * size
-            if (time.time() - self.start) > (60 * playingTimeMins):
-                self.hasFinished = True
+            if self.should_stop:
+                self.has_stopped = True
                 return empty
 
             self.loader.request_file_for(self)
@@ -169,6 +180,8 @@ class MonoWavSource(MonoSoundSource):
 
 class Player():
     def __init__(self):
+        self.should_stop = threading.Event()
+        self.loop_plater = None
         self.sources = []
 
         if inDir is not None:
@@ -184,6 +197,19 @@ class Player():
         self.playing = len(self.sources)
         print(f"playing {self.playing} sources")
 
+
+    def stop(self):
+        print("received signal to stop")
+        self.should_stop.set()
+        for s in self.sources:
+            s.signal_to_stop()
+
+        while self.loop_player.is_alive():
+            time.sleep(0.1)
+        self.loop_player.join()
+        print("finished")
+
+
     def play(self):
         def callback(outdata, frames, time, status):
             if status:
@@ -192,11 +218,54 @@ class Player():
             block = np.dstack([s.read(frames) for s in self.sources]).flatten()
             outdata[:] = struct.pack(f"{self.playing * frames}f", *block)
 
-        with sd.RawOutputStream(samplerate=samplerate, blocksize=blocksize, device=device, channels=self.playing, dtype="float32", callback=callback):
-            while True:
-                if all([s.isFinished() for s in self.sources]):
-                    print("All sources finished")
-                    exit(0)
-                time.sleep(3)
+        def loop():
+            print("Playing loop running")
+            with sd.RawOutputStream(samplerate=samplerate, blocksize=blocksize, device=device, channels=self.playing, dtype="float32", callback=callback):
+                done = False
+                while not done:
+                    if self.should_stop.is_set():
+                        if all([s.isFinished() for s in self.sources]):
+                            done = True
+                    time.sleep(1)
+                print("Playing loop terminated")
+                return
 
-Player().play()
+        self.loop_player = threading.Thread(target=loop, args=(), daemon=False)
+        self.loop_player.start()
+
+
+player = Player()
+
+class Controller(BaseHTTPRequestHandler):
+    def _standardResponse(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
+    def do_OPTIONS(self):
+        self._standardResponse()
+        self.send_header("Access-Control-Allow-Methods", "GET, POST")
+        self.send_header("Access-Control-Allow-Headers", "Current-Time")
+        self.send_header("Access-Control-Allow-Headers", "Tonic")
+        self.send_header("Access-Control-Allow-Headers", "Mode")
+        self.end_headers()
+
+    def do_POST(self):
+        getattr(self, "_%s" % self.path[1:])()
+        self._standardResponse()
+        self.wfile.write(json.dumps({}).encode("utf-8"))
+        self.end_headers()
+
+    def _play(self):
+        player.play()
+
+    def _stop(self):
+        player.stop()
+
+    def _pause(self):
+        player.pause()
+
+
+HTTPServer(("0.0.0.0", 9966), Controller).serve_forever()
+
