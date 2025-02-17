@@ -67,6 +67,7 @@ class Loading(Enum):
     Started = 2
     AwaitingFinish = 3
     Finished = 4
+    NoFiles = 5
 
 
 class AudioFileLoader:
@@ -87,6 +88,8 @@ class AudioFileLoader:
     def getFile(self):
         rawFiles = os.listdir(self.inDir)
         if len(rawFiles) == 0:
+            self.load_state = Loading.NoFiles
+            logger.info(f"{self.currently_loading_for.me} has no files")
             return
         logger.info(f"{self.currently_loading_for.me} choosing from {len(rawFiles)} files")
         random.shuffle(rawFiles)
@@ -101,7 +104,7 @@ class AudioFileLoader:
 
     def request_file_for(self, source):
         if self.currently_loading_for is not None and self.currently_loading_for.me != source.me:
-            return False
+            return
 
         match self.load_state:
             case Loading.Finished:
@@ -109,22 +112,28 @@ class AudioFileLoader:
                 self.currently_loading_for.is_ready = True
                 self.currently_loading_for = None
                 self.load_state = Loading.NotSetUp
-                return True
+                return
             case Loading.AwaitingFinish:
                 self.loading.join()
                 self.load_state = Loading.Finished
-                return False
+                return
+            case Loading.NoFiles:
+                self.loading.join()
+                del self.loading
+                self.loading = threading.Thread(target=self.getFile, daemon=True)
+                self.load_state = Loading.NotStarted
+                return
             case Loading.NotStarted:
                 self.loading.start()
                 self.load_state = Loading.Started
-                return False
+                return
             case Loading.NotSetUp:
                 self.currently_loading_for = source
                 self.loading = threading.Thread(target=self.getFile, daemon=True)
                 self.load_state = Loading.NotStarted
-                return False
+                return
             case _:
-                return False
+                return
 
 
 loader = AudioFileLoader(inDir)
@@ -193,7 +202,7 @@ class Player():
             ])
 
         self.playing = len(self.sources)
-        logger.info(f"ready to play {self.playing} sources")
+        logger.info(f"Process {os.getpid()} ready to play {self.playing} sources")
 
     def status(self):
         if self.loop_player is None:
