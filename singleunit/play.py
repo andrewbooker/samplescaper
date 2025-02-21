@@ -106,34 +106,30 @@ class AudioFileLoader:
         if self.currently_loading_for is not None and self.currently_loading_for.me != source.me:
             return
 
-        match self.load_state:
-            case Loading.Finished:
-                self.loading = None
-                self.currently_loading_for.is_ready = True
-                self.currently_loading_for = None
-                self.load_state = Loading.NotSetUp
-                return
-            case Loading.AwaitingFinish:
-                self.loading.join()
-                self.load_state = Loading.Finished
-                return
-            case Loading.NoFiles:
-                self.loading.join()
-                del self.loading
-                self.loading = threading.Thread(target=self.getFile, daemon=True)
-                self.load_state = Loading.NotStarted
-                return
-            case Loading.NotStarted:
-                self.loading.start()
-                self.load_state = Loading.Started
-                return
-            case Loading.NotSetUp:
-                self.currently_loading_for = source
-                self.loading = threading.Thread(target=self.getFile, daemon=True)
-                self.load_state = Loading.NotStarted
-                return
-            case _:
-                return
+        if self.load_state == Loading.Finished:
+            self.loading = None
+            self.currently_loading_for.is_ready = True
+            self.currently_loading_for = None
+            self.load_state = Loading.NotSetUp
+            return
+        if self.load_state == Loading.AwaitingFinish:
+            self.loading.join()
+            self.load_state = Loading.Finished
+            return
+        if self.load_state == Loading.NoFiles:
+            self.loading.join()
+            del self.loading
+            self.loading = threading.Thread(target=self.getFile, daemon=True)
+            self.load_state = Loading.NotStarted
+            return
+        if self.load_state == Loading.NotStarted:
+            self.loading.start()
+            self.load_state = Loading.Started
+            return
+        if self.load_state == Loading.NotSetUp:
+            self.currently_loading_for = source
+            self.loading = threading.Thread(target=self.getFile, daemon=True)
+            self.load_state = Loading.NotStarted
 
 
 loader = AudioFileLoader(inDir)
