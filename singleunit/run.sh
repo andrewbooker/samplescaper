@@ -1,4 +1,3 @@
-device=$(~/Documents/samplescaper/singleunit/play.py | grep hdmi | cut -d' ' -f3)
+device=$(~/Documents/samplescaper/singleunit/play.py | sed -nE 's/.*([0-9]).+hdmi.*/\1/p')
 echo using device $device
-~/Documents/samplescaper/singleunit/play.py 3 0.3 ~/Music/pool/looped 8 5
-~/Documents/samplescaper/singleunit/recycle.sh ~/Music/pool
+~/Documents/samplescaper/singleunit/play.py $device 0.3 ~/Music/pool/looped 8

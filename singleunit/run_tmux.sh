@@ -1,4 +1,4 @@
-cmdPlay="./play.py 7 0.3 ~/Music/pool/looped 8"
+cmdPlay="./run.sh"
 cmdFillPool="./fill_pool.sh"
 
 
@@ -18,3 +18,5 @@ select-pane -t 0 \; \
 split-window -v "$cmdL1"\; \
 select-pane -t 4 \; \
 split-window -v "$cmdR1"\; \
+select-pane -t 4 \; \
+split-window
