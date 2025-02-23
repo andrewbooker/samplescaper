@@ -1,7 +1,6 @@
 cmdPlay="./run.sh"
 cmdFillPool="./fill_pool.sh"
 
-
 cmdL0=$cmdFillPool
 cmdL1=$cmdPlay
 cmdL2="tail -f /var/log/samplescaper/synth.log"
@@ -19,4 +18,4 @@ split-window -v "$cmdL1"\; \
 select-pane -t 4 \; \
 split-window -v "$cmdR1"\; \
 select-pane -t 4 \; \
-split-window
+split-window "cd ~; exec bash"
