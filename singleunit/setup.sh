@@ -14,6 +14,7 @@ sudo apt -y install curl
 sudo apt -y install htop
 sudo apt -y install net-tools
 sudo apt -y install dhcpcd5
+sudo apt -y install tmux
 
 sudo mkdir /var/log/samplescaper
 sudo chown $USER /var/log/samplescaper
