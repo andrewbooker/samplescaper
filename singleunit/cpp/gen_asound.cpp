@@ -3,10 +3,10 @@
 #include <sstream>
 
 int main() {
-    const std::vector<int> cards {1, 2};
+    const std::vector<int> cards {0};
     const std::vector<int> devices {0};
     const unsigned int deviceChannels(2);
-    const std::string name("maestro");
+    const std::string name("soundblaster");
     const std::string sp("  ");
 
     std::ofstream out("asound.conf", std::ofstream::out);
