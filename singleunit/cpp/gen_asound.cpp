@@ -3,23 +3,25 @@
 #include <sstream>
 
 int main() {
-    const std::vector<int> cards {0};
-    const std::string cardName("Audigy2");
-    const std::vector<int> devices {0, 3, 4};
+    const std::vector<std::string> cards {"NVidia", "Audigy2"};
+    const std::vector<int> devices {0};
     const unsigned int deviceChannels(2);
-    const std::string name("soundblaster");
+    const std::string name("soundcard");
     const std::string sp("  ");
 
     const unsigned int channels(deviceChannels * cards.size() * devices.size());
     std::ofstream out("asound.conf", std::ofstream::out);
-
-    for (std::vector<int>::const_iterator d(devices.begin()); d != devices.end(); ++d) {
-        out << "pcm." << name << *d << " {\n";
-        out << sp << "type hw\n";
-        out << sp << "card \"" << cardName << "\"\n";
-        out << sp << "device " << *d << "\n";
-        out << "}";
-	out << "\n\n";
+    unsigned int devs(0);
+    for (std::vector<std::string>::const_iterator c(cards.begin()); c != cards.end(); ++c) {
+        for (std::vector<int>::const_iterator d(devices.begin()); d != devices.end(); ++d) {
+            out << "pcm." << name << devs << " {\n";
+            out << sp << "type hw\n";
+            out << sp << "card \"" << *c << "\"\n";
+            out << sp << "device " << *d << "\n";
+            out << "}";
+	    out << "\n\n";
+	    ++devs;
+        }
     }
 
     std::stringstream slaveName;
@@ -30,20 +32,17 @@ int main() {
     out << "pcm." << slaveName.str() << " {\n";
     out << sp << "type multi\n";
     out << sp << "slaves [\n";
-    for (unsigned int c(0); c != cards.size(); ++c) {
-        for (unsigned int d(0); d != devices.size(); ++d) {
-            const unsigned int slave(c + d);
-            out << sp << sp << "{\n";
-            out << sp << sp << sp << "pcm \"" << name << devices[d] << "\"\n";
-            out << sp << sp << sp << "channels " << deviceChannels << "\n";
-            out << sp << sp << "}\n";
-            for (unsigned int ch(0); ch != deviceChannels; ++ch) {
-                unsigned int cc(((c + d) * deviceChannels) + ch);
-		std::stringstream b;
-                b << "{ slave " << slave << " channel " << ch << " }";
-                bindings.push_back(b.str());
-	    }
-	}
+    for (unsigned int d(0); d != devs; ++d) {
+        out << sp << sp << "{\n";
+        out << sp << sp << sp << "pcm \"" << name << d << "\"\n";
+        out << sp << sp << sp << "channels " << deviceChannels << "\n";
+        out << sp << sp << "}\n";
+        for (unsigned int ch(0); ch != deviceChannels; ++ch) {
+            unsigned int cc((d * deviceChannels) + ch);
+            std::stringstream b;
+            b << "{ slave " << d << " channel " << ch << " }";
+            bindings.push_back(b.str());
+        }
     }
     out << sp << "]\n";
     out << sp << "bindings [\n";
