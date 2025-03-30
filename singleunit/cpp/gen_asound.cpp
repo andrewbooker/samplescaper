@@ -29,26 +29,28 @@ int main() {
 
     out << "pcm." << slaveName.str() << " {\n";
     out << sp << "type multi\n";
+    out << sp << "slaves [\n";
     for (unsigned int c(0); c != cards.size(); ++c) {
         for (unsigned int d(0); d != devices.size(); ++d) {
-            const char slave('a' + c + d);
-            out << sp << "slaves." << slave << " {\n";
-            out << sp << sp << "pcm \"" << name << devices[d] << "\"\n";
-            out << sp << sp << "channels " << deviceChannels << "\n";
-            out << sp << "}\n";
+            const unsigned int slave(c + d);
+            out << sp << sp << "{\n";
+            out << sp << sp << sp << "pcm \"" << name << devices[d] << "\"\n";
+            out << sp << sp << sp << "channels " << deviceChannels << "\n";
+            out << sp << sp << "}\n";
             for (unsigned int ch(0); ch != deviceChannels; ++ch) {
                 unsigned int cc(((c + d) * deviceChannels) + ch);
-		std::stringstream bs, bc;
-                bs << cc << ".slave " << slave;
-		bc << cc << ".channel " << ch;
-                bindings.push_back(bs.str());
-                bindings.push_back(bc.str());
+		std::stringstream b;
+                b << "{ slave " << slave << " channel " << ch << " }";
+                bindings.push_back(b.str());
 	    }
 	}
     }
+    out << sp << "]\n";
+    out << sp << "bindings [\n";
     for (std::vector<std::string>::const_iterator i(bindings.begin()); i != bindings.end(); ++i) {
-        out << sp << "bindings." << *i << "\n";
+        out << sp << sp << *i << "\n";
     }
+    out << sp << "]\n";
     out << "}";
 
     out << "\n";
