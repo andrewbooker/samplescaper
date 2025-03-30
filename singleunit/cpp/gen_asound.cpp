@@ -5,7 +5,7 @@
 int main() {
     const std::vector<int> cards {0};
     const std::string cardName("Audigy2");
-    const std::vector<int> devices {0};
+    const std::vector<int> devices {0, 3, 4};
     const unsigned int deviceChannels(2);
     const std::string name("soundblaster");
     const std::string sp("  ");
@@ -31,13 +31,13 @@ int main() {
     out << sp << "type multi\n";
     for (unsigned int c(0); c != cards.size(); ++c) {
         for (unsigned int d(0); d != devices.size(); ++d) {
-            const char slave('a' + c);
+            const char slave('a' + c + d);
             out << sp << "slaves." << slave << " {\n";
             out << sp << sp << "pcm \"" << name << devices[d] << "\"\n";
             out << sp << sp << "channels " << deviceChannels << "\n";
             out << sp << "}\n";
             for (unsigned int ch(0); ch != deviceChannels; ++ch) {
-                unsigned int cc((c * deviceChannels) + ch);
+                unsigned int cc(((c + d) * deviceChannels) + ch);
 		std::stringstream bs, bc;
                 bs << cc << ".slave " << slave;
 		bc << cc << ".channel " << ch;
