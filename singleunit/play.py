@@ -71,8 +71,18 @@ class Loading(Enum):
 
 
 class AudioFileLoader:
+    def __init__(self):
+        self.currently_loading_for = None
+        self.load_state = Loading.NotSetUp
+        self.loading = None
+
     def getFile(self):
         pass
+
+    def supply(self, data, pad = []):
+        self.currently_loading_for.fileBuffer = pad
+        self.currently_loading_for.fileBuffer.extend([(level * d) for d in data])
+        self.load_state = Loading.AwaitingFinish
 
     def request_file_for(self, source):
         if self.currently_loading_for is not None and self.currently_loading_for.me != source.me:
@@ -103,19 +113,31 @@ class AudioFileLoader:
             self.loading = threading.Thread(target=self.getFile, daemon=True)
             self.load_state = Loading.NotStarted
 
+
+import requests
+import io
+class HttpFileFetcher(AudioFileLoader):
+    def __init__(self):
+        AudioFileLoader.__init__(self)
+        self.url = "http://localost:9999"
+
+    def getFile(self):
+        response = requests.get(self.url, stream=True)
+        data, _ = sf.read(io.BytesIO(response.raw.read()))
+        self.supply(data);
+
+
 class DiskLoader(AudioFileLoader):
     maxLeadInSecs = 5
 
     def __init__(self, inDir):
+        AudioFileLoader.__init__(self)
         self.inDir = inDir
         parent_dir = os.path.dirname(inDir)
-        self.currently_loading_for = None
-        self.loading = None
         self.done_dir = os.path.join(parent_dir, datetime.now().strftime("%Y%m%d_%H%M%S"))
         logger.info(f"Playing files in {inDir}")
         logger.info(f"Moving played files to {self.done_dir}")
         Path(self.done_dir).mkdir()
-        self.load_state = Loading.NotSetUp
 
     def getFile(self):
         rawFiles = os.listdir(self.inDir)
@@ -129,10 +151,8 @@ class DiskLoader(AudioFileLoader):
         leadIn = DiskLoader.maxLeadInSecs * random.random()
         file_to_open = os.path.join(self.inDir, selected)
         data, samplerate = sf.read(file_to_open)
-        self.currently_loading_for.fileBuffer = [0.0] * int(leadIn * samplerate)
-        self.currently_loading_for.fileBuffer.extend([(level * d) for d in data])
         os.rename(file_to_open, os.path.join(self.done_dir, selected))
-        self.load_state = Loading.AwaitingFinish
+        self.supply(data, [0.0] * int(leadIn * samplerate));
     
 
 loader = DiskLoader(inDir)
