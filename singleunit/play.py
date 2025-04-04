@@ -117,9 +117,9 @@ class AudioFileLoader:
 import requests
 import io
 class HttpFileFetcher(AudioFileLoader):
-    def __init__(self):
+    def __init__(self, url):
         AudioFileLoader.__init__(self)
-        self.url = "http://localost:9999"
+        self.url = url
 
     def getFile(self):
         response = requests.get(self.url, stream=True)
@@ -155,8 +155,11 @@ class DiskLoader(AudioFileLoader):
         self.supply(data, [0.0] * int(leadIn * samplerate));
     
 
-loader = DiskLoader(inDir)
-
+loader = None
+if inDir[:4] == "http":
+    loader = HttpFileFetcher(inDir)
+else:
+    loader = DiskLoader(inDir)
 
 class MonoWavSource(MonoSoundSource):
     def __init__(self, loader, idx):
