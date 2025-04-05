@@ -4,12 +4,15 @@
 #include <string>
 
 
-
 class AudioPlayer {
 private:
     SNDFILE* audioFile;
     PaStream* audioStream;
     SF_INFO sfInfo;
+
+    unsigned long readInto(float* out, const unsigned long framesPerBuffer) {
+        return sf_readf_float(audioFile, out, framesPerBuffer);
+    }
 
     static int audioCallback(
         const void* inputBuffer,
@@ -17,15 +20,13 @@ private:
         unsigned long framesPerBuffer,
         const PaStreamCallbackTimeInfo* timeInfo,
         PaStreamCallbackFlags statusFlags,
-        void* userData
+        void* player
     ) {
-        SNDFILE* sndFile = (SNDFILE*)userData;
-        float* out = (float*)outputBuffer;
-
-        sf_count_t framesRead = sf_readf_float(sndFile, out, framesPerBuffer);
+        float* out(reinterpret_cast<float*>(outputBuffer));
+        unsigned long framesRead(reinterpret_cast<AudioPlayer*>(player)->readInto(out, framesPerBuffer));
 
         if (framesRead < framesPerBuffer) {
-            for (unsigned long i = framesRead; i < framesPerBuffer; ++i) {
+            for (unsigned long i(framesRead); i < framesPerBuffer; ++i) {
                 out[i] = 0.0f;
             }
             return paComplete; // Signal that playback is done
@@ -54,9 +55,8 @@ public:
         outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
         outputParameters.hostApiSpecificStreamInfo = 0;
 
-        if (Pa_OpenStream(&audioStream, 0, &outputParameters, sfInfo.samplerate, paFramesPerBufferUnspecified, paClipOff, AudioPlayer::audioCallback, audioFile) != paNoError) {
+        if (Pa_OpenStream(&audioStream, 0, &outputParameters, sfInfo.samplerate, paFramesPerBufferUnspecified, paClipOff, &AudioPlayer::audioCallback, this) != paNoError) {
             std::cerr << "Failed to open PortAudio stream." << std::endl;
-            return;
         }
     }
     
@@ -90,6 +90,7 @@ public:
         return false;
     }
 };
+
 
 
 int main() {
