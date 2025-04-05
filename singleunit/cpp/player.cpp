@@ -4,31 +4,36 @@
 #include <string>
 
 
-static int audioCallback(
-    const void* inputBuffer,
-    void* outputBuffer,
-    unsigned long framesPerBuffer,
-    const PaStreamCallbackTimeInfo* timeInfo,
-    PaStreamCallbackFlags statusFlags,
-    void* userData
-) {
-    SNDFILE* sndFile = (SNDFILE*)userData;
-    float* out = (float*)outputBuffer;
-
-    sf_count_t framesRead = sf_readf_float(sndFile, out, framesPerBuffer);
-
-    if (framesRead < framesPerBuffer) {
-        for (unsigned long i = framesRead; i < framesPerBuffer; ++i) {
-            out[i] = 0.0f;
-        }
-        return paComplete; // Signal that playback is done
-    }
-
-    return paContinue;
-}
-
 
 class AudioPlayer {
+private:
+    SNDFILE* audioFile;
+    PaStream* audioStream;
+    SF_INFO sfInfo;
+
+    static int audioCallback(
+        const void* inputBuffer,
+        void* outputBuffer,
+        unsigned long framesPerBuffer,
+        const PaStreamCallbackTimeInfo* timeInfo,
+        PaStreamCallbackFlags statusFlags,
+        void* userData
+    ) {
+        SNDFILE* sndFile = (SNDFILE*)userData;
+        float* out = (float*)outputBuffer;
+
+        sf_count_t framesRead = sf_readf_float(sndFile, out, framesPerBuffer);
+
+        if (framesRead < framesPerBuffer) {
+            for (unsigned long i = framesRead; i < framesPerBuffer; ++i) {
+                out[i] = 0.0f;
+            }
+            return paComplete; // Signal that playback is done
+        }
+
+        return paContinue;
+    }
+
 public:
     AudioPlayer(const std::string& filePath): audioFile(0), audioStream(0) {
         if (Pa_Initialize() != paNoError) {
@@ -49,7 +54,7 @@ public:
         outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
         outputParameters.hostApiSpecificStreamInfo = 0;
 
-        if (Pa_OpenStream(&audioStream, 0, &outputParameters, sfInfo.samplerate, paFramesPerBufferUnspecified, paClipOff, audioCallback, audioFile) != paNoError) {
+        if (Pa_OpenStream(&audioStream, 0, &outputParameters, sfInfo.samplerate, paFramesPerBufferUnspecified, paClipOff, AudioPlayer::audioCallback, audioFile) != paNoError) {
             std::cerr << "Failed to open PortAudio stream." << std::endl;
             return;
         }
@@ -84,11 +89,6 @@ public:
         }
         return false;
     }
-
-private:
-    SNDFILE* audioFile;
-    PaStream* audioStream;
-    SF_INFO sfInfo;
 };
 
 
