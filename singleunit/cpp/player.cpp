@@ -2,16 +2,23 @@
 #include <portaudio.h>
 #include <sndfile.h>
 #include <string>
+#include <cstring>
 
 
 class AudioPlayer {
 private:
-    SNDFILE* audioFile;
+    SNDFILE* audioFileL;
+    SNDFILE* audioFileR;
     PaStream* audioStream;
-    SF_INFO sfInfo;
+    const unsigned int channels;
 
-    unsigned long readInto(float* out, const unsigned long framesPerBuffer) {
-        return sf_readf_float(audioFile, out, framesPerBuffer);
+    void readInto(float* out, const unsigned long upToLength) {
+        memset(out, 0, upToLength * sizeof(float));
+
+        const unsigned long perFileLength(upToLength / channels);
+
+        sf_readf_float(audioFileL, out + 0, perFileLength);
+        sf_readf_float(audioFileR, out + perFileLength, perFileLength);
     }
 
     static int audioCallback(
@@ -23,46 +30,42 @@ private:
         void* player
     ) {
         float* out(reinterpret_cast<float*>(outputBuffer));
-        unsigned long framesRead(reinterpret_cast<AudioPlayer*>(player)->readInto(out, framesPerBuffer));
-
-        if (framesRead < framesPerBuffer) {
-            for (unsigned long i(framesRead); i < framesPerBuffer; ++i) {
-                out[i] = 0.0f;
-            }
-            return paComplete; // Signal that playback is done
-        }
-
+        reinterpret_cast<AudioPlayer*>(player)->readInto(out, framesPerBuffer);
         return paContinue;
     }
 
 public:
-    AudioPlayer(const std::string& filePath): audioFile(0), audioStream(0) {
+    AudioPlayer(const std::string& filePath): channels(2), audioFileL(0), audioFileR(0), audioStream(0) {
         if (Pa_Initialize() != paNoError) {
             std::cerr << "PortAudio initialization failed." << std::endl;
             return;
         }
 
-        audioFile = sf_open(filePath.c_str(), SFM_READ, &sfInfo);
-        if (!audioFile) {
-            std::cerr << "Failed to open audio file: " << filePath << std::endl;
-            return;
-        }
+        const std::string left(filePath + "/looped_55_si_2025-02-23_154447.wav");
+        const std::string right(filePath + "/looped_86_siq_2025-02-23_105403.wav");
+
+        SF_INFO ignore;
+        audioFileL = sf_open(left.c_str(), SFM_READ, &ignore);
+        audioFileR = sf_open(right.c_str(), SFM_READ, &ignore);
 
         PaStreamParameters outputParameters;
         outputParameters.device = Pa_GetDefaultOutputDevice();
-        outputParameters.channelCount = sfInfo.channels;
+        outputParameters.channelCount = channels;
         outputParameters.sampleFormat = paFloat32;
         outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
         outputParameters.hostApiSpecificStreamInfo = 0;
 
-        if (Pa_OpenStream(&audioStream, 0, &outputParameters, sfInfo.samplerate, paFramesPerBufferUnspecified, paClipOff, &AudioPlayer::audioCallback, this) != paNoError) {
+        if (Pa_OpenStream(&audioStream, 0, &outputParameters, 44100, paFramesPerBufferUnspecified, paClipOff, &AudioPlayer::audioCallback, this) != paNoError) {
             std::cerr << "Failed to open PortAudio stream." << std::endl;
         }
     }
     
     ~AudioPlayer() {
-        if (audioFile) {
-            sf_close(audioFile);
+        if (audioFileL) {
+            sf_close(audioFileL);
+        }
+        if (audioFileR) {
+            sf_close(audioFileR);
         }
 
         if (audioStream) {
@@ -73,7 +76,7 @@ public:
     }
 
     bool start() {
-        if (audioFile && audioStream) {
+        if (audioFileL && audioStream) {
             if (Pa_StartStream(audioStream) == paNoError) {
                 std::cout << "Playing audio. Press Enter to stop..." << std::endl;
                 std::cin.get();
@@ -94,7 +97,7 @@ public:
 
 
 int main() {
-    const std::string filePath = "/home/abooker/Music/pool/looped/looped_55_si_2025-02-23_154447.wav";
+    const std::string filePath("/home/abooker/Music/pool/looped");
 
     AudioPlayer audioPlayer(filePath);
 
