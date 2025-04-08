@@ -3,3 +3,4 @@ __pycache__
 *.swp
 asound.conf
 gen_asound
+singleunit/cpp/test
