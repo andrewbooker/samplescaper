@@ -8,14 +8,14 @@ static const unsigned long posFrom(const unsigned long i, const unsigned long pa
 }
 
 static const unsigned long inversePosFrom(const unsigned long i, const unsigned long partLength) {
-    if (i < partLength) {
+    if (i % 2 != 0) {
         return partLength + ((i - 1) / 2);
     }
     return i / 2;
 }
 
 
-static void interleave(float* out, const unsigned long totalLength) {
+static void interleaveA(float* out, const unsigned long totalLength) {
     const unsigned long partLength(totalLength / 2);
 
     unsigned long i(1), fetchPos(-1);
@@ -37,4 +37,10 @@ static void interleave(float* out, const unsigned long totalLength) {
             ++i;
         }
     }    
+}
+
+static void interleave(float* out, const unsigned long totalLength) {
+    float c(*(out + 1));
+    *(out + 1) = *(out + 2);
+    *(out + 2) = c;
 }
