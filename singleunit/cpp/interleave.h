@@ -1,4 +1,4 @@
-
+#include <iostream>  // remove this
 
 static const unsigned long posFrom(const unsigned long i, const unsigned long partLength) {
     if (i < partLength) {
@@ -15,18 +15,25 @@ static const unsigned long inversePosFrom(const unsigned long i, const unsigned 
 }
 
 
-static void interleaveA(float* out, const unsigned long totalLength) {
+static void interleave(float* out, const unsigned long totalLength) {
     const unsigned long partLength(totalLength / 2);
 
-    unsigned long i(1), fetchPos(-1);
+    unsigned long i(1), done(1), fetchPos(0);
     float c(0);
-    while (i != totalLength) {
+    while (done != (totalLength - 1)) {
+        std::cout << "done:" << done << ", i:" << i;
+        if (fetchPos > 0) {
+            std::cout << ", just moved:" << out[fetchPos];
+        }
+        std::cout << ", c=" << c << "\nbuff=";
+
         if (fetchPos > 0) {
             if (fetchPos == i) {
                 *(out + i) = c;
                 ++i;
+                fetchPos = 0;
             } else {
-                auto f(inversePosFrom(fetchPos, partLength));
+                const unsigned long f(inversePosFrom(fetchPos, partLength));
                 *(out + fetchPos) = *(out + f);
                 fetchPos = f;
             }
@@ -34,13 +41,16 @@ static void interleaveA(float* out, const unsigned long totalLength) {
             fetchPos = inversePosFrom(i, partLength);
             c = *(out + i);
             *(out + i) = *(out + fetchPos);
+            *(out + fetchPos) = c;
+            if (i != 1) {
+                break;
+            }
             ++i;
         }
+        ++done;
+        for (int j(0); j != totalLength; ++j) {
+            std::cout << *(out + j) << ",";
+        }
+        std::cout << "\n";
     }    
-}
-
-static void interleave(float* out, const unsigned long totalLength) {
-    float c(*(out + 1));
-    *(out + 1) = *(out + 2);
-    *(out + 2) = c;
 }

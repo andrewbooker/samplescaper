@@ -2,16 +2,6 @@
 
 #include <gtest/gtest.h>
 
-TEST(InterleaveTest, fourElements) {
-    float buff[] { 1.0, 2.0, 3.0, 4.0 };
-    float interleaved[] { 1.0, 3.0, 2.0, 4.0 };
-
-    interleave(buff, 4);
-    for (int i(0); i != 4; ++i) {
-        EXPECT_EQ(buff[i], interleaved[i]);
-    }
-}
-
 TEST(InterleaveTest, test_posFrom) {
     EXPECT_EQ(posFrom(0, 1), 0);
     EXPECT_EQ(posFrom(0, 5), 0);
@@ -43,4 +33,26 @@ TEST(InterleaveTest, test_inversePosFrom) {
     EXPECT_EQ(inversePosFrom(7, 5), 8);
     EXPECT_EQ(inversePosFrom(8, 5), 4);
     EXPECT_EQ(inversePosFrom(9, 5), 9);
+}
+
+TEST(InterleaveTest, fourElements) {
+    float buff[] { 1.0, 2.0, 3.0, 4.0 };
+    float interleaved[] { 1.0, 3.0, 2.0, 4.0 };
+
+    interleave(buff, 4);
+    for (int i(0); i != 4; ++i) {
+        EXPECT_EQ(buff[i], interleaved[i]);
+    }
+}
+
+
+TEST(InterleaveTest, tenElements) {
+    const unsigned int size(10);
+    float buff[] { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 };
+    float interleaved[] { 1.0, 6.0, 2.0, 7.0, 3.0, 8.0, 4.0, 9.0, 5.0, 10.0 };
+
+    interleave(buff, size);
+    for (int i(0); i != size; ++i) {
+        EXPECT_EQ(buff[i], interleaved[i]);
+    }
 }
