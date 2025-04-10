@@ -56,3 +56,39 @@ TEST(InterleaveTest, tenElements) {
         EXPECT_EQ(buff[i], interleaved[i]);
     }
 }
+
+TEST(InterleaveTest, twentyElements) {
+    const unsigned int size(20);
+    float* buff(new float[size]);
+    float* interleaved(new float[size]);
+
+    for (int i(0); i != size; ++i) {
+        buff[i] = 1.0 * i;
+        if (i % 2 == 0) {
+            interleaved[i] = i / 2.0;
+        } else {
+            interleaved[i] = ((size / 2.0) - 1) + ((i + 1) / 2.0);
+        }
+    }
+    
+    interleave(buff, size);
+    bool failed(false);
+    for (int i(0); i != size; ++i) {
+        failed |= (interleaved[i] != buff[i]);
+    }
+    EXPECT_EQ(false, failed);
+    if (failed) {
+        std::cout << "expected=";
+        for (int j(0); j != size; ++j) {
+            std::cout << *(interleaved + j) << ",";
+        }
+        std::cout << "\n";
+        std::cout << "got=";
+        for (int j(0); j != size; ++j) {
+            std::cout << *(buff + j) << ",";
+        }
+        std::cout << "\n";
+    }
+    delete [] buff;
+    delete [] interleaved; 
+}
