@@ -1,19 +1,41 @@
 <html>
   <body>
-    <div id="container">
-        <svg id="box" viewBox="0 0 100 10" xmlns="http://www.w3.org/2000/svg" style="font-size: 10px; font-family: Arial">
+    <div id="container" style="font-size: 10px; font-family: Arial">
+        <svg id="box" viewBox="0 0 100 10" xmlns="http://www.w3.org/2000/svg"></svg>
+        <svg viewBox="0 0 100 10" xmlns="http://www.w3.org/2000/svg">
+            <rect id="holder-rect" width="10px" height="10px" rx="2"></rect>
+            <text id="holder-text" x="2" y="8.3" fill="white"></text>
         </svg>
     </div>
     <button onclick="next();">Next</button>
     <script>
         const length = 10;
+        const partLength = length / 2;
         const box = document.getElementById("box");
-        function next() {
 
+        function annotateCell(rect, text, origIdx) {
+            const colour = origIdx >= partLength ? [0, 0, 255] : [255, 0, 0];
+            colour[1] += (origIdx % partLength) * (255 / partLength);
+            rect.setAttribute("fill", "rgb(" + colour.join(",") + ")");
+
+            text.innerHTML = origIdx;
+        }
+
+        function move(fromIdx, toIdx) {
+            const r = box.children.item(toIdx * 2);
+            const t = box.children.item(1 + (toIdx * 2));
+
+            box.children.item(fromIdx * 2).setAttribute("fill", "lightgrey");
+            annotateCell(r, t, fromIdx);
+        }
+
+        function next() {
+            annotateCell(document.getElementById("holder-rect"), document.getElementById("holder-text"), 2);
+
+            move(6, 2);
         }
 
         (function draw() {
-            const partLength = length / 2;
             for (var i = 0; i < length; ++i) {
                 const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                 rect.setAttribute("y", 0);
@@ -22,15 +44,12 @@
                 rect.setAttribute("height", "10");
                 rect.setAttribute("rx", "2");
 
-                const colour = i >= partLength ? [0, 0, 255] : [255, 0, 0];
-                colour[1] += (i % partLength) * (255 / partLength);
-                rect.setAttribute("fill", "rgb(" + colour.join(",") + ")");
-
                 const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 text.setAttribute("y", 8.3);
                 text.setAttribute("x", 2 + (i * 10));
                 text.setAttribute("fill", "white");
-                text.innerHTML = i;
+
+                annotateCell(rect, text, i);
 
                 box.appendChild(rect);
                 box.appendChild(text);
