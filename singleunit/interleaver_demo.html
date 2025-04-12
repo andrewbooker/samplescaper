@@ -1,0 +1,33 @@
+<html>
+  <body>
+    <div id="container">
+        <svg id="box" viewBox="0 0 100 10" xmlns="http://www.w3.org/2000/svg">
+        </svg>
+    </div>
+    <button onclick="next();">Next</button>
+    <script>
+        const length = 10;
+        const box = document.getElementById("box");
+        function next() {
+
+        }
+
+        (function draw() {
+            const partLength = length / 2;
+            for (var i = 0; i < length; ++i) {
+                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("x", i * 10);
+                rect.setAttribute("width", "10");
+                rect.setAttribute("height", "10");
+                rect.setAttribute("rx", "2");
+
+                const colour = i >= partLength ? [0, 0, 255] : [255, 0, 0];
+                colour[1] += (i % partLength) * (255 / partLength);
+                rect.setAttribute("fill", "rgb(" + colour.join(",") + ")");
+
+                box.appendChild(rect);
+            }
+        })();
+    </script>
+  </body>
+</html>
