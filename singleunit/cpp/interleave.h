@@ -19,7 +19,8 @@ static void interleave(float* out, const unsigned long totalLength) {
 
     unsigned long i(1), done(1), fetchPos(0);
     float c(0);
-    while (done != (totalLength - 1)) {
+    while (done < (totalLength - 1)) {
+        ++done;
         if (fetchPos > 0) {
             if (fetchPos == i) {
                 *(out + i) = c;
@@ -40,6 +41,5 @@ static void interleave(float* out, const unsigned long totalLength) {
             }
             ++i;
         }
-        ++done;
     }    
 }
