@@ -17,8 +17,10 @@
 
         // toC++
         const stats = {
-            pos: 1,
-            moved: 0
+            pos: null,
+            moved: 0,
+            pot: null,
+            buff: []
         };
         function inversePosFrom(i, partLength) {
             if (i % 2 != 0) {
@@ -28,40 +30,25 @@
         }
         //
 
-        function annotateCell(rect, text, origIdx) {
-            const colour = origIdx >= partLength ? [0, 0, 255] : [255, 0, 0];
-            colour[1] += (origIdx % partLength) * (255 / partLength);
-            rect.setAttribute("fill", "rgb(" + colour.join(",") + ")");
-
-            text.innerHTML = origIdx;
-        }
-
-        function move(fromIdx, toIdx) {
-            const r = box.children.item(toIdx * 2);
-            const t = box.children.item(1 + (toIdx * 2));
-
-            box.children.item(fromIdx * 2).setAttribute("fill", "lightgrey");
-            annotateCell(r, t, fromIdx);
-            stats.moved += 1;
+        for (var i = 0; i < length; ++i) {
+            stats.buff[i] = 1.0 * i;
         }
 
         function next() {
-            annotateCell(document.getElementById("holder-rect"), document.getElementById("holder-text"), stats.pos);
-
+            if (stats.pos === null) {
+                stats.pos = 1;
+            }
             const nextPos = inversePosFrom(stats.pos, partLength);
-            move(nextPos, stats.pos);
+            stats.pot = stats.buff[stats.pos];
+            stats.buff[stats.pos] = stats.buff[nextPos];
             stats.pos = nextPos;
 
-            showStats.innerHTML = "";
-            for (s in stats) {
-                const stat = document.createElement("div");
-                stat.innerHTML = s + ": " + stats[s];
-                showStats.appendChild(stat);
-            }
+            render();
         }
 
-        (function draw() {
+        function render() {
             for (var i = 0; i < length; ++i) {
+                const v = stats.buff[i];
                 const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                 rect.setAttribute("y", 0);
                 rect.setAttribute("x", i * 10);
@@ -69,17 +56,34 @@
                 rect.setAttribute("height", "10");
                 rect.setAttribute("rx", "2");
 
+                if (i === stats.pos) {
+                    rect.setAttribute("fill", "lightgrey");
+                } else {
+                    const colour = v >= partLength ? [0, 0, 255] : [255, 0, 0];
+                    colour[1] += (v % partLength) * (255 / partLength);
+                    rect.setAttribute("fill", "rgb(" + colour.join(",") + ")");
+                }
+
                 const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 text.setAttribute("y", 8.3);
                 text.setAttribute("x", 2 + (i * 10));
                 text.setAttribute("fill", "white");
-
-                annotateCell(rect, text, i);
+                text.innerHTML = v;
 
                 box.appendChild(rect);
                 box.appendChild(text);
             }
-        })();
+            if (stats.pot !== null) {
+                document.getElementById("holder-text").innerHTML = stats.pot;
+            }
+            showStats.innerHTML = "";
+            for (s in stats) {
+                const stat = document.createElement("div");
+                stat.innerHTML = s + ": " + stats[s];
+                showStats.appendChild(stat);
+            }
+        };
+        render();
     </script>
   </body>
 </html>
