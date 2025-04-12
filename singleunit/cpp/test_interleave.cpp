@@ -1,6 +1,44 @@
 #include "interleave.h"
 
+#include <iostream>
+static bool can_interleave_n_elements(int size) {
+    float* buff(new float[size]);
+    float* interleaved(new float[size]);
+
+    for (int i(0); i != size; ++i) {
+        buff[i] = 1.0 * i;
+        if (i % 2 == 0) {
+            interleaved[i] = i / 2.0;
+        } else {
+            interleaved[i] = ((size / 2.0) - 1) + ((i + 1) / 2.0);
+        }
+    }
+    
+    interleave(buff, size);
+    bool passed(true);
+    for (int i(0); i != size; ++i) {
+        passed &= (interleaved[i] == buff[i]);
+    }
+    if (!passed) {
+        std::cout << "expected=";
+        for (int j(0); j != size; ++j) {
+            std::cout << *(interleaved + j) << ",";
+        }
+        std::cout << "\n";
+        std::cout << "got=";
+        for (int j(0); j != size; ++j) {
+            std::cout << *(buff + j) << ",";
+        }
+        std::cout << "\n";
+    }
+    delete [] buff;
+    delete [] interleaved;
+    return passed;
+}
+
+
 #include <gtest/gtest.h>
+
 
 TEST(InterleaveTest, test_posFrom) {
     EXPECT_EQ(posFrom(0, 1), 0);
@@ -35,60 +73,22 @@ TEST(InterleaveTest, test_inversePosFrom) {
     EXPECT_EQ(inversePosFrom(9, 5), 9);
 }
 
-TEST(InterleaveTest, fourElements) {
-    float buff[] { 1.0, 2.0, 3.0, 4.0 };
-    float interleaved[] { 1.0, 3.0, 2.0, 4.0 };
 
-    interleave(buff, 4);
-    for (int i(0); i != 4; ++i) {
-        EXPECT_EQ(buff[i], interleaved[i]);
-    }
+TEST(InterleaveTest, variousNumbersOfElements) {
+    EXPECT_TRUE(can_interleave_n_elements(4));
+    EXPECT_TRUE(can_interleave_n_elements(6));
+    EXPECT_TRUE(can_interleave_n_elements(10));
+    EXPECT_TRUE(can_interleave_n_elements(20));
 }
 
-
-TEST(InterleaveTest, tenElements) {
-    const unsigned int size(10);
-    float buff[] { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 };
-    float interleaved[] { 1.0, 6.0, 2.0, 7.0, 3.0, 8.0, 4.0, 9.0, 5.0, 10.0 };
-
-    interleave(buff, size);
-    for (int i(0); i != size; ++i) {
-        EXPECT_EQ(buff[i], interleaved[i]);
-    }
+TEST(InterleaveTest, eightElements) {
+    EXPECT_TRUE(can_interleave_n_elements(8));
 }
 
-TEST(InterleaveTest, twentyElements) {
-    const unsigned int size(20);
-    float* buff(new float[size]);
-    float* interleaved(new float[size]);
+TEST(InterleaveTest, fortyElements) {
+    EXPECT_TRUE(can_interleave_n_elements(40));
+}
 
-    for (int i(0); i != size; ++i) {
-        buff[i] = 1.0 * i;
-        if (i % 2 == 0) {
-            interleaved[i] = i / 2.0;
-        } else {
-            interleaved[i] = ((size / 2.0) - 1) + ((i + 1) / 2.0);
-        }
-    }
-    
-    interleave(buff, size);
-    bool failed(false);
-    for (int i(0); i != size; ++i) {
-        failed |= (interleaved[i] != buff[i]);
-    }
-    EXPECT_EQ(false, failed);
-    if (failed) {
-        std::cout << "expected=";
-        for (int j(0); j != size; ++j) {
-            std::cout << *(interleaved + j) << ",";
-        }
-        std::cout << "\n";
-        std::cout << "got=";
-        for (int j(0); j != size; ++j) {
-            std::cout << *(buff + j) << ",";
-        }
-        std::cout << "\n";
-    }
-    delete [] buff;
-    delete [] interleaved; 
+TEST(InterleaveTest, eightyElements) {
+    EXPECT_TRUE(can_interleave_n_elements(80));
 }
