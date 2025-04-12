@@ -7,11 +7,26 @@
             <text id="holder-text" x="2" y="8.3" fill="white"></text>
         </svg>
     </div>
+    <div id="stats"></div>
     <button onclick="next();">Next</button>
     <script>
         const length = 10;
         const partLength = length / 2;
         const box = document.getElementById("box");
+        const showStats = document.getElementById("stats");
+
+        // toC++
+        const stats = {
+            pos: 1,
+            moved: 0
+        };
+        function inversePosFrom(i, partLength) {
+            if (i % 2 != 0) {
+                return partLength + ((i - 1) / 2);
+            }
+            return i / 2;
+        }
+        //
 
         function annotateCell(rect, text, origIdx) {
             const colour = origIdx >= partLength ? [0, 0, 255] : [255, 0, 0];
@@ -27,12 +42,22 @@
 
             box.children.item(fromIdx * 2).setAttribute("fill", "lightgrey");
             annotateCell(r, t, fromIdx);
+            stats.moved += 1;
         }
 
         function next() {
-            annotateCell(document.getElementById("holder-rect"), document.getElementById("holder-text"), 2);
+            annotateCell(document.getElementById("holder-rect"), document.getElementById("holder-text"), stats.pos);
 
-            move(6, 2);
+            const nextPos = inversePosFrom(stats.pos, partLength);
+            move(nextPos, stats.pos);
+            stats.pos = nextPos;
+
+            showStats.innerHTML = "";
+            for (s in stats) {
+                const stat = document.createElement("div");
+                stat.innerHTML = s + ": " + stats[s];
+                showStats.appendChild(stat);
+            }
         }
 
         (function draw() {
