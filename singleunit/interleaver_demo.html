@@ -10,7 +10,7 @@
     <div id="stats"></div>
     <button onclick="next();">Next</button>
     <script>
-        const length = 16;
+        const length = 12;
         const partLength = length / 2;
         const box = document.getElementById("box");
         const showStats = document.getElementById("stats");
@@ -64,7 +64,7 @@
                     stats.pot = null;
                     stats.potPos = null;
                 } else if (inversePosFrom(stats.fetchPos, partLength) === stats.potPos) {
-                    stats.stage = "block5"
+                    stats.stage = "block4"
                     stats.buff[stats.fetchPos] = stats.pot;
                     stats.i += 1;
                     stats.pot = null;
@@ -77,18 +77,12 @@
                     stats.fetchPos = f;
                 }
             } else {
-                if (stats.pot === null) {
-                    stats.fetchPos = inversePosFrom(stats.i, partLength);
-                    stats.stage = "block3"
-                    stats.pot = stats.buff[stats.i];
-                    stats.potPos = stats.i;
-                    stats.buff[stats.i] = stats.buff[stats.fetchPos];
-                    stats.i += 1;
-                } else {
-                    stats.stage = "block4"
-                    stats.buff[nextPosFrom(stats.postPos, partLength)] = stats.pot;
-                    stats.pot = null;
-                }
+                stats.fetchPos = inversePosFrom(stats.i, partLength);
+                stats.stage = "block3"
+                stats.pot = stats.buff[stats.i];
+                stats.potPos = stats.i;
+                stats.buff[stats.i] = stats.buff[stats.fetchPos];
+                stats.i += 1;
             }
 
             stats.moved += 1;
@@ -106,7 +100,7 @@
                 rect.setAttribute("rx", "2");
 
                 if (i === stats.fetchPos) {
-                    rect.setAttribute("fill", "lightgrey");
+                    rect.setAttribute("fill", "lavender");
                 } else {
                     const colour = v >= partLength ? [0, 0, 255] : [255, 0, 0];
                     colour[1] += (v % partLength) * (255 / partLength);
