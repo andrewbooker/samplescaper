@@ -17,10 +17,12 @@
 
         // toC++
         const stats = {
-            pos: null,
+            i: null,
+            fetchPos: null,
             moved: 0,
             pot: null,
-            buff: []
+            buff: [],
+            done: false
         };
         function inversePosFrom(i, partLength) {
             if (i % 2 != 0) {
@@ -35,14 +37,36 @@
         }
 
         function next() {
-            if (stats.pos === null) {
-                stats.pos = 1;
+            if (stats.moved == (length - 3)) {
+                stats.done = true;
+                render();
+                return;
             }
-            const nextPos = inversePosFrom(stats.pos, partLength);
-            stats.pot = stats.buff[stats.pos];
-            stats.buff[stats.pos] = stats.buff[nextPos];
-            stats.pos = nextPos;
+            if (stats.i === null) {
+                stats.i = 1;
+            }
 
+            if (stats.fetchPos > 0) {
+                if (stats.fetchPos == stats.i) {
+                    stats.buff[stats.i] = stats.pot;
+                    stats.i += 1;
+                    stats.fetchPos = null;
+                } else {
+                    const f = inversePosFrom(stats.fetchPos, partLength);
+                    stats.buff[stats.fetchPos] = stats.buff[f];
+                    stats.fetchPos = f;
+                }
+            } else {
+                stats.fetchPos = inversePosFrom(stats.i, partLength);
+                stats.pot = stats.buff[stats.i];
+                stats.buff[stats.i] = stats.buff[stats.fetchPos];
+                stats.buff[stats.fetchPos] = stats.pot;
+                if (stats.i > 0) {
+                    stats.i += 1;
+                }
+            }
+
+            stats.moved += 1;
             render();
         }
 
@@ -56,7 +80,7 @@
                 rect.setAttribute("height", "10");
                 rect.setAttribute("rx", "2");
 
-                if (i === stats.pos) {
+                if (i === stats.fetchPos) {
                     rect.setAttribute("fill", "lightgrey");
                 } else {
                     const colour = v >= partLength ? [0, 0, 255] : [255, 0, 0];
