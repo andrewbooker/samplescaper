@@ -1,7 +1,7 @@
 <html>
   <body>
-    <div id="container" style="font-size: 10px; font-family: Arial">
-        <svg id="box" viewBox="0 0 100 10" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div id="container" style="font-size: 6px; font-family: Arial">
+        <svg id="box" viewBox="0 0 160 10" xmlns="http://www.w3.org/2000/svg"></svg>
         <svg viewBox="0 0 100 10" xmlns="http://www.w3.org/2000/svg">
             <rect id="holder-rect" width="10px" height="10px" rx="2"></rect>
             <text id="holder-text" x="2" y="8.3" fill="white"></text>
@@ -10,7 +10,7 @@
     <div id="stats"></div>
     <button onclick="next();">Next</button>
     <script>
-        const length = 10;
+        const length = 16;
         const partLength = length / 2;
         const box = document.getElementById("box");
         const showStats = document.getElementById("stats");
@@ -64,7 +64,9 @@
                     stats.pot = null;
                     stats.potPos = null;
                 } else if (inversePosFrom(stats.fetchPos, partLength) === stats.potPos) {
+                    stats.stage = "block5"
                     stats.buff[stats.fetchPos] = stats.pot;
+                    stats.i += 1;
                     stats.pot = null;
                     stats.potPos = null;
                     stats.fetchPos = null;
@@ -81,9 +83,7 @@
                     stats.pot = stats.buff[stats.i];
                     stats.potPos = stats.i;
                     stats.buff[stats.i] = stats.buff[stats.fetchPos];
-                    if (stats.i > 0) {
-                        stats.i += 1;
-                    }
+                    stats.i += 1;
                 } else {
                     stats.stage = "block4"
                     stats.buff[nextPosFrom(stats.postPos, partLength)] = stats.pot;
