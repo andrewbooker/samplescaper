@@ -1,7 +1,7 @@
 <html>
   <body>
     <div id="container">
-        <svg id="box" viewBox="0 0 100 10" xmlns="http://www.w3.org/2000/svg">
+        <svg id="box" viewBox="0 0 100 10" xmlns="http://www.w3.org/2000/svg" style="font-size: 10px; font-family: Arial">
         </svg>
     </div>
     <button onclick="next();">Next</button>
@@ -16,6 +16,7 @@
             const partLength = length / 2;
             for (var i = 0; i < length; ++i) {
                 const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("y", 0);
                 rect.setAttribute("x", i * 10);
                 rect.setAttribute("width", "10");
                 rect.setAttribute("height", "10");
@@ -25,7 +26,14 @@
                 colour[1] += (i % partLength) * (255 / partLength);
                 rect.setAttribute("fill", "rgb(" + colour.join(",") + ")");
 
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("y", 8.3);
+                text.setAttribute("x", 2 + (i * 10));
+                text.setAttribute("fill", "white");
+                text.innerHTML = i;
+
                 box.appendChild(rect);
+                box.appendChild(text);
             }
         })();
     </script>
