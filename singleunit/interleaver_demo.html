@@ -17,10 +17,12 @@
 
         // toC++
         const stats = {
+            stage: null,
             i: null,
             fetchPos: null,
             moved: 0,
             pot: null,
+            potPos: null,
             buff: [],
             done: false
         };
@@ -36,8 +38,15 @@
             stats.buff[i] = 1.0 * i;
         }
 
+        function nextPosFrom(i, partLength) {
+            if (i < partLength) {
+                return 2 * i;
+            }
+            return (2 * (i - partLength)) + 1;
+        }
+
         function next() {
-            if (stats.moved == (length - 3)) {
+            if (stats.moved == (length - 2)) {
                 stats.done = true;
                 render();
                 return;
@@ -46,23 +55,39 @@
                 stats.i = 1;
             }
 
-            if (stats.fetchPos > 0) {
+            if (stats.fetchPos !== null) {
                 if (stats.fetchPos == stats.i) {
+                    stats.stage = "block1"
                     stats.buff[stats.i] = stats.pot;
                     stats.i += 1;
                     stats.fetchPos = null;
+                    stats.pot = null;
+                    stats.potPos = null;
+                } else if (inversePosFrom(stats.fetchPos, partLength) === stats.potPos) {
+                    stats.buff[stats.fetchPos] = stats.pot;
+                    stats.pot = null;
+                    stats.potPos = null;
+                    stats.fetchPos = null;
                 } else {
+                    stats.stage = "block2"
                     const f = inversePosFrom(stats.fetchPos, partLength);
                     stats.buff[stats.fetchPos] = stats.buff[f];
                     stats.fetchPos = f;
                 }
             } else {
-                stats.fetchPos = inversePosFrom(stats.i, partLength);
-                stats.pot = stats.buff[stats.i];
-                stats.buff[stats.i] = stats.buff[stats.fetchPos];
-                stats.buff[stats.fetchPos] = stats.pot;
-                if (stats.i > 0) {
-                    stats.i += 1;
+                if (stats.pot === null) {
+                    stats.fetchPos = inversePosFrom(stats.i, partLength);
+                    stats.stage = "block3"
+                    stats.pot = stats.buff[stats.i];
+                    stats.potPos = stats.i;
+                    stats.buff[stats.i] = stats.buff[stats.fetchPos];
+                    if (stats.i > 0) {
+                        stats.i += 1;
+                    }
+                } else {
+                    stats.stage = "block4"
+                    stats.buff[nextPosFrom(stats.postPos, partLength)] = stats.pot;
+                    stats.pot = null;
                 }
             }
 
@@ -97,9 +122,8 @@
                 box.appendChild(rect);
                 box.appendChild(text);
             }
-            if (stats.pot !== null) {
-                document.getElementById("holder-text").innerHTML = stats.pot;
-            }
+
+            document.getElementById("holder-text").innerHTML = stats.pot || "";
             showStats.innerHTML = "";
             for (s in stats) {
                 const stat = document.createElement("div");
