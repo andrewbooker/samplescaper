@@ -39,40 +39,6 @@ static bool can_interleave_buffer_of_length(int size) {
 
 #include <gtest/gtest.h>
 
-
-TEST(InterleaveTest, test_posFrom) {
-    EXPECT_EQ(posFrom(0, 1), 0);
-    EXPECT_EQ(posFrom(0, 5), 0);
-    EXPECT_EQ(posFrom(0, 10), 0);
-
-    EXPECT_EQ(posFrom(1, 5), 2);
-    EXPECT_EQ(posFrom(2, 5), 4);
-    EXPECT_EQ(posFrom(3, 5), 6);
-    EXPECT_EQ(posFrom(4, 5), 8);
-
-    EXPECT_EQ(posFrom(5, 5), 1);
-    EXPECT_EQ(posFrom(6, 5), 3);
-    EXPECT_EQ(posFrom(7, 5), 5);
-    EXPECT_EQ(posFrom(8, 5), 7);
-    EXPECT_EQ(posFrom(9, 5), 9);
-}
-
-TEST(InterleaveTest, test_inversePosFrom) {
-    EXPECT_EQ(inversePosFrom(0, 1), 0);
-    EXPECT_EQ(inversePosFrom(0, 5), 0);
-    EXPECT_EQ(inversePosFrom(0, 10), 0);
-
-    EXPECT_EQ(inversePosFrom(1, 5), 5);
-    EXPECT_EQ(inversePosFrom(2, 5), 1);
-    EXPECT_EQ(inversePosFrom(3, 5), 6);
-    EXPECT_EQ(inversePosFrom(4, 5), 2);
-    EXPECT_EQ(inversePosFrom(5, 5), 7);
-    EXPECT_EQ(inversePosFrom(6, 5), 3);
-    EXPECT_EQ(inversePosFrom(7, 5), 8);
-    EXPECT_EQ(inversePosFrom(8, 5), 4);
-    EXPECT_EQ(inversePosFrom(9, 5), 9);
-}
-
 #define testOver(n) TEST(InterleaveTest, over##n##Elements) { EXPECT_TRUE(can_interleave_buffer_of_length(n)); }
 
 // passing
@@ -85,18 +51,15 @@ testOver(14)
 testOver(20)
 testOver(30)
 
-// failing
 
 testOver(8)
-//testOver(16)
-//testOver(18)
-//testOver(22)
-//testOver(24)
-//testOver(26)
-//testOver(28)
+testOver(16)
+testOver(18)
+testOver(22)
+testOver(24)
+testOver(26)
+testOver(28)
+testOver(40)
+testOver(80)
 
 
-
-
-//TEST(InterleaveTest, fortyElements) { EXPECT_TRUE(can_interleave_buffer_of_length(40)); }
-//TEST(InterleaveTest, eightyElements) { EXPECT_TRUE(can_interleave_buffer_of_length(80)); }

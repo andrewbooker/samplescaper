@@ -1,45 +1,23 @@
 
-static const unsigned long posFrom(const unsigned long i, const unsigned long partLength) {
-    if (i < partLength) {
-        return 2 * i;
-    }
-    return (2 * (i - partLength)) + 1;
-}
+#include <cstring>
 
-static const unsigned long inversePosFrom(const unsigned long i, const unsigned long partLength) {
-    if (i % 2 != 0) {
-        return partLength + ((i - 1) / 2);
+#define bufferLength 44100
+float buff[bufferLength] {};
+
+static void interleave(float* out, const unsigned long totalLength, const unsigned int channels) {
+    if (totalLength > bufferLength) {
+        throw 9999;
     }
-    return i / 2;
+    memcpy(buff, out, totalLength * sizeof(float));
+    const unsigned long partLength(totalLength / channels);
+    for (unsigned long i(0); i != partLength; ++i) {
+        for (unsigned int c(0); c != channels; ++c) {
+            *(out + (i * channels) + c) = *(buff + i + (c * partLength));
+        }
+    }
 }
 
 
 static void interleave(float* out, const unsigned long totalLength) {
-    const unsigned long partLength(totalLength / 2);
-
-    unsigned long i(1), done(1), fetchPos(0);
-    float c(0);
-    while (done < (totalLength - 1)) {
-        ++done;
-        if (fetchPos > 0) {
-            if (fetchPos == i) {
-                *(out + i) = c;
-                ++i;
-                fetchPos = 0;
-            } else {
-                const unsigned long f(inversePosFrom(fetchPos, partLength));
-                *(out + fetchPos) = *(out + f);
-                fetchPos = f;
-            }
-        } else {
-            fetchPos = inversePosFrom(i, partLength);
-            c = *(out + i);
-            *(out + i) = *(out + fetchPos);
-            *(out + fetchPos) = c;
-            if (i != 1) {
-                break;
-            }
-            ++i;
-        }
-    }    
+    interleave(out, totalLength, 2);
 }

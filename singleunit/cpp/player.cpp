@@ -1,3 +1,6 @@
+
+#include "interleave.h"
+
 #include <iostream>
 #include <portaudio.h>
 #include <sndfile.h>
@@ -12,13 +15,12 @@ private:
     PaStream* audioStream;
     const unsigned int channels;
 
-    void readInto(float* out, const unsigned long upToLength) {
-        memset(out, 0, upToLength * sizeof(float));
+    void readInto(float* out, const unsigned long perChannelLength) {
+        memset(out, 0, perChannelLength * sizeof(float) * channels);
 
-        const unsigned long perFileLength(upToLength / channels);
-
-        sf_readf_float(audioFileL, out + 0, perFileLength);
-        sf_readf_float(audioFileR, out + perFileLength, perFileLength);
+        sf_readf_float(audioFileL, out, perChannelLength);
+        sf_readf_float(audioFileR, out + perChannelLength, perChannelLength);
+        interleave(out, perChannelLength * channels, channels);
     }
 
     static int audioCallback(
@@ -49,11 +51,11 @@ public:
         audioFileR = sf_open(right.c_str(), SFM_READ, &ignore);
 
         PaStreamParameters outputParameters;
+        memset(&outputParameters, 0, sizeof(PaStreamParameters));
         outputParameters.device = Pa_GetDefaultOutputDevice();
         outputParameters.channelCount = channels;
-        outputParameters.sampleFormat = paFloat32;
+        outputParameters.sampleFormat = paFloat32; // | paNonInterleaved;
         outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
-        outputParameters.hostApiSpecificStreamInfo = 0;
 
         if (Pa_OpenStream(&audioStream, 0, &outputParameters, 44100, paFramesPerBufferUnspecified, paClipOff, &AudioPlayer::audioCallback, this) != paNoError) {
             std::cerr << "Failed to open PortAudio stream." << std::endl;
