@@ -43,8 +43,8 @@ public:
             return;
         }
 
-        const std::string left(filePath + "/looped_55_si_2025-02-23_154447.wav");
-        const std::string right(filePath + "/looped_86_siq_2025-02-23_105403.wav");
+        const std::string left(filePath + "/looped_65_si_2025-02-14_220120.wav");
+        const std::string right(filePath + "/looped_69_si_2025-02-14_220055.wav");
 
         SF_INFO ignore;
         audioFileL = sf_open(left.c_str(), SFM_READ, &ignore);
@@ -52,9 +52,9 @@ public:
 
         PaStreamParameters outputParameters;
         memset(&outputParameters, 0, sizeof(PaStreamParameters));
-        outputParameters.device = Pa_GetDefaultOutputDevice();
+        outputParameters.device = 0;
         outputParameters.channelCount = channels;
-        outputParameters.sampleFormat = paFloat32; // | paNonInterleaved;
+        outputParameters.sampleFormat = paFloat32;
         outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
 
         if (Pa_OpenStream(&audioStream, 0, &outputParameters, 44100, paFramesPerBufferUnspecified, paClipOff, &AudioPlayer::audioCallback, this) != paNoError) {
@@ -78,12 +78,18 @@ public:
     }
 
     bool start() {
-        if (audioFileL && audioStream) {
-            if (Pa_StartStream(audioStream) == paNoError) {
-                std::cout << "Playing audio. Press Enter to stop..." << std::endl;
-                std::cin.get();
-                return true;
-            }
+        if (!audioStream) {
+            std::cout << "No audio stream" << std::endl;
+            return false;
+        }
+        if (!audioFileL) {
+            std::cout << "No audio file" << std::endl;
+            return false;
+        }
+        if (Pa_StartStream(audioStream) == paNoError) {
+            std::cout << "Playing audio. Press Enter to stop..." << std::endl;
+            std::cin.get();
+            return true;
         }
         return false;
     }
@@ -105,6 +111,8 @@ int main() {
 
     if (audioPlayer.start()) {
         audioPlayer.stop();
+    } else {
+        std::cout << "could not start playback" << std::endl;
     }
    
     return 0;

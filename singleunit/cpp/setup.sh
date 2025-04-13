@@ -1,7 +1,7 @@
 sudo apt install -y libsndfile1-dev
 sudo apt install -y portaudio19-dev
-sudo apt install libgtest-dev
-sudo apt install cmake
+sudo apt install -y libgtest-dev
+sudo apt install -y cmake
 cd /usr/src/gtest
 sudo cmake .
 sudo make
