@@ -1,4 +1,3 @@
-
 #include "interleave.h"
 
 #include <iostream>
@@ -6,6 +5,7 @@
 #include <sndfile.h>
 #include <string>
 #include <cstring>
+#include <vector>
 
 
 class DiskSource {
@@ -28,18 +28,41 @@ public:
     }
 };
 
+
+class SoundSources {
+private:
+    typedef std::vector<DiskSource*> t_sources;
+    t_sources sources;
+
+public:
+    SoundSources(const std::string& filePath) {
+        sources.push_back(new DiskSource(filePath + "/looped_65_si_2025-02-14_220120.wav"));
+        sources.push_back(new DiskSource(filePath + "/looped_69_si_2025-02-14_220055.wav"));
+    }
+
+    void readInto(float* out, const unsigned long sampleLength, const unsigned int channel) {
+        sources[channel]->readInto(out, sampleLength);
+    }
+
+    ~SoundSources() {
+        for (t_sources::const_iterator i(sources.begin()); i != sources.end(); ++i) {
+            delete *i;
+        }
+    }
+};
+
+
 class AudioPlayer {
 private:
-    DiskSource audioFileL;
-    DiskSource audioFileR;
+    SoundSources soundSources;
     PaStream* audioStream;
     const unsigned int channels;
 
     void readInto(float* out, const unsigned long perChannelLength) {
         memset(out, 0, perChannelLength * sizeof(float) * channels);
-
-        audioFileL.readInto(out, perChannelLength);
-        audioFileR.readInto(out + perChannelLength, perChannelLength);
+        for (unsigned int c(0); c != channels; ++c) {
+            soundSources.readInto(out + (c * perChannelLength), perChannelLength, c);
+        }
         interleave(out, perChannelLength * channels, channels);
     }
 
@@ -60,8 +83,7 @@ public:
     AudioPlayer(const std::string& filePath) :
         channels(2),
         audioStream(0),
-        audioFileL(filePath + "/looped_65_si_2025-02-14_220120.wav"),
-        audioFileR(filePath + "/looped_69_si_2025-02-14_220055.wav")
+        soundSources(filePath)
     {
         if (Pa_Initialize() != paNoError) {
             std::cerr << "PortAudio initialization failed." << std::endl;
