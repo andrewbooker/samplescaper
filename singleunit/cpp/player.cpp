@@ -8,18 +8,38 @@
 #include <cstring>
 
 
+class DiskSource {
+private:
+    SNDFILE* soundFile;
+    SF_INFO info;
+
+public:
+    DiskSource(const std::string& f) : soundFile(sf_open(f.c_str(), SFM_READ, &info)) {
+    }
+
+    void readInto(float* out, const unsigned long sampleLength) {
+        sf_readf_float(soundFile, out, sampleLength);
+    }
+
+    ~DiskSource() {
+        if (soundFile) {
+            sf_close(soundFile);
+        }
+    }
+};
+
 class AudioPlayer {
 private:
-    SNDFILE* audioFileL;
-    SNDFILE* audioFileR;
+    DiskSource audioFileL;
+    DiskSource audioFileR;
     PaStream* audioStream;
     const unsigned int channels;
 
     void readInto(float* out, const unsigned long perChannelLength) {
         memset(out, 0, perChannelLength * sizeof(float) * channels);
 
-        sf_readf_float(audioFileL, out, perChannelLength);
-        sf_readf_float(audioFileR, out + perChannelLength, perChannelLength);
+        audioFileL.readInto(out, perChannelLength);
+        audioFileR.readInto(out + perChannelLength, perChannelLength);
         interleave(out, perChannelLength * channels, channels);
     }
 
@@ -37,22 +57,20 @@ private:
     }
 
 public:
-    AudioPlayer(const std::string& filePath): channels(2), audioFileL(0), audioFileR(0), audioStream(0) {
+    AudioPlayer(const std::string& filePath) :
+        channels(2),
+        audioStream(0),
+        audioFileL(filePath + "/looped_65_si_2025-02-14_220120.wav"),
+        audioFileR(filePath + "/looped_69_si_2025-02-14_220055.wav")
+    {
         if (Pa_Initialize() != paNoError) {
             std::cerr << "PortAudio initialization failed." << std::endl;
             return;
         }
 
-        const std::string left(filePath + "/looped_65_si_2025-02-14_220120.wav");
-        const std::string right(filePath + "/looped_69_si_2025-02-14_220055.wav");
-
-        SF_INFO ignore;
-        audioFileL = sf_open(left.c_str(), SFM_READ, &ignore);
-        audioFileR = sf_open(right.c_str(), SFM_READ, &ignore);
-
         PaStreamParameters outputParameters;
         memset(&outputParameters, 0, sizeof(PaStreamParameters));
-        outputParameters.device = 0;
+        outputParameters.device = Pa_GetDefaultOutputDevice();
         outputParameters.channelCount = channels;
         outputParameters.sampleFormat = paFloat32;
         outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
@@ -63,13 +81,6 @@ public:
     }
     
     ~AudioPlayer() {
-        if (audioFileL) {
-            sf_close(audioFileL);
-        }
-        if (audioFileR) {
-            sf_close(audioFileR);
-        }
-
         if (audioStream) {
             Pa_StopStream(audioStream);
             Pa_CloseStream(audioStream);
@@ -80,10 +91,6 @@ public:
     bool start() {
         if (!audioStream) {
             std::cout << "No audio stream" << std::endl;
-            return false;
-        }
-        if (!audioFileL) {
-            std::cout << "No audio file" << std::endl;
             return false;
         }
         if (Pa_StartStream(audioStream) == paNoError) {
