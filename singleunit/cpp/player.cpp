@@ -6,25 +6,47 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <filesystem>
+#include <time.h>
 
 
 class DiskSource {
 private:
+    const std::string& location;
+    bool ready;
     SNDFILE* soundFile;
     SF_INFO info;
+    typedef std::vector<std::string> t_fileNames;
+    t_fileNames fileNames;
 
 public:
-    DiskSource(const std::string& f) : soundFile(sf_open(f.c_str(), SFM_READ, &info)) {
-    }
-
-    void readInto(float* out, const unsigned long sampleLength) {
-        sf_readf_float(soundFile, out, sampleLength);
+    DiskSource(const std::string& loc) : location(loc), soundFile(0), ready(false) {
+        memset(&info, 0, sizeof(SF_INFO));
+        fetch();
     }
 
     ~DiskSource() {
         if (soundFile) {
             sf_close(soundFile);
         }
+    }
+
+    void fetch() {
+        for (const auto & entry : std::filesystem::directory_iterator(location)) {
+            fileNames.push_back(entry.path());
+        }
+        const unsigned int selection(rand() % fileNames.size());
+        soundFile = sf_open(fileNames[selection].c_str(), SFM_READ, &info);
+        ready = true;
+    }
+
+    void readInto(float* out, const unsigned long sampleLength) {
+        if (!ready) {
+            memset(out, 0, sampleLength * sizeof(float));
+            return;
+        }
+        const unsigned long read(sf_readf_float(soundFile, out, sampleLength));
+        ready = (read == sampleLength);
     }
 };
 
@@ -35,9 +57,10 @@ private:
     t_sources sources;
 
 public:
-    SoundSources(const std::string& filePath) {
-        sources.push_back(new DiskSource(filePath + "/looped_65_si_2025-02-14_220120.wav"));
-        sources.push_back(new DiskSource(filePath + "/looped_69_si_2025-02-14_220055.wav"));
+    SoundSources(const std::string& filePath, const unsigned int channels) {
+        for (unsigned int c(0); c != channels; ++c) {
+            sources.push_back(new DiskSource(filePath));
+        }
     }
 
     void readInto(float* out, const unsigned long sampleLength, const unsigned int channel) {
@@ -83,7 +106,7 @@ public:
     AudioPlayer(const std::string& filePath) :
         channels(2),
         audioStream(0),
-        soundSources(filePath)
+        soundSources(filePath, 2)
     {
         if (Pa_Initialize() != paNoError) {
             std::cerr << "PortAudio initialization failed." << std::endl;
@@ -134,6 +157,7 @@ public:
 
 
 int main() {
+    srand(time(0));
     const std::string filePath("/home/abooker/Music/pool/looped");
 
     AudioPlayer audioPlayer(filePath);
