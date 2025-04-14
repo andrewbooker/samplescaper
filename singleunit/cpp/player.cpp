@@ -8,36 +8,57 @@
 #include <vector>
 #include <filesystem>
 #include <time.h>
+#include <thread>
+#include <chrono>
 
 
 class DiskSource {
 private:
     const std::string& location;
     bool ready;
+    bool closing;
     SNDFILE* soundFile;
-    SF_INFO info;
+
     typedef std::vector<std::string> t_fileNames;
     t_fileNames fileNames;
+    std::thread loop;
+
+    void fetch() {
+        while (!closing) {
+            if (!ready) {
+                if (soundFile) {
+                    sf_close(soundFile);
+                    soundFile = 0;
+                }
+                for (const auto & entry : std::filesystem::directory_iterator(location)) {
+                    fileNames.push_back(entry.path());
+                }
+                const unsigned int selection(rand() % fileNames.size());
+                SF_INFO info;
+                soundFile = sf_open(fileNames[selection].c_str(), SFM_READ, &info);
+                ready = true;
+            } else {
+               std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
+        }
+    }
+
+    static void fetchLoop(DiskSource* d) {
+        d->fetch();
+    }
 
 public:
-    DiskSource(const std::string& loc) : location(loc), soundFile(0), ready(false) {
-        memset(&info, 0, sizeof(SF_INFO));
-        fetch();
+    DiskSource(const std::string& loc) : location(loc), soundFile(0), ready(false), closing(false), loop(fetchLoop, this) {
     }
 
     ~DiskSource() {
         if (soundFile) {
             sf_close(soundFile);
         }
-    }
-
-    void fetch() {
-        for (const auto & entry : std::filesystem::directory_iterator(location)) {
-            fileNames.push_back(entry.path());
-        }
-        const unsigned int selection(rand() % fileNames.size());
-        soundFile = sf_open(fileNames[selection].c_str(), SFM_READ, &info);
-        ready = true;
+        closing = true;
+        std::cout << "Stopping fetch loop... ";
+        loop.join();
+        std::cout << "stopped\n";
     }
 
     void readInto(float* out, const unsigned long sampleLength) {
