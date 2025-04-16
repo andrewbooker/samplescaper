@@ -1,4 +1,3 @@
-#include "fetch_via_http.h"
 #include "interleave.h"
 
 #include <iostream>
@@ -12,16 +11,11 @@
 #include <thread>
 #include <chrono>
 
-
-class DiskSource {
+class SoundSource {
 private:
-    const std::string& location;
     bool ready;
     bool closing;
     SNDFILE* soundFile;
-
-    typedef std::vector<std::string> t_fileNames;
-    t_fileNames fileNames;
     std::thread loop;
 
     void fetch() {
@@ -31,12 +25,7 @@ private:
                     sf_close(soundFile);
                     soundFile = 0;
                 }
-                for (const auto & entry : std::filesystem::directory_iterator(location)) {
-                    fileNames.push_back(entry.path());
-                }
-                const unsigned int selection(rand() % fileNames.size());
-                SF_INFO info;
-                soundFile = sf_open(fileNames[selection].c_str(), SFM_READ, &info);
+                soundFile = getSoundFile();
                 ready = true;
             } else {
                std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -44,15 +33,16 @@ private:
         }
     }
 
-    static void fetchLoop(DiskSource* d) {
-        d->fetch();
+    static void fetchLoop(SoundSource* s) {
+        s->fetch();
     }
+
+protected:
+    virtual SNDFILE* getSoundFile() = 0;
 
 public:
-    DiskSource(const std::string& loc) : location(loc), soundFile(0), ready(false), closing(false), loop(fetchLoop, this) {
-    }
-
-    ~DiskSource() {
+    SoundSource() : ready(false), closing(false), soundFile(0), loop(fetchLoop, this) {}
+    virtual ~SoundSource() {
         if (soundFile) {
             sf_close(soundFile);
         }
@@ -69,6 +59,27 @@ public:
         }
         const unsigned long read(sf_readf_float(soundFile, out, sampleLength));
         ready = (read == sampleLength);
+    }
+};
+
+class DiskSource : public SoundSource {
+private:
+    const std::string& location;
+    typedef std::vector<std::string> t_fileNames;
+    t_fileNames fileNames;
+
+protected:
+    SNDFILE* getSoundFile() {
+        for (const auto & entry : std::filesystem::directory_iterator(location)) {
+            fileNames.push_back(entry.path());
+        }
+        const unsigned int selection(rand() % fileNames.size());
+        SF_INFO info;
+        return sf_open(fileNames[selection].c_str(), SFM_READ, &info);
+    }
+
+public:
+    DiskSource(const std::string& loc) : SoundSource(), location(loc) {
     }
 };
 
@@ -179,7 +190,6 @@ public:
 
 
 int main() {
-    HttpSource().fetch();
     srand(time(0));
     const std::string filePath("/home/abooker/Music/pool/looped");
 
