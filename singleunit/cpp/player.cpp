@@ -42,7 +42,6 @@ private:
 public:
     SoundSources(const std::string& filePath, const unsigned int channels) {
         for (unsigned int c(0); c != channels; ++c) {
-            //sources.push_back(new DiskSource(filePath));
             sources.push_back(new HttpSource(c));
         }
     }

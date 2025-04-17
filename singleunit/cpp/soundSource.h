@@ -21,6 +21,8 @@ private:
                 soundFile = getSoundFile();
                 if (soundFile) {
                     ready = true;
+                } else {
+                    std::cout << "Fetch thread failed to get sound file" << std::endl;
                 }
             } else {
                std::this_thread::sleep_for(std::chrono::milliseconds(500));

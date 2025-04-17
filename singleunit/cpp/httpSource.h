@@ -7,8 +7,6 @@
 #include <cstring>
 #include <sndfile.h>
 
-#include <sstream>
-#include <stdio.h>
 
 struct MemoryBuffer {
     const unsigned char* data;
@@ -69,6 +67,7 @@ private:
     typedef std::vector<unsigned char> t_buffer;
     t_buffer buffer;
     const int idx;
+    MemoryBuffer mem;
 
     static size_t write(void* ptr, size_t size, size_t nmemb, void* stream) {
         t_buffer& out(*reinterpret_cast<t_buffer*>(stream));
@@ -84,7 +83,7 @@ protected:
         CURL* curl(curl_easy_init());
         buffer.clear();
         if (curl) {
-            std::cout << "fetching from " << url << std::endl;
+            std::cout << idx << " fetching from " << url << std::endl;
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
@@ -94,21 +93,14 @@ protected:
                 std::cerr << curl_easy_strerror(res) << std::endl;
             }
             curl_easy_cleanup(curl);
-            std::cout << buffer.size() << " bytes" << std::endl;
-            std::stringstream fn;
-            fn << "./test_sound" << idx << ".wav";
-            std::cout << "saving to " << fn.str() << std::endl;
-            FILE* file(fopen(fn.str().c_str(), "wb"));
-            std::cout << "file open " << (file != NULL ? "OK" : "failed") << std::endl;
-            fwrite(buffer.data(), sizeof(unsigned char), buffer.size(), file);
-            std::cout << "written" << std::endl;
-            fclose(file);
-            std::cout << "saved" << std::endl;
+            std::cout << "read " << buffer.size() << " bytes" << std::endl;
 
-            MemoryBuffer mem { buffer.data(), static_cast<sf_count_t>(buffer.size()), 0 };
-
+            mem.data = buffer.data();
+            mem.size = buffer.size();
+            mem.pos = 0;
             SF_INFO sfinfo;
-            return sf_open_virtual(&vio, SFM_READ, &sfinfo, &mem);
+            SNDFILE* sf(sf_open_virtual(&vio, SFM_READ, &sfinfo, &mem));
+            return sf;
         } else {
             std::cerr << "Failed to initialize curl\n";
         }
@@ -116,6 +108,8 @@ protected:
     }
 
 public:
-    HttpSource(const unsigned int i) : url("http://0.0.0.0:3064"), idx(i) {}
+    HttpSource(const unsigned int i) : url("http://0.0.0.0:3064"), idx(i) {
+        memset(&mem, 0, sizeof(MemoryBuffer));
+    }
 };
 
