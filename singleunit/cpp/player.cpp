@@ -4,34 +4,9 @@
 
 #include <iostream>
 #include <portaudio.h>
-#include <sndfile.h>
 #include <string>
 #include <cstring>
 #include <vector>
-#include <filesystem>
-#include <time.h>
-#include <chrono>
-
-class DiskSource : public SoundSource {
-private:
-    const std::string& location;
-    typedef std::vector<std::string> t_fileNames;
-    t_fileNames fileNames;
-
-protected:
-    SNDFILE* getSoundFile() {
-        for (const auto & entry : std::filesystem::directory_iterator(location)) {
-            fileNames.push_back(entry.path());
-        }
-        const unsigned int selection(rand() % fileNames.size());
-        SF_INFO info;
-        return sf_open(fileNames[selection].c_str(), SFM_READ, &info);
-    }
-
-public:
-    DiskSource(const std::string& loc) : SoundSource(), location(loc) {
-    }
-};
 
 
 class SoundSources {
@@ -40,7 +15,7 @@ private:
     t_sources sources;
 
 public:
-    SoundSources(const std::string& filePath, const unsigned int channels) {
+    SoundSources(const unsigned int channels) {
         for (unsigned int c(0); c != channels; ++c) {
             sources.push_back(new HttpSource(c));
         }
@@ -86,10 +61,10 @@ private:
     }
 
 public:
-    AudioPlayer(const std::string& filePath) :
+    AudioPlayer() :
         channels(2),
         audioStream(0),
-        soundSources(filePath, 2)
+        soundSources(2)
     {
         if (Pa_Initialize() != paNoError) {
             std::cerr << "PortAudio initialization failed." << std::endl;
@@ -141,9 +116,8 @@ public:
 
 int main() {
     srand(time(0));
-    const std::string filePath("/home/abooker/Music/pool/looped");
 
-    AudioPlayer audioPlayer(filePath);
+    AudioPlayer audioPlayer;
 
     if (audioPlayer.start()) {
         audioPlayer.stop();
