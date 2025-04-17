@@ -1,4 +1,5 @@
 #include "interleave.h"
+#include "httpSource.h"
 #include "soundSource.h"
 
 #include <iostream>
@@ -35,13 +36,14 @@ public:
 
 class SoundSources {
 private:
-    typedef std::vector<DiskSource*> t_sources;
+    typedef std::vector<SoundSource*> t_sources;
     t_sources sources;
 
 public:
     SoundSources(const std::string& filePath, const unsigned int channels) {
         for (unsigned int c(0); c != channels; ++c) {
-            sources.push_back(new DiskSource(filePath));
+            //sources.push_back(new DiskSource(filePath));
+            sources.push_back(new HttpSource(c));
         }
     }
 

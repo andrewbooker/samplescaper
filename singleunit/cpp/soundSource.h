@@ -1,3 +1,5 @@
+#pragma once
+
 #include <sndfile.h>
 #include <thread>
 #include <iostream>
@@ -17,7 +19,9 @@ private:
                     soundFile = 0;
                 }
                 soundFile = getSoundFile();
-                ready = true;
+                if (soundFile) {
+                    ready = true;
+                }
             } else {
                std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
