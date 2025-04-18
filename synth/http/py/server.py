@@ -81,11 +81,13 @@ class SampleServer(BaseHTTPRequestHandler):
         size = int(SAMPLE_RATE * anywhere_between(8, 20))
         note = int(parse_qs(urlparse(self.path).query)["note"][0])
         envelope = LinearRampUpDown(size)
-        mf = Modulation(freq(note), anywhere_between(0.1, 2.1), anywhere_between(0.01, 0.08))
+        f = freq(note)
+        mf = Modulation(f, anywhere_between(0.1, 2.1 * f), anywhere_between(0.01, 0.08))
         am_depth = SineVariation(Constant(anywhere_between(0.1, 10.0)), (anywhere_between(0.005, 0.3), anywhere_between(0.4, 1.0)))
         am_freq = Constant(anywhere_between(0.3, 7.0))
+        phase = SineVariation(Constant(anywhere_between(0.1, 20.0)), (anywhere_between(0.005, 0.3), anywhere_between(0.01 * f, 2 * f)))
         am = CosineAttenuation(am_freq, am_depth)
-        buff = [am.at(i) * envelope.at(i) * math.sin(2 * math.pi * mf.at(i) * i / SAMPLE_RATE) for i in range(size)]
+        buff = [am.at(i) * envelope.at(i) * math.sin(phase.at(i) + (2 * math.pi * mf.at(i)) * i / SAMPLE_RATE) for i in range(size)]
         self.send_response(200)
         self.send_header("Content-Type", "application/octet-stream")
         self.send_header("Content-Length", size * 4)
