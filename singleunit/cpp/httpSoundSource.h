@@ -1,6 +1,7 @@
 #include "soundSource.h"
 
 #include <string>
+#include <sstream>
 #include <vector>
 #include <iostream>
 #include <curl/curl.h>
@@ -14,6 +15,7 @@ private:
     t_buffer buffer;
     const int idx;
     unsigned long pos;
+    const std::vector<unsigned short> key;
 
     static size_t write(void* ptr, size_t size, size_t nmemb, void* stream) {
         t_buffer& out(*reinterpret_cast<t_buffer*>(stream));
@@ -29,9 +31,11 @@ protected:
         CURL* curl(curl_easy_init());
         buffer.clear();
         pos = 0;
+        std::stringstream uri;
+        uri << url << "/?note=" << key.at(rand() % key.size());
         if (curl) {
-            std::cout << idx << " fetching from " << url << std::endl;
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            std::cout << idx << " fetching from " << uri.str() << std::endl;
+            curl_easy_setopt(curl, CURLOPT_URL, uri.str().c_str());
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
 
@@ -49,7 +53,11 @@ protected:
     }
 
 public:
-    HttpSoundSource(const unsigned int i) : url("http://0.0.0.0:9965"), idx(i), pos(0) {}
+    HttpSoundSource(const unsigned int i) :
+        url("http://0.0.0.0:9965"),
+        idx(i),
+        pos(0),
+        key {57, 59, 60, 62, 64, 65, 67, 69} {}
 
     void readInto(float* out, const unsigned long sampleLength) {
         memset(out, 0, sampleLength * sizeof(float));

@@ -4,8 +4,8 @@ import math
 import random
 import struct
 import sys
-from http.server import HTTPServer, BaseHTTPRequestHandler, SimpleHTTPRequestHandler
-
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import urlparse, parse_qs
 
 SAMPLE_RATE = 44100
 
@@ -17,14 +17,14 @@ def freq(n):
 class SampleServer(BaseHTTPRequestHandler):
     def do_GET(self):
         size = int(SAMPLE_RATE * 1.0)
-        note = random.randint(50, 80)
+        note = int(parse_qs(urlparse(self.path).query)["note"][0])
         buff = [math.sin(2 * math.pi * freq(note) * i / SAMPLE_RATE) for i in range(size)];
         self.send_response(200)
         self.send_header("Content-Type", "application/octet-stream")
         self.send_header("Content-Length", size * 4)
         self.end_headers()
         self.wfile.write(struct.pack(f"{size}f", *buff))
-        sys.stdout.write(f"generated {size} samples\n\r")
+        sys.stdout.write(f"generated {size} samples for note {note}\n\r")
         return None
 
 
