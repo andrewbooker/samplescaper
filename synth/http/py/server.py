@@ -82,10 +82,10 @@ class SampleServer(BaseHTTPRequestHandler):
         note = int(parse_qs(urlparse(self.path).query)["note"][0])
         envelope = LinearRampUpDown(size)
         f = freq(note)
-        mf = Modulation(f, anywhere_between(0.1, 2.1 * f), anywhere_between(0.01, 0.08))
+        mf = Modulation(f, anywhere_between(0.1, 1.0), anywhere_between(0.01, 0.08))
         am_depth = SineVariation(Constant(anywhere_between(0.1, 10.0)), (anywhere_between(0.005, 0.3), anywhere_between(0.4, 1.0)))
         am_freq = Constant(anywhere_between(0.3, 7.0))
-        phase = SineVariation(Constant(anywhere_between(0.1, 20.0)), (anywhere_between(0.005, 0.3), anywhere_between(0.01 * f, 2 * f)))
+        phase = SineVariation(Constant(anywhere_between(0.01, 3.0)), (anywhere_between(-0.02 * f, 0.0001 * f), anywhere_between(0.0001 * f, 0.02 * f)))
         am = CosineAttenuation(am_freq, am_depth)
         buff = [am.at(i) * envelope.at(i) * math.sin(phase.at(i) + (2 * math.pi * mf.at(i)) * i / SAMPLE_RATE) for i in range(size)]
         self.send_response(200)
