@@ -1,5 +1,5 @@
 #include "interleave.h"
-#include "httpSource.h"
+#include "httpFileSource.h"
 #include "soundSource.h"
 
 #include <iostream>
@@ -17,7 +17,7 @@ private:
 public:
     SoundSources(const unsigned int channels) {
         for (unsigned int c(0); c != channels; ++c) {
-            sources.push_back(new HttpSource(c));
+            sources.push_back(new HttpFileSource(c));
         }
     }
 

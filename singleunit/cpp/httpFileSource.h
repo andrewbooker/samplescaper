@@ -61,7 +61,7 @@ SF_VIRTUAL_IO vio = {
     vio_tell
 };
 
-class HttpSource : public SoundFileSource {
+class HttpFileSource : public SoundFileSource {
 private:
     const std::string url;
     typedef std::vector<unsigned char> t_buffer;
@@ -108,7 +108,7 @@ protected:
     }
 
 public:
-    HttpSource(const unsigned int i) : url("http://0.0.0.0:3064"), idx(i) {
+    HttpFileSource(const unsigned int i) : url("http://0.0.0.0:3064"), idx(i) {
         memset(&mem, 0, sizeof(MemoryBuffer));
     }
 };
