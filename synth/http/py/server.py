@@ -107,7 +107,12 @@ class SampleServer(BaseHTTPRequestHandler):
     def do_GET(self):
         size = int(SAMPLE_RATE * anywhere_between(8, 20))
         note = int(parse_qs(urlparse(self.path).query)["note"][0])
+        if random.random() > 0.7:
+            note += 12
+        if random.random() > 0.7:
+            note += 12
         f = freq(note)
+        vol_coeff = 1.0 if note < 60 else 1.0 - (0.5 * (note - 60) / 35)
 
         ramp_up_down = HalfCosineRamp(size)
         mf = Modulation(f, anywhere_between(0.01, 1.0), anywhere_between(0.01, 0.08))
@@ -122,7 +127,7 @@ class SampleServer(BaseHTTPRequestHandler):
         cmp_threshold = envelope(anywhere_between(0.2, 0.5), anywhere_between(0.51, 0.9))
         compressor = Compressor(cmp_gain, cmp_threshold)
 
-        buff = [am.at(i) * ramp_up_down.at(i) * compressor.apply_to(i, math.sin(phase.at(i) + (2 * math.pi * mf.at(i)) * i / SAMPLE_RATE)) for i in range(size)]
+        buff = [vol_coeff * am.at(i) * ramp_up_down.at(i) * compressor.apply_to(i, math.sin(phase.at(i) + (2 * math.pi * mf.at(i)) * i / SAMPLE_RATE)) for i in range(size)]
         self.send_response(200)
         self.send_header("Content-Type", "application/octet-stream")
         self.send_header("Content-Length", size * 4)
