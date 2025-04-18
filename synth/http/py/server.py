@@ -29,7 +29,7 @@ class Constant(Envelope):
         return self.v
 
 
-class Amplitude(Envelope):
+class LinearRampUpDown(Envelope):
     def __init__(self, over):
         self.over = over
         self.ramp_up = int(SAMPLE_RATE * anywhere_between(2.0, 4.0))
@@ -44,7 +44,7 @@ class Amplitude(Envelope):
         return 1.0
 
 
-class AmplitudeModulator(Envelope):
+class CosineAttenuation(Envelope):
     def __init__(self, freq_envelope, depth_envelope):
         self.freq = freq_envelope
         self.depth = depth_envelope
@@ -55,14 +55,26 @@ class AmplitudeModulator(Envelope):
         return 1.0 - (d * v)
 
 
+class SineVariation(Envelope):
+    def __init__(self, freq_envelope, output_range):
+        self.output_range = output_range
+        self.freq = freq_envelope
+
+    def at(self, i):
+        l, u = self.output_range
+        v = (u - l) * 0.5 * (1.0 + math.sin(2 * math.pi * self.freq.at(i) * i / SAMPLE_RATE))
+        return l + v
+
 
 class SampleServer(BaseHTTPRequestHandler):
     def do_GET(self):
         size = int(SAMPLE_RATE * anywhere_between(8, 20))
         note = int(parse_qs(urlparse(self.path).query)["note"][0])
-        envelope = Amplitude(size)
+        envelope = LinearRampUpDown(size)
         f = freq(note)
-        am = AmplitudeModulator(Constant(anywhere_between(0.3, 7.0)), Constant(anywhere_between(0.3, 1.0)))
+        am_depth = SineVariation(Constant(anywhere_between(0.1, 10.0)), (anywhere_between(0.005, 0.3), anywhere_between(0.4, 1.0)))
+        am_freq = Constant(anywhere_between(0.3, 7.0))
+        am = CosineAttenuation(am_freq, am_depth)
         buff = [am.at(i) * envelope.at(i) * math.sin(2 * math.pi * f * i / SAMPLE_RATE) for i in range(size)]
         self.send_response(200)
         self.send_header("Content-Type", "application/octet-stream")
