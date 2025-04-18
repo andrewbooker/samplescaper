@@ -45,23 +45,25 @@ class Amplitude(Envelope):
 
 
 class AmplitudeModulator(Envelope):
-    def __init__(self, depth_envelope):
-        self.freq = anywhere_between(0.3, 7.0)
+    def __init__(self, freq_envelope, depth_envelope):
+        self.freq = freq_envelope
         self.depth = depth_envelope
 
     def at(self, i):
         d = self.depth.at(i)
-        v = 0.5 * (1.0 + math.cos(2 * math.pi * self.freq * i / SAMPLE_RATE))
+        v = 0.5 * (1.0 + math.cos(2 * math.pi * self.freq.at(i) * i / SAMPLE_RATE))
         return 1.0 - (d * v)
+
 
 
 class SampleServer(BaseHTTPRequestHandler):
     def do_GET(self):
         size = int(SAMPLE_RATE * anywhere_between(8, 20))
-        envelope = Amplitude(size)
-        am = AmplitudeModulator(Constant(anywhere_between(0.3, 0.9)))
         note = int(parse_qs(urlparse(self.path).query)["note"][0])
-        buff = [am.at(i) * envelope.at(i) * math.sin(2 * math.pi * freq(note) * i / SAMPLE_RATE) for i in range(size)]
+        envelope = Amplitude(size)
+        f = freq(note)
+        am = AmplitudeModulator(Constant(anywhere_between(0.3, 7.0)), Constant(anywhere_between(0.3, 1.0)))
+        buff = [am.at(i) * envelope.at(i) * math.sin(2 * math.pi * f * i / SAMPLE_RATE) for i in range(size)]
         self.send_response(200)
         self.send_header("Content-Type", "application/octet-stream")
         self.send_header("Content-Length", size * 4)
