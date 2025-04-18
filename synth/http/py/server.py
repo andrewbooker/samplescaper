@@ -29,7 +29,7 @@ class Constant(Envelope):
         return self.v
 
 
-class LinearRampUpDown(Envelope):
+class HalfCosineRamp(Envelope):
     def __init__(self, over):
         self.over = over
         self.ramp_up = int(SAMPLE_RATE * anywhere_between(2.0, 4.0))
@@ -38,9 +38,9 @@ class LinearRampUpDown(Envelope):
 
     def at(self, i):
         if i < self.ramp_up:
-            return i * 1.0 / self.ramp_up
+            return 0.5 * (1.0 + math.cos(math.pi * (i + self.ramp_up) / self.ramp_up))
         if i > self.start_ramp_down:
-            return 1.0 - ((i - self.start_ramp_down) * 1.0 / self.ramp_down)
+            return 0.5 * (1.0 + math.cos(math.pi * (i - self.start_ramp_down) / self.ramp_down))
         return 1.0
 
 
@@ -97,7 +97,7 @@ def envelope(from_val, to_val, note_freq = None):
     if random.random() > 0.3:
         return Constant(v)
 
-    if random.random() > 0.5 and note_freq is not None:
+    if random.random() > 0.8 and note_freq is not None:
         return SineVariation(Constant(anywhere_between(0.01 * note_freq, note_freq)), (from_val, to_val))
 
     return SineVariation(Constant(anywhere_between(0.01, 4.0)), (from_val, to_val))
@@ -109,7 +109,7 @@ class SampleServer(BaseHTTPRequestHandler):
         note = int(parse_qs(urlparse(self.path).query)["note"][0])
         f = freq(note)
 
-        ramp_up_down = LinearRampUpDown(size)
+        ramp_up_down = HalfCosineRamp(size)
         mf = Modulation(f, anywhere_between(0.01, 1.0), anywhere_between(0.01, 0.08))
 
         am_depth = envelope(0.1, 0.9)
