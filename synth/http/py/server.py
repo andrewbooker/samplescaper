@@ -12,13 +12,29 @@ SAMPLE_RATE = 44100
 def freq(n):
     return math.pow(2, (n - 69) / 12.0) * 440
 
-#make 44100 16 or 32 bit array of samples
+def anywhere_between(v1, v2):
+    return v1 + (random.random() * (v2 - v1))
+
+class AmplitudeEnvelope:
+    def __init__(self, over):
+        self.over = over
+        self.ramp_up = int(SAMPLE_RATE * anywhere_between(2.0, 4.0))
+        self.ramp_down = int(anywhere_between(0.2 * over, 0.5 * over))
+        self.start_ramp_down = self.over - self.ramp_down
+
+    def at(self, i):
+        if i < self.ramp_up:
+            return i * 1.0 / self.ramp_up
+        if i > self.start_ramp_down:
+            return 1.0 - ((i - self.start_ramp_down) * 1.0 / self.ramp_down)
+        return 1.0
 
 class SampleServer(BaseHTTPRequestHandler):
     def do_GET(self):
-        size = int(SAMPLE_RATE * 1.0)
+        size = int(SAMPLE_RATE * anywhere_between(8, 20))
+        envelope = AmplitudeEnvelope(size)
         note = int(parse_qs(urlparse(self.path).query)["note"][0])
-        buff = [math.sin(2 * math.pi * freq(note) * i / SAMPLE_RATE) for i in range(size)];
+        buff = [envelope.at(i) * math.sin(2 * math.pi * freq(note) * i / SAMPLE_RATE) for i in range(size)]
         self.send_response(200)
         self.send_header("Content-Type", "application/octet-stream")
         self.send_header("Content-Length", size * 4)
