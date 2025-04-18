@@ -21,7 +21,7 @@ class SampleServer(BaseHTTPRequestHandler):
         buff = [math.sin(2 * math.pi * freq(note) * i / SAMPLE_RATE) for i in range(size)];
         self.send_response(200)
         self.send_header("Content-Type", "application/octet-stream")
-        self.send_header("Content-Length", size)
+        self.send_header("Content-Length", size * 4)
         self.end_headers()
         self.wfile.write(struct.pack(f"{size}f", *buff))
         sys.stdout.write(f"generated {size} samples\n\r")
