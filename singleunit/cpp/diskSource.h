@@ -5,9 +5,9 @@
 #include <sndfile.h>
 
 
-class DiskSource : public SoundSource {
+class DiskSource : public SoundFileSource {
 private:
-    const std::string& location;
+    const std::string location;
     typedef std::vector<std::string> t_fileNames;
     t_fileNames fileNames;
 
@@ -22,7 +22,6 @@ protected:
     }
 
 public:
-    DiskSource(const std::string& loc) : SoundSource(), location(loc) {
-    }
+    DiskSource(const unsigned int i) : location("/home/abooker/Music/pool/looped") {}
 };
 

@@ -61,7 +61,7 @@ SF_VIRTUAL_IO vio = {
     vio_tell
 };
 
-class HttpSource : public SoundSource {
+class HttpSource : public SoundFileSource {
 private:
     const std::string url;
     typedef std::vector<unsigned char> t_buffer;

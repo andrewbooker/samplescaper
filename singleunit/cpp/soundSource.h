@@ -4,27 +4,20 @@
 #include <thread>
 #include <iostream>
 
+
 class SoundSource {
-private:
+protected:
     bool ready;
-    bool closing;
-    SNDFILE* soundFile;
+
+    virtual bool fetchContent() = 0;
+private:
     std::thread loop;
+    bool closing;
 
     void fetch() {
         while (!closing) {
             if (!ready) {
-                if (soundFile) {
-                    sf_close(soundFile);
-                    soundFile = 0;
-                }
-                soundFile = getSoundFile();
-                if (soundFile) {
-                    ready = true;
-                } else {
-                    std::cout << "Fetch thread failed to get sound file" << std::endl;
-                    std::this_thread::sleep_for(std::chrono::seconds(3));
-                }
+                ready = fetchContent();
             } else {
                std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
@@ -35,19 +28,48 @@ private:
         s->fetch();
     }
 
-protected:
-    virtual SNDFILE* getSoundFile() = 0;
-
 public:
-    SoundSource() : ready(false), closing(false), soundFile(0), loop(fetchLoop, this) {}
+    SoundSource() : ready(false), closing(false), loop(fetchLoop, this) {}
+    virtual void readInto(float* out, const unsigned long sampleLength) = 0;
     virtual ~SoundSource() {
-        if (soundFile) {
-            sf_close(soundFile);
-        }
         closing = true;
         std::cout << "Stopping fetch loop... ";
         loop.join();
         std::cout << "stopped\n";
+    }
+};
+
+
+class SoundFileSource : public SoundSource {
+private:
+    SNDFILE* soundFile;
+
+protected:
+    virtual SNDFILE* getSoundFile() = 0;
+
+    bool fetchContent() {
+        if (soundFile) {
+            sf_close(soundFile);
+            soundFile = 0;
+        }
+        soundFile = getSoundFile();
+        if (soundFile) {
+            return true;
+        } else {
+            std::cout << "Fetch thread failed to get sound file" << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+        }
+        return false;
+    }
+
+public:
+    SoundFileSource() : soundFile(0) {}
+
+    virtual ~SoundFileSource() {
+        std::cout << "Closing sound file" << std::endl;
+        if (soundFile) {
+            sf_close(soundFile);
+        }
     }
 
     void readInto(float* out, const unsigned long sampleLength) {
