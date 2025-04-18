@@ -92,21 +92,37 @@ class Compressor:
         return -r if s < 0 else r
 
 
+def envelope(from_val, to_val, note_freq = None):
+    v = anywhere_between(from_val, to_val)
+    if random.random() > 0.3:
+        return Constant(v)
+
+    if random.random() > 0.5 and note_freq is not None:
+        return SineVariation(Constant(anywhere_between(0.01 * note_freq, note_freq)), (from_val, to_val))
+
+    return SineVariation(Constant(anywhere_between(0.01, 4.0)), (from_val, to_val))
+
+
 class SampleServer(BaseHTTPRequestHandler):
     def do_GET(self):
         size = int(SAMPLE_RATE * anywhere_between(8, 20))
         note = int(parse_qs(urlparse(self.path).query)["note"][0])
-        envelope = LinearRampUpDown(size)
         f = freq(note)
+
+        ramp_up_down = LinearRampUpDown(size)
         mf = Modulation(f, anywhere_between(0.01, 1.0), anywhere_between(0.01, 0.08))
-        am_depth = SineVariation(Constant(anywhere_between(0.1, 10.0)), (anywhere_between(0.005, 0.3), anywhere_between(0.4, 1.0)))
-        am_freq = Constant(anywhere_between(0.3, 7.0))
-        phase = SineVariation(Constant(anywhere_between(0.01, 3.0)), (anywhere_between(-0.008 * f, 0.0001 * f), anywhere_between(0.0001 * f, 0.008 * f)))
+
+        am_depth = envelope(0.1, 0.9)
+        am_freq = envelope(0.3, 7.0, f)
         am = CosineAttenuation(am_freq, am_depth)
-        cmp_gain = SineVariation(Constant(anywhere_between(0.001, 4.0)), (anywhere_between(1.0, 1.2), anywhere_between(1.3, 6)))
-        cmp_threshold = SineVariation(Constant(anywhere_between(0.001, 5.0)), (anywhere_between(0.2, 0.5), anywhere_between(0.51, 0.9)))
+
+        phase = envelope(anywhere_between(-0.008 * f, 0.0001 * f), anywhere_between(0.0001 * f, 0.008 * f), f)
+
+        cmp_gain = envelope(anywhere_between(1.0, 1.2), anywhere_between(1.3, 10), f)
+        cmp_threshold = envelope(anywhere_between(0.2, 0.5), anywhere_between(0.51, 0.9))
         compressor = Compressor(cmp_gain, cmp_threshold)
-        buff = [am.at(i) * envelope.at(i) * compressor.apply_to(i, math.sin(phase.at(i) + (2 * math.pi * mf.at(i)) * i / SAMPLE_RATE)) for i in range(size)]
+
+        buff = [am.at(i) * ramp_up_down.at(i) * compressor.apply_to(i, math.sin(phase.at(i) + (2 * math.pi * mf.at(i)) * i / SAMPLE_RATE)) for i in range(size)]
         self.send_response(200)
         self.send_header("Content-Type", "application/octet-stream")
         self.send_header("Content-Length", size * 4)
