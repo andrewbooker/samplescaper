@@ -60,13 +60,31 @@ TEST(InterleaveTest, over12ElementsAcross3Channels) {
     float buff[12] {};
     float expected[12] {};
     const int channels(3);
+    const int perBlock(12 / channels);
     for (int i(0); i != 12; ++i) {
         const int c(i % channels);
         const int p(i / channels);
         buff[i] = 1.0 * i;
-        expected[i] = (1.0 * c * channels) + c + p;
+        expected[i] = (1.0 * c * perBlock) + p;
     }
     float test[12] {0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11};
+    for (int i(0); i != 12; ++i) {
+        EXPECT_EQ(*(expected + i), *(test + i));
+    }
+}
+
+TEST(InterleaveTest, over12ElementsAcross4Channels) {
+    float buff[12] {};
+    float expected[12] {};
+    const int channels(4);
+    const int perBlock(12 / channels);
+    for (int i(0); i != 12; ++i) {
+        const int c(i % channels);
+        const int p(i / channels);
+        buff[i] = 1.0 * i;
+        expected[i] = (1.0 * c * perBlock) + p;
+    }
+    const float test[12] {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11};
     for (int i(0); i != 12; ++i) {
         EXPECT_EQ(*(expected + i), *(test + i));
     }
