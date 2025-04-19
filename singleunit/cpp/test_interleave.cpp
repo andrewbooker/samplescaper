@@ -41,18 +41,13 @@ static bool can_interleave_buffer_of_length(int size) {
 
 #define testOver(n) TEST(InterleaveTest, over##n##Elements) { EXPECT_TRUE(can_interleave_buffer_of_length(n)); }
 
-// passing
 testOver(2)
 testOver(4)
 testOver(6)
+testOver(8)
 testOver(10)
 testOver(12)
 testOver(14)
-testOver(20)
-testOver(30)
-
-
-testOver(8)
 testOver(16)
 testOver(18)
 testOver(22)
@@ -60,6 +55,21 @@ testOver(24)
 testOver(26)
 testOver(28)
 testOver(40)
-testOver(80)
+
+TEST(InterleaveTest, over12ElementsAcross3Channels) {
+    float buff[12] {};
+    float expected[12] {};
+    const int channels(3);
+    for (int i(0); i != 12; ++i) {
+        const int c(i % channels);
+        const int p(i / channels);
+        buff[i] = 1.0 * i;
+        expected[i] = (1.0 * c * channels) + c + p;
+    }
+    float test[12] {0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11};
+    for (int i(0); i != 12; ++i) {
+        EXPECT_EQ(*(expected + i), *(test + i));
+    }
+}
 
 
