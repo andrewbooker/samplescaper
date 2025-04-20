@@ -5,3 +5,5 @@ asound.conf
 gen_asound
 singleunit/cpp/test
 synth/http/*/bin
+synth/http/rust/Cargo.lock
+synth/http/rust/target
