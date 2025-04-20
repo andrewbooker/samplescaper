@@ -215,9 +215,13 @@ public:
 };
 
 
-int main() {
+int main(int argc, char* argv[]) {
     srand(time(0));
-    const unsigned int port(9964);
+    if (argc < 2) {
+        std::cout << "Must supply port number" << std::endl;
+        return 0;
+    }
+    const unsigned int port(atoi(argv[1]));
     Server server(port);
     if (!server.isAlive()) {
         return 1;
