@@ -7,6 +7,7 @@
 #include <string>
 #include <regex>
 #include <cmath>
+#include <math.h>
 
 
 #define SAMPLE_RATE 44100
@@ -16,8 +17,80 @@ const float frequencyOf(const unsigned short n) {
 }
 
 
-class Server {
+const float anywhereBetween(const float& l, const float&u) {
+    const float r(rand() * 1.0 / RAND_MAX);
+    return l + (r * (u - l));
+}
+
+
+class Envelope {
+public:
+    virtual const float at(const unsigned long i) const = 0;
+};
+
+
+class ConstVal : public Envelope {
+    const float& val;
+
+public:
+    ConstVal(const float& v) : val(v) {}
+    const float at(const unsigned long i) const { return val; }
+};
+
+
+class RampUpDown : public Envelope {
+    const unsigned long size;
+    const unsigned long rampUp;
+    const unsigned long rampDown;
+    const unsigned long startRampDown;
+
+public:
+    RampUpDown(const unsigned long s) :
+        size(s),
+        rampUp(SAMPLE_RATE * anywhereBetween(2.0, 4.0)),
+        rampDown(anywhereBetween(0.2 * s, 0.5 * s)),
+        startRampDown(s - rampDown)
+    {}
+
+    const float at(const unsigned long i) const {
+        if (i < rampUp) {
+            return 0.5 * (1.0 + cos(M_PI * (i + rampUp) / rampUp));
+        }
+        if (i > startRampDown) {
+            return 0.5 * (1.0 + cos(M_PI * (i - startRampDown) / rampDown));
+        }
+        return 1.0;
+    }
+};
+
+
+class Synth {
+public:
+    typedef std::vector<float> t_sound;
+
 private:
+    t_sound buffer;
+    const float& freq;
+
+public:
+    Synth(const float& f) : freq(f) {}
+
+    const t_sound& generate() {
+        const float lengthSecs(anywhereBetween(8, 15));
+        const unsigned long size(SAMPLE_RATE * lengthSecs);
+        buffer.clear();
+        buffer.reserve(size);
+        const ConstVal phase(0.0);
+        const RampUpDown amplitude(size);
+        for (unsigned long i(0); i != size; ++i) {
+            buffer.push_back(amplitude.at(i) * sin(phase.at(i) + (2 * M_PI * freq * i / SAMPLE_RATE)));
+        }
+        return buffer;
+    }
+};
+
+
+class Server {
     const int server_fd;
     struct sockaddr_in address;
     socklen_t addrlen;
@@ -28,6 +101,8 @@ public:
             perror("Failed to create socket");
             exit(EXIT_FAILURE);
         }
+        int opt(1);
+        setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
         address.sin_family = AF_INET;
         address.sin_addr.s_addr = INADDR_ANY;
@@ -75,17 +150,19 @@ public:
         }
         if (last == std::string("die")) return true;
         const short int note(atoi(last.c_str()));
-        const double f(frequencyOf(note));
+        const float f(frequencyOf(note));
 
-        std::cout << "Responding to {" << note << " at " << f << "Hz}\n";
-        const std::string r("hello Andrew");
-        std::stringstream response;
-        response << "HTTP/1.1 200 OK\r\n" << "Content-Type: text/plain\r\n" << "Content-Length: " << r.size() << "\r\n";
-        response << "\r\n";
-        response << r;
-
-        const std::string& resp(response.str());
+        Synth synth(f);
+        const Synth::t_sound& sound(synth.generate());
+        std::cout << "Responding to {" << note << " at " << f << "Hz over " << sound.size() << " samples}\n";
+        const unsigned long binarySize(sound.size() * sizeof(float));
+        std::stringstream responseHeader;
+        responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << binarySize << "\r\n";
+        responseHeader << "\r\n";
+        const std::string& resp(responseHeader.str());
         send(client_fd, resp.c_str(), resp.size(), 0);
+        send(client_fd, sound.data(), binarySize, 0);
+
         close(client_fd);
         return false;
     }
@@ -93,7 +170,8 @@ public:
 
 
 int main() {
-    const unsigned int port(9963);
+    srand(time(0));
+    const unsigned int port(9964);
     Server server(port);
     if (!server.isAlive()) {
         return 1;
