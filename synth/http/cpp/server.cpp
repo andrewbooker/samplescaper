@@ -6,6 +6,14 @@
 #include <sstream>
 #include <string>
 #include <regex>
+#include <cmath>
+
+
+#define SAMPLE_RATE 44100
+
+const float frequencyOf(const unsigned short n) {
+    return std::pow(2, (n - 69) / 12.0) * 440;
+}
 
 
 class Server {
@@ -66,9 +74,10 @@ public:
             if (!s.empty()) last = s;
         }
         if (last == std::string("die")) return true;
-        const unsigned int note(atoi(last.c_str()));
+        const short int note(atoi(last.c_str()));
+        const double f(frequencyOf(note));
 
-        std::cout << "Responding to {" << note << "}\n";
+        std::cout << "Responding to {" << note << " at " << f << "Hz}\n";
         const std::string r("hello Andrew");
         std::stringstream response;
         response << "HTTP/1.1 200 OK\r\n" << "Content-Type: text/plain\r\n" << "Content-Length: " << r.size() << "\r\n";

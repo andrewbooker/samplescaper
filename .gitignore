@@ -4,3 +4,4 @@ __pycache__
 asound.conf
 gen_asound
 singleunit/cpp/test
+synth/http/*/bin
