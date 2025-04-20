@@ -7,7 +7,15 @@ import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
+
+if len(sys.argv) < 2:
+    print("Must supply port number")
+    exit(0)
+
+
+PORT = int(sys.argv[1])
 SAMPLE_RATE = 44100
+
 
 def freq(n):
     return math.pow(2, (n - 69) / 12.0) * 440
@@ -137,4 +145,4 @@ class SampleServer(BaseHTTPRequestHandler):
         return None
 
 
-HTTPServer(("0.0.0.0", 9965), SampleServer).serve_forever()
+HTTPServer(("0.0.0.0", PORT), SampleServer).serve_forever()
