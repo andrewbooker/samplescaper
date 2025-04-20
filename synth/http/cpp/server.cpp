@@ -38,6 +38,20 @@ public:
 };
 
 
+class Scaled : public Envelope {
+    const Envelope& envelope;
+    const float min;
+    const float scale;
+
+public:
+    Scaled(const Envelope& e, const float m, const float s) : envelope(e), min(m), scale(s) {}
+
+    const float at(const unsigned long i) const {
+        return min + (scale * envelope.at(i));
+    }
+};
+
+
 class RampUpDown : public Envelope {
     const unsigned long size;
     const unsigned long rampUp;
@@ -66,13 +80,12 @@ public:
 
 class Lfo : public Envelope {
     const float freq;
-    const float amplitude;
 
 public:
-    Lfo() : freq(anywhereBetween(0.05, 7.0)), amplitude(anywhereBetween(0.05, 1.0)) {}
+    Lfo() : freq(anywhereBetween(0.05, 5.5)) {}
 
     const float at(const unsigned long i) const {
-        return amplitude * sin(2 * M_PI * freq * i / SAMPLE_RATE);
+        return sin(2 * M_PI * freq * i / SAMPLE_RATE);
     }
 };
 
@@ -93,7 +106,8 @@ public:
         const unsigned long size(SAMPLE_RATE * lengthSecs);
         buffer.clear();
         buffer.reserve(size);
-        const Lfo phase;
+        const Lfo lfo;
+        const Scaled phase(lfo, 0.0, freq * anywhereBetween(0.0005, 0.008));
         const RampUpDown amplitude(size);
         for (unsigned long i(0); i != size; ++i) {
             buffer.push_back(amplitude.at(i) * sin(phase.at(i) + (2 * M_PI * freq * i / SAMPLE_RATE)));
