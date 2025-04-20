@@ -64,6 +64,19 @@ public:
 };
 
 
+class Lfo : public Envelope {
+    const float freq;
+    const float amplitude;
+
+public:
+    Lfo() : freq(anywhereBetween(0.05, 7.0)), amplitude(anywhereBetween(0.05, 1.0)) {}
+
+    const float at(const unsigned long i) const {
+        return amplitude * sin(2 * M_PI * freq * i / SAMPLE_RATE);
+    }
+};
+
+
 class Synth {
 public:
     typedef std::vector<float> t_sound;
@@ -80,7 +93,7 @@ public:
         const unsigned long size(SAMPLE_RATE * lengthSecs);
         buffer.clear();
         buffer.reserve(size);
-        const ConstVal phase(0.0);
+        const Lfo phase;
         const RampUpDown amplitude(size);
         for (unsigned long i(0); i != size; ++i) {
             buffer.push_back(amplitude.at(i) * sin(phase.at(i) + (2 * M_PI * freq * i / SAMPLE_RATE)));
@@ -154,7 +167,7 @@ public:
 
         Synth synth(f);
         const Synth::t_sound& sound(synth.generate());
-        std::cout << "Responding to {" << note << " at " << f << "Hz over " << sound.size() << " samples}\n";
+        std::cout << "Note " << note << " at " << f << "Hz for " << sound.size() * 1.0 / SAMPLE_RATE << "s\n";
         const unsigned long binarySize(sound.size() * sizeof(float));
         std::stringstream responseHeader;
         responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << binarySize << "\r\n";
