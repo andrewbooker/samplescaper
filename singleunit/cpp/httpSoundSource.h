@@ -10,12 +10,12 @@
 
 class HttpSoundSource : public SoundSource {
 private:
-    const std::string url;
     typedef std::vector<unsigned char> t_buffer;
     t_buffer buffer;
     const int idx;
     unsigned long pos;
     const std::vector<unsigned short> key;
+    const std::vector<std::string>& hosts;
 
     static size_t write(void* ptr, size_t size, size_t nmemb, void* stream) {
         t_buffer& out(*reinterpret_cast<t_buffer*>(stream));
@@ -32,7 +32,7 @@ protected:
         buffer.clear();
         pos = 0;
         std::stringstream uri;
-        uri << url << "/?note=" << key.at(rand() % key.size());
+        uri << "http://" << hosts.at(rand() % hosts.size()) << "/?note=" << key.at(rand() % key.size());
         if (curl) {
             std::cout << idx << " fetching from " << uri.str() << std::endl;
             curl_easy_setopt(curl, CURLOPT_URL, uri.str().c_str());
@@ -53,8 +53,8 @@ protected:
     }
 
 public:
-    HttpSoundSource(const unsigned int i) :
-        url("http://0.0.0.0:9964"),
+    HttpSoundSource(const unsigned int i, const std::vector<std::string>& h) :
+        hosts(h),
         idx(i),
         pos(0),
         key {57, 59, 60, 62, 64, 65, 67, 69} {}

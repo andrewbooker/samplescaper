@@ -15,9 +15,9 @@ private:
     t_sources sources;
 
 public:
-    SoundSources(const unsigned int channels) {
+    SoundSources(const unsigned int channels, const std::vector<std::string>& hosts) {
         for (unsigned int c(0); c != channels; ++c) {
-            sources.push_back(new HttpSoundSource(c));
+            sources.push_back(new HttpSoundSource(c, hosts));
         }
     }
 
@@ -61,10 +61,10 @@ private:
     }
 
 public:
-    AudioPlayer() :
+    AudioPlayer(const std::vector<std::string>& hosts) :
         channels(2),
         audioStream(0),
-        soundSources(2)
+        soundSources(2, hosts)
     {
         if (Pa_Initialize() != paNoError) {
             std::cerr << "PortAudio initialization failed." << std::endl;
@@ -116,8 +116,8 @@ public:
 
 int main() {
     srand(time(0));
-
-    AudioPlayer audioPlayer;
+    const std::vector<std::string> hosts {"0.0.0.0:9964"};
+    AudioPlayer audioPlayer(hosts);
 
     if (audioPlayer.start()) {
         audioPlayer.stop();
