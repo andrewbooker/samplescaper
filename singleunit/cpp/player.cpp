@@ -15,7 +15,7 @@ private:
     t_sources sources;
 
 public:
-    SoundSources(const unsigned int channels, const std::vector<std::string>& hosts) {
+    SoundSources(const unsigned int channels, const HttpSoundSource::t_hosts& hosts) {
         for (unsigned int c(0); c != channels; ++c) {
             sources.push_back(new HttpSoundSource(c, hosts));
         }
@@ -61,7 +61,7 @@ private:
     }
 
 public:
-    AudioPlayer(const std::vector<std::string>& hosts) :
+    AudioPlayer(const HttpSoundSource::t_hosts& hosts) :
         channels(2),
         audioStream(0),
         soundSources(2, hosts)
@@ -116,7 +116,7 @@ public:
 
 int main() {
     srand(time(0));
-    const std::vector<std::string> hosts {"0.0.0.0:9964"};
+    const HttpSoundSource::t_hosts hosts {"0.0.0.0:9964"};
     AudioPlayer audioPlayer(hosts);
 
     if (audioPlayer.start()) {

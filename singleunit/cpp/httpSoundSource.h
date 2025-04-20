@@ -9,13 +9,16 @@
 
 
 class HttpSoundSource : public SoundSource {
+public:
+    typedef std::vector<std::string> t_hosts;
+
 private:
     typedef std::vector<unsigned char> t_buffer;
     t_buffer buffer;
     const int idx;
     unsigned long pos;
     const std::vector<unsigned short> key;
-    const std::vector<std::string>& hosts;
+    const t_hosts& hosts;
 
     static size_t write(void* ptr, size_t size, size_t nmemb, void* stream) {
         t_buffer& out(*reinterpret_cast<t_buffer*>(stream));
@@ -53,7 +56,7 @@ protected:
     }
 
 public:
-    HttpSoundSource(const unsigned int i, const std::vector<std::string>& h) :
+    HttpSoundSource(const unsigned int i, const t_hosts& h) :
         hosts(h),
         idx(i),
         pos(0),
