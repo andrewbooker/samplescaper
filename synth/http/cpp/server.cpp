@@ -52,6 +52,18 @@ public:
 };
 
 
+class AsPositive : public Envelope {
+    const Envelope& oscillator;
+
+public:
+    AsPositive(const Envelope& e) : oscillator(e) {}
+
+    const float at(const unsigned long i) const {
+        return 0.5 * (1.0 + oscillator.at(i));
+    }
+};
+
+
 class RampUpDown : public Envelope {
     const unsigned long size;
     const unsigned long rampUp;
@@ -106,11 +118,18 @@ public:
         const unsigned long size(SAMPLE_RATE * lengthSecs);
         buffer.clear();
         buffer.reserve(size);
-        const Lfo lfo;
-        const Scaled phase(lfo, 0.0, freq * anywhereBetween(0.0005, 0.008));
+
+        const Lfo phaseLfo;
+        const Scaled phase(phaseLfo, 0.0, freq * anywhereBetween(0.0005, 0.008));
+
+        const Lfo amLfo;
+        const AsPositive amLfoP(amLfo);
+        const float amDepth(anywhereBetween(0.0, 1.0));
+        const Scaled am(amLfo, amDepth, 1.0 - amDepth);
+
         const RampUpDown amplitude(size);
         for (unsigned long i(0); i != size; ++i) {
-            buffer.push_back(amplitude.at(i) * sin(phase.at(i) + (2 * M_PI * freq * i / SAMPLE_RATE)));
+            buffer.push_back(am.at(i) * amplitude.at(i) * sin(phase.at(i) + (2 * M_PI * freq * i / SAMPLE_RATE)));
         }
         return buffer;
     }
