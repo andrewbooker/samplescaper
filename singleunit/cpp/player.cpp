@@ -114,9 +114,22 @@ public:
 
 
 
-int main() {
+int main(int argc, char *argv[]) {
     srand(time(0));
-    const HttpSoundSource::t_hosts hosts {"0.0.0.0:9964"};
+    HttpSoundSource::t_hosts hosts;
+    const std::string server("0.0.0.0");
+    if (argc > 1) {
+        for (int i(1); i != argc; ++i) {
+            const std::string v(argv[i]);
+            hosts.push_back(server + ":" + v);
+        }
+    }
+    if (hosts.empty()) {
+        hosts.push_back("0.0.0.0:9964");
+    }
+    for (auto& h : hosts) {
+        std::cout << h << std::endl;
+    }
     AudioPlayer audioPlayer(hosts);
 
     if (audioPlayer.start()) {
