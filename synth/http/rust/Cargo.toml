@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rand = "0.8.2"
+rand = "0.9.1"
 regex = "1.11.1"
