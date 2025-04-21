@@ -46,6 +46,30 @@ impl ValueAt for RangeDepth {
     }
 }
 
+
+struct Boost {
+    amount: Rc<dyn ValueAt>,
+    apply_to: Rc<dyn ValueAt>
+}
+
+impl Boost {
+    fn new(amount: Rc<dyn ValueAt>, apply_to: Rc<dyn ValueAt>) -> Self {
+        Boost {
+            amount: amount,
+            apply_to: apply_to
+        }
+    }
+}
+
+impl ValueAt for Boost {
+    fn at(&self, i: usize) -> f32 {
+        let v = self.apply_to.at(i);
+        let m = 1.0 + (self.amount.at(i) * (1.0 - v.abs()));
+        m * v
+    }
+}
+
+
 struct RampUpDown {
     ramp_up: f32,
     ramp_down: f32,
@@ -106,7 +130,8 @@ struct Synth {
     buffer: Vec<f32>,
     phase_freq: f32,
     tremolo_freq: f32,
-    tremolo_depth: f32
+    tremolo_depth: f32,
+    boost_freq: f32,
 }
 
 trait Generator {
@@ -122,7 +147,8 @@ impl Generator for Synth {
             buffer: vec![0.0; (SAMPLE_RATE as f32 * rng.random_range(8.0..20.0)) as usize],
             phase_freq: rng.random_range(0.01..5.0),
             tremolo_freq: rng.random_range(0.01..6.0),
-            tremolo_depth: rng.random_range(0.1..1.0)
+            tremolo_depth: rng.random_range(0.1..1.0),
+            boost_freq: rng.random_range(0.001..4.0),
         }
     }
     fn generate(&mut self, note: u8) -> &Vec<f32> {
@@ -133,15 +159,21 @@ impl Generator for Synth {
         let zero_am_phase: Rc<dyn ValueAt> = Rc::new(Const { val: 0.0 });
         let am_level: Rc<dyn ValueAt> = Rc::new(Const { val: 1.0 });
         let am_lfo: Rc<dyn ValueAt> = Rc::new(Oscillator::new(self.tremolo_freq, zero_am_phase, am_level));
-        let am: Rc<dyn ValueAt> = Rc::new(RangeDepth::new(self.tremolo_depth, am_lfo));
 
         let freq = f32::powf(2.0, (note as i8 - 69) as f32 / 12.0) * 440.0;
+        let osc_am: Rc<dyn ValueAt> = Rc::new(Const { val: 1.0 });
+        let osc: Rc<dyn ValueAt> = Rc::new(Oscillator::new(freq, phase_lfo, osc_am));
 
-        let osc = Oscillator::new(freq, phase_lfo, am);
+        let boost_amount: Rc<dyn ValueAt> = Rc::new(Const { val: 1.0 });
+        let zero_boost_phase: Rc<dyn ValueAt> = Rc::new(Const { val: 0.0 });
+        let boost_lfo: Rc<dyn ValueAt> = Rc::new(Oscillator::new(self.boost_freq, zero_boost_phase, boost_amount));
+        let boosted_osc: Rc<dyn ValueAt> = Rc::new(Boost::new(boost_lfo, osc));
+
+        let am = RangeDepth::new(self.tremolo_depth, am_lfo);
         let ramp = RampUpDown::new(self.buffer.len());
 
         for i in 0..self.buffer.len() {
-            self.buffer[i] = ramp.at(i) * osc.at(i);
+            self.buffer[i] = ramp.at(i) * am.at(i) * boosted_osc.at(i);
         }
         &self.buffer
     }
