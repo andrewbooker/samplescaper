@@ -65,17 +65,15 @@ public:
 
 
 class RampUpDown : public Envelope {
-    const unsigned long size;
     const unsigned long rampUp;
     const unsigned long rampDown;
     const unsigned long startRampDown;
 
 public:
-    RampUpDown(const unsigned long s) :
-        size(s),
+    RampUpDown(const unsigned long size) :
         rampUp(SAMPLE_RATE * anywhereBetween(2.0, 4.0)),
-        rampDown(anywhereBetween(0.2 * s, 0.5 * s)),
-        startRampDown(s - rampDown)
+        rampDown(size * anywhereBetween(0.2, 0.5)),
+        startRampDown(size - rampDown)
     {}
 
     const float at(const unsigned long i) const {
