@@ -132,6 +132,7 @@ struct Synth {
     tremolo_freq: f32,
     tremolo_depth: f32,
     boost_freq: f32,
+    boost_amount: f32
 }
 
 trait Generator {
@@ -149,6 +150,7 @@ impl Generator for Synth {
             tremolo_freq: rng.random_range(0.01..6.0),
             tremolo_depth: rng.random_range(0.1..1.0),
             boost_freq: rng.random_range(0.001..4.0),
+            boost_amount: rng.random_range(0.0..1.0)
         }
     }
     fn generate(&mut self, note: u8) -> &Vec<f32> {
@@ -164,7 +166,7 @@ impl Generator for Synth {
         let osc_am: Rc<dyn ValueAt> = Rc::new(Const { val: 1.0 });
         let osc: Rc<dyn ValueAt> = Rc::new(Oscillator::new(freq, phase_lfo, osc_am));
 
-        let boost_amount: Rc<dyn ValueAt> = Rc::new(Const { val: 1.0 });
+        let boost_amount: Rc<dyn ValueAt> = Rc::new(Const { val: self.boost_amount });
         let zero_boost_phase: Rc<dyn ValueAt> = Rc::new(Const { val: 0.0 });
         let boost_lfo: Rc<dyn ValueAt> = Rc::new(Oscillator::new(self.boost_freq, zero_boost_phase, boost_amount));
         let boosted_osc: Rc<dyn ValueAt> = Rc::new(Boost::new(boost_lfo, osc));
