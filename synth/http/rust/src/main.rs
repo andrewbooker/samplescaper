@@ -1,7 +1,8 @@
 use std::env;
 use std::{
     net::TcpListener,
-    io::{BufReader, BufRead, Write}
+    io::{BufReader, BufRead, Write},
+    rc::Rc
 };
 use regex::Regex;
 use rand::Rng;
@@ -60,27 +61,28 @@ impl ValueAt for RampUpDown {
 
 struct Oscillator {
     freq: f32,
-    phase: Const
+    phase: Rc<dyn ValueAt>
 }
 
 impl Oscillator {
-    fn new(freq: f32) -> Self {
+    fn new(freq: f32, phase: Rc<dyn ValueAt>) -> Self {
         Oscillator {
             freq: freq,
-            phase: Const { val: 0.0 }
+            phase: phase
         }
     }
 }
 
 impl ValueAt for Oscillator {
     fn at(&self, i: usize) -> f32 {
-        (self.phase.at(i) + (2.0 * std::f32::consts::PI * i as f32 * self.freq / SAMPLE_RATE as f32)).sin()
+        (1.9 * self.phase.at(i) + (2.0 * std::f32::consts::PI * i as f32 * self.freq / SAMPLE_RATE as f32)).sin()
     }
 }
 
 
 struct Synth {
-    buffer: Vec<f32>
+    buffer: Vec<f32>,
+    phase_freq: f32
 }
 
 trait Generator {
@@ -93,12 +95,15 @@ impl Generator for Synth {
     fn new() -> Synth {
         let mut rng = rand::rng();
         Synth {
-            buffer: vec![0.0; (SAMPLE_RATE as f32 * rng.random_range(8.0..20.0)) as usize]
+            buffer: vec![0.0; (SAMPLE_RATE as f32 * rng.random_range(8.0..20.0)) as usize],
+            phase_freq: rng.random_range(0.01..5.0)
         }
     }
     fn generate(&mut self, note: u8) -> &Vec<f32> {
+        let const_phase: Rc<dyn ValueAt> = Rc::new(Const { val: 0.0 });
+        let phase_lfo: Rc<dyn ValueAt> = Rc::new(Oscillator::new(self.phase_freq, const_phase));
         let freq = f32::powf(2.0, (note as i8 - 69) as f32 / 12.0) * 440.0;
-        let osc = Oscillator::new(freq);
+        let osc = Oscillator::new(freq, phase_lfo);
         let ramp = RampUpDown::new(self.buffer.len());
 
         for i in 0..self.buffer.len() {
