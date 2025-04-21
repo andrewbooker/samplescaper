@@ -10,6 +10,42 @@ use rand::Rng;
 const SAMPLE_RATE: u16 = 44100;
 
 
+struct RampUpDown {
+    ramp_up: f32,
+    ramp_down: f32,
+    start_ramp_down: f32
+}
+
+trait ValueAt {
+    fn new(size: usize) -> RampUpDown;
+    fn at(&self, i: usize) -> f32;
+}
+
+impl ValueAt for RampUpDown {
+    fn new(size: usize) -> RampUpDown {
+        let fsize = size as f32;
+        let mut rng = rand::rng();
+        let ramp_down = fsize * rng.random_range(0.2..0.5);
+        RampUpDown {
+            ramp_up: SAMPLE_RATE as f32 * rng.random_range(2.0..4.0),
+            ramp_down: ramp_down,
+            start_ramp_down: fsize - ramp_down
+        }
+    }
+
+    fn at(&self, ui: usize) -> f32 {
+        let i = ui as f32;
+        if i < self.ramp_up {
+            return 0.5 * (1.0 + (std::f32::consts::PI * (i + self.ramp_up) / self.ramp_up).cos());
+        }
+        if i > self.start_ramp_down {
+            return 0.5 * (1.0 + (std::f32::consts::PI * (i - self.start_ramp_down) / self.ramp_down).cos());
+        }
+        1.0
+    }
+}
+
+
 struct Synth {
     buffer: Vec<f32>
 }
@@ -30,8 +66,10 @@ impl Generator for Synth {
     fn generate(&mut self, note: u8) -> &Vec<f32> {
         let freq = f32::powf(2.0, (note as i8 - 69) as f32 / 12.0) * 440.0;
         let ang_freq = freq * 2.0 * std::f32::consts::PI;
+        let ramp = RampUpDown::new(self.buffer.len());
+
         for i in 0..self.buffer.len() {
-            self.buffer[i] = (i as f32 * ang_freq / SAMPLE_RATE as f32).sin();
+            self.buffer[i] = ramp.at(i) * (i as f32 * ang_freq / SAMPLE_RATE as f32).sin();
         }
         &self.buffer
     }
