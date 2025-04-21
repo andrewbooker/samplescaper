@@ -10,19 +10,29 @@ use rand::Rng;
 const SAMPLE_RATE: u16 = 44100;
 
 
+trait ValueAt {
+    fn at(&self, i: usize) -> f32;
+}
+
+struct Const {
+    val: f32
+}
+
+impl ValueAt for Const {
+    fn at(&self, _: usize) -> f32 {
+        self.val
+    }
+}
+
+
 struct RampUpDown {
     ramp_up: f32,
     ramp_down: f32,
     start_ramp_down: f32
 }
 
-trait ValueAt {
-    fn new(size: usize) -> RampUpDown;
-    fn at(&self, i: usize) -> f32;
-}
-
-impl ValueAt for RampUpDown {
-    fn new(size: usize) -> RampUpDown {
+impl RampUpDown {
+    fn new(size: usize) -> Self {
         let fsize = size as f32;
         let mut rng = rand::rng();
         let ramp_down = fsize * rng.random_range(0.2..0.5);
@@ -32,7 +42,9 @@ impl ValueAt for RampUpDown {
             start_ramp_down: fsize - ramp_down
         }
     }
+}
 
+impl ValueAt for RampUpDown {
     fn at(&self, ui: usize) -> f32 {
         let i = ui as f32;
         if i < self.ramp_up {
@@ -42,6 +54,27 @@ impl ValueAt for RampUpDown {
             return 0.5 * (1.0 + (std::f32::consts::PI * (i - self.start_ramp_down) / self.ramp_down).cos());
         }
         1.0
+    }
+}
+
+
+struct Oscillator {
+    freq: f32,
+    phase: Const
+}
+
+impl Oscillator {
+    fn new(freq: f32) -> Self {
+        Oscillator {
+            freq: freq,
+            phase: Const { val: 0.0 }
+        }
+    }
+}
+
+impl ValueAt for Oscillator {
+    fn at(&self, i: usize) -> f32 {
+        (self.phase.at(i) + (2.0 * std::f32::consts::PI * i as f32 * self.freq / SAMPLE_RATE as f32)).sin()
     }
 }
 
@@ -65,11 +98,11 @@ impl Generator for Synth {
     }
     fn generate(&mut self, note: u8) -> &Vec<f32> {
         let freq = f32::powf(2.0, (note as i8 - 69) as f32 / 12.0) * 440.0;
-        let ang_freq = freq * 2.0 * std::f32::consts::PI;
+        let osc = Oscillator::new(freq);
         let ramp = RampUpDown::new(self.buffer.len());
 
         for i in 0..self.buffer.len() {
-            self.buffer[i] = ramp.at(i) * (i as f32 * ang_freq / SAMPLE_RATE as f32).sin();
+            self.buffer[i] = ramp.at(i) * osc.at(i);
         }
         &self.buffer
     }
