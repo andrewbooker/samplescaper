@@ -125,6 +125,7 @@ int main(int argc, char *argv[]) {
         }
     }
     if (hosts.empty()) {
+        std::cout << "No hosts specified. Using ";
         hosts.push_back("0.0.0.0:9964");
     }
     for (auto& h : hosts) {
