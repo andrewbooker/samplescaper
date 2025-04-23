@@ -34,8 +34,11 @@ function oscillator($note) {
     $size = rand(8, 20) * SAMPLE_RATE;
     $envelope = new Envelope($size);
     $wave = array();
+    $gain = 3.3;
     for ($i = 0; $i != $size; ++$i) {
-        $wave[$i] = $envelope->at($i) * sin(2 * M_PI * $freq * $i / SAMPLE_RATE);
+        $v = sin(2 * M_PI * $freq * $i / SAMPLE_RATE);
+        $sign = $v < 0.0 ? -1.0 : 0.0;
+        $wave[$i] = $envelope->at($i) * $sign * min(1.0, $gain * abs($v));
     }
     return $wave;
 }
