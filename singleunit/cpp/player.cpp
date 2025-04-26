@@ -61,10 +61,10 @@ private:
     }
 
 public:
-    AudioPlayer(const HttpSoundSource::t_hosts& hosts) :
-        channels(2),
+    AudioPlayer(const HttpSoundSource::t_hosts& hosts, const unsigned int ch) :
+        channels(ch),
         audioStream(0),
-        soundSources(2, hosts)
+        soundSources(ch, hosts)
     {
         if (Pa_Initialize() != paNoError) {
             std::cerr << "PortAudio initialization failed." << std::endl;
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
     for (auto& h : hosts) {
         std::cout << h << std::endl;
     }
-    AudioPlayer audioPlayer(hosts);
+    AudioPlayer audioPlayer(hosts, 6);
 
     if (audioPlayer.start()) {
         audioPlayer.stop();
