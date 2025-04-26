@@ -17,6 +17,7 @@ sudo apt -y install dhcpcd5
 sudo apt -y install tmux
 sudo apt -y install openssh-server
 sudo apt -y install alsa-utils
+sudo apt install -y alsa-base
 sudo apt install -y rustc
 sudo apt install -y cargo
 sudo apt install -y libcurl4-openssl-dev
