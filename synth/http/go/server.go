@@ -42,11 +42,12 @@ func (ramp RampUpDown) at(i int) float32 {
 
 
 type SineOscillator struct {
-    freq float32
+    freq float32;
+    phase ValueAt
 }
 
 func (osc SineOscillator) at(i int) float32 {
-    return float32(math.Sin(2.0 * math.Pi * float64(osc.freq) * float64(i) / SampleRate))
+    return float32(math.Sin(float64(osc.phase.at(i)) + (2.0 * math.Pi * float64(osc.freq) * float64(i) / SampleRate)))
 }
 
 
@@ -69,15 +70,35 @@ func (v *RangeDepth) at(i int) float32 {
 }
 
 
+type Scaled struct {
+    coeff float32;
+    value ValueAt
+}
+
+func (s *Scaled) at(i int) float32 {
+    return s.coeff * s.value.at(i)
+}
+
+
+type Const struct {
+    value float32
+}
+
+func (c *Const) at(i int) float32 {
+    return c.value
+}
+
+
 func server(w http.ResponseWriter, r *http.Request) {
     t := anywhereBetween(8.0, 20.0)
     size := int(SampleRate * t)
     buffer := make([]float32, size)
-
     note, _ := strconv.Atoi(r.URL.Query()["note"][0])
-    osc := SineOscillator { frequencyOf(note) }
-    lfo_am := RangeDepth { anywhereBetween(0.1, 1.0), &AsPositive { &SineOscillator { anywhereBetween(0.001, 4.9) } } }
 
+    zero := Const { 0.0 }
+    lfo_phase := Scaled { anywhereBetween(0.1, math.Pi), &SineOscillator { anywhereBetween(0.1, 5.8), &zero } }
+    osc := SineOscillator { frequencyOf(note), &lfo_phase }
+    lfo_am := RangeDepth { anywhereBetween(0.1, 1.0), &AsPositive { &SineOscillator { anywhereBetween(0.001, 4.9), &zero } } }
     up := anywhereBetween(2.0, 4.0) * SampleRate
     down := int(SampleRate * t * anywhereBetween(0.2, 0.5))
     ramp := RampUpDown { int(up), down, size - down }
