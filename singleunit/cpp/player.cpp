@@ -38,6 +38,7 @@ private:
     SoundSources soundSources;
     PaStream* audioStream;
     const unsigned int channels;
+    const unsigned int deviceNumber;
 
     void readInto(float* out, const unsigned long perChannelLength) {
         memset(out, 0, perChannelLength * sizeof(float) * channels);
@@ -61,8 +62,9 @@ private:
     }
 
 public:
-    AudioPlayer(const HttpSoundSource::t_hosts& hosts, const unsigned int ch) :
+    AudioPlayer(const HttpSoundSource::t_hosts& hosts, const unsigned int ch, const unsigned int devNum) :
         channels(ch),
+        deviceNumber(devNum),
         audioStream(0),
         soundSources(ch, hosts)
     {
@@ -73,7 +75,7 @@ public:
 
         PaStreamParameters outputParameters;
         memset(&outputParameters, 0, sizeof(PaStreamParameters));
-        outputParameters.device = Pa_GetDefaultOutputDevice();
+        outputParameters.device = deviceNumber;
         outputParameters.channelCount = channels;
         outputParameters.sampleFormat = paFloat32;
         outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
@@ -118,10 +120,13 @@ int main(int argc, char *argv[]) {
     srand(time(0));
     HttpSoundSource::t_hosts hosts;
     const std::string server("0.0.0.0");
-    if (argc > 1) {
+    const unsigned int channels(argc > 1 ? atoi(argv[1]) : 2);
+    const unsigned int deviceNumber(argc > 2 ? atoi(argv[2]) : 0);
+    std::cout << "playing " << channels << " channels on device " << deviceNumber << "\n";
+    if (argc > 3) {
         for (int i(1); i != argc; ++i) {
-            const std::string v(argv[i]);
-            hosts.push_back(server + ":" + v);
+            const std::string port(argv[i]);
+            hosts.push_back(server + ":" + port);
         }
     }
     if (hosts.empty()) {
@@ -131,13 +136,12 @@ int main(int argc, char *argv[]) {
     for (auto& h : hosts) {
         std::cout << h << std::endl;
     }
-    AudioPlayer audioPlayer(hosts, 6);
-
+    AudioPlayer audioPlayer(hosts, channels, deviceNumber);
     if (audioPlayer.start()) {
         audioPlayer.stop();
     } else {
         std::cout << "could not start playback" << std::endl;
     }
-   
+
     return 0;
 }
