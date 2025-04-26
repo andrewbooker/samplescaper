@@ -45,9 +45,17 @@ type SineOscillator struct {
     freq float32
 }
 
-
 func (osc SineOscillator) at(i int) float32 {
     return float32(math.Sin(2.0 * math.Pi * float64(osc.freq) * float64(i) / SampleRate))
+}
+
+
+type AsPositive struct {
+    value ValueAt
+}
+
+func (v *AsPositive) at(i int) float32 {
+    return 0.5 * (1.0 + v.value.at(i))
 }
 
 
@@ -58,12 +66,13 @@ func server(w http.ResponseWriter, r *http.Request) {
 
     note, _ := strconv.Atoi(r.URL.Query()["note"][0])
     osc := SineOscillator { frequencyOf(note) }
+    lfo_am := AsPositive { SineOscillator { anywhereBetween(0.001, 4.9) } }
 
     up := anywhereBetween(2.0, 4.0) * SampleRate
     down := int(SampleRate * t * anywhereBetween(0.2, 0.5))
     ramp := RampUpDown { int(up), down, size - down }
     for i := 0; i != size; i++ {
-        buffer[i] = ramp.at(i) * osc.at(i)
+        buffer[i] = ramp.at(i) * lfo_am.at(i) * osc.at(i)
     }
     contentLength := size * 4
     fmt.Printf("Creating sample for note %d at %fHz lasting %fs (%d samples)\n", note, osc.freq, t, cap(buffer))
