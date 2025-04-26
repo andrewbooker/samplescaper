@@ -1,0 +1,68 @@
+package main
+
+
+import (
+	"fmt"
+	"math"
+	"math/rand"
+	"time"
+)
+
+const SampleRate = 44100
+
+func frequencyOf(note int) float32 {
+    return float32(math.Pow(2, float64(note - 69) / 12.0) * 440.0)
+}
+
+func anywhereBetween(l, u float32) float32 {
+    return (rand.Float32() * (u - l)) + l
+}
+
+
+type ValueAt interface {
+    at(i int) float32
+}
+
+type RampUpDown struct {
+    up, down, startDown int
+}
+
+func (ramp RampUpDown) at(i int) float32 {
+    if i < ramp.up {
+        return 0.5 * float32(1.0 + math.Cos(math.Pi * float64(i + ramp.up) / float64(ramp.up)))
+    }
+    if i > ramp.startDown {
+        return 0.5 * float32(1.0 + math.Cos(math.Pi * float64(i - ramp.startDown) / float64(ramp.down)))
+    }
+    return 1.0
+}
+
+
+type SineOscillator struct {
+    freq float32
+}
+
+
+func (osc SineOscillator) at(i int) float32 {
+    return float32(math.Sin(2.0 * math.Pi * float64(osc.freq) * float64(i) / SampleRate))
+}
+
+
+func main() {
+    rand.Seed(time.Now().UnixNano())
+    t := anywhereBetween(8.0, 20.0)
+    size := int(SampleRate * t)
+    buffer := make([]float32, size)
+
+    note := 64
+    osc := SineOscillator { frequencyOf(note) }
+
+    up := anywhereBetween(2.0, 4.0) * SampleRate
+    down := int(SampleRate * t * anywhereBetween(0.2, 0.5))
+    ramp := RampUpDown { int(up), down, size - down }
+    for i := 0; i != size; i++ {
+        buffer[i] = ramp.at(i) * osc.at(i)
+    }
+
+    fmt.Printf("Creating sample for note %d at %fHz lasting %fs (%d samples)\n", note, osc.freq, t, cap(buffer))
+}

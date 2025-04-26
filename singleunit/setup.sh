@@ -20,6 +20,8 @@ sudo apt -y install alsa-utils
 sudo apt install -y rustc
 sudo apt install -y cargo
 sudo apt install -y libcurl4-openssl-dev
+sudo apt install -y php-cli
+sudo apt install -y golang-go
 
 sudo mkdir /var/log/samplescaper
 sudo chown $USER /var/log/samplescaper
