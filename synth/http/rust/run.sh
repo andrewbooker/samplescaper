@@ -1,1 +1,1 @@
-cargo run 9963
+cargo run $1

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"unsafe"
+	"flag"
 )
 
 const SampleRate = 44100
@@ -106,7 +107,7 @@ func server(w http.ResponseWriter, r *http.Request) {
         buffer[i] = ramp.at(i) * lfo_am.at(i) * osc.at(i)
     }
     contentLength := size * 4
-    fmt.Printf("Creating sample for note %d at %fHz lasting %fs (%d samples)\n", note, osc.freq, t, cap(buffer))
+    fmt.Printf("Go note %d at %fHz lasting %fs (%d samples)\n", note, osc.freq, t, cap(buffer))
     w.Header().Set("Content-Length", strconv.Itoa(contentLength))
     w.Header().Set("Content-Type", "application/octet-stream")
     w.Write(unsafe.Slice((*byte)(unsafe.Pointer(&buffer[0])), contentLength))
@@ -114,7 +115,18 @@ func server(w http.ResponseWriter, r *http.Request) {
 
 
 func main() {
+    flag.Parse()
+    vals := flag.Args()
+    if len(vals) == 0 {
+        fmt.Printf("Must supply port number\n")
+        return
+    }
+    port, err := strconv.Atoi(vals[0])
+    if err != nil {
+        fmt.Printf("Invalid supply port number\n", err, "\n\n")
+        return
+    }
     rand.Seed(time.Now().UnixNano())
     http.HandleFunc("/", server)
-    http.ListenAndServe(":9961", nil)
+    http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }
