@@ -59,7 +59,7 @@ if ($params[0] == "note") {
     $s = oscillator($note);
     $sound = as_bytes($s);
     $size = count($s) * 4;
-    header("Content-Type: text/plain");
+    header("Content-Type: application/octet-stream");
     header("Content-Length: " . $size);
     echo $sound;
 }
