@@ -59,6 +59,16 @@ func (v *AsPositive) at(i int) float32 {
 }
 
 
+type RangeDepth struct {
+    depth float32;
+    value ValueAt
+}
+
+func (v *RangeDepth) at(i int) float32 {
+    return 1.0 - (v.depth * 0.5 * (1.0 + v.value.at(i)))
+}
+
+
 func server(w http.ResponseWriter, r *http.Request) {
     t := anywhereBetween(8.0, 20.0)
     size := int(SampleRate * t)
@@ -66,7 +76,7 @@ func server(w http.ResponseWriter, r *http.Request) {
 
     note, _ := strconv.Atoi(r.URL.Query()["note"][0])
     osc := SineOscillator { frequencyOf(note) }
-    lfo_am := AsPositive { SineOscillator { anywhereBetween(0.001, 4.9) } }
+    lfo_am := RangeDepth { anywhereBetween(0.1, 1.0), &AsPositive { &SineOscillator { anywhereBetween(0.001, 4.9) } } }
 
     up := anywhereBetween(2.0, 4.0) * SampleRate
     down := int(SampleRate * t * anywhereBetween(0.2, 0.5))
