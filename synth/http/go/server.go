@@ -6,6 +6,9 @@ import (
 	"math"
 	"math/rand"
 	"time"
+	"net/http"
+	"strconv"
+	"unsafe"
 )
 
 const SampleRate = 44100
@@ -48,13 +51,12 @@ func (osc SineOscillator) at(i int) float32 {
 }
 
 
-func main() {
-    rand.Seed(time.Now().UnixNano())
+func server(w http.ResponseWriter, r *http.Request) {
     t := anywhereBetween(8.0, 20.0)
     size := int(SampleRate * t)
     buffer := make([]float32, size)
 
-    note := 64
+    note, _ := strconv.Atoi(r.URL.Query()["note"][0])
     osc := SineOscillator { frequencyOf(note) }
 
     up := anywhereBetween(2.0, 4.0) * SampleRate
@@ -63,6 +65,16 @@ func main() {
     for i := 0; i != size; i++ {
         buffer[i] = ramp.at(i) * osc.at(i)
     }
-
+    contentLength := size * 4
     fmt.Printf("Creating sample for note %d at %fHz lasting %fs (%d samples)\n", note, osc.freq, t, cap(buffer))
+    w.Header().Set("Content-Length", strconv.Itoa(contentLength))
+    w.Header().Set("Content-Type", "application/octet-stream")
+    w.Write(unsafe.Slice((*byte)(unsafe.Pointer(&buffer[0])), contentLength))
+}
+
+
+func main() {
+    rand.Seed(time.Now().UnixNano())
+    http.HandleFunc("/", server)
+    http.ListenAndServe(":9961", nil)
 }
