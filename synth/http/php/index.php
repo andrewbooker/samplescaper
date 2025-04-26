@@ -29,9 +29,16 @@ class Envelope {
     }
 }
 
+
+
 function oscillator($note) {
     $freq = pow(2.0, ($note - 69) / 12.0) * 440;
-    $size = rand(8, 20) * SAMPLE_RATE;
+    $len = rand(8, 20);
+    $size = $len * SAMPLE_RATE;
+
+    $stdout = fopen("php://stdout", "w");
+    fputs($stdout, "generating " . $note . " at " . number_format($freq, 4, '.', '') . "Hz for " . $len . "s\n");
+
     $envelope = new Envelope($size);
     $wave = array();
     $gain = 3.3;

@@ -137,7 +137,7 @@ struct Synth {
 
 trait Generator {
     fn new() -> Synth;
-    fn generate(&mut self, note: u8) -> &Vec<f32>;
+    fn generate(&mut self, freq: f32) -> &Vec<f32>;
 }
 
 
@@ -153,7 +153,7 @@ impl Generator for Synth {
             boost_amount: rng.random_range(0.0..1.0)
         }
     }
-    fn generate(&mut self, note: u8) -> &Vec<f32> {
+    fn generate(&mut self, freq: f32) -> &Vec<f32> {
         let phase_am: Rc<dyn ValueAt> = Rc::new(Const { val: 1.1 });
         let const_phase: Rc<dyn ValueAt> = Rc::new(Const { val: 0.0 });
         let phase_lfo: Rc<dyn ValueAt> = Rc::new(Oscillator::new(self.phase_freq, const_phase, phase_am));
@@ -162,7 +162,6 @@ impl Generator for Synth {
         let am_level: Rc<dyn ValueAt> = Rc::new(Const { val: 1.0 });
         let am_lfo: Rc<dyn ValueAt> = Rc::new(Oscillator::new(self.tremolo_freq, zero_am_phase, am_level));
 
-        let freq = f32::powf(2.0, (note as i8 - 69) as f32 / 12.0) * 440.0;
         let osc_am: Rc<dyn ValueAt> = Rc::new(Const { val: 1.0 });
         let osc: Rc<dyn ValueAt> = Rc::new(Oscillator::new(freq, phase_lfo, osc_am));
 
@@ -204,12 +203,13 @@ fn main() {
             .collect();
 
         let re = Regex::new(r"^([A-Z]+) /[\?]?([a-z]+)=?([0-9]*)").unwrap();
-        for (_, [method, param, value]) in re.captures_iter(&http_request[0]).map(|c| c.extract()) {
-            println!("{method} {param} {value}");
-
+        for (_, [_, _, value]) in re.captures_iter(&http_request[0]).map(|c| c.extract()) {
             let mut synth = Synth::new();
             let note = value.parse::<u8>().unwrap();
-            let synth_buffer = synth.generate(note);
+            let freq = f32::powf(2.0, (note as i8 - 69) as f32 / 12.0) * 440.0;
+
+            let synth_buffer = synth.generate(freq);
+            println!("generating {} at {}Hz for {}s", note, freq, synth_buffer.len() as f32 / SAMPLE_RATE as f32);
 
             let status_line = "HTTP/1.1 200 OK";
             let length = synth_buffer.len() * std::mem::size_of::<f32>();

@@ -107,7 +107,7 @@ func server(w http.ResponseWriter, r *http.Request) {
         buffer[i] = ramp.at(i) * lfo_am.at(i) * osc.at(i)
     }
     contentLength := size * 4
-    fmt.Printf("Go note %d at %fHz lasting %fs (%d samples)\n", note, osc.freq, t, cap(buffer))
+    fmt.Printf("generating %d at %.4fHz for %.4fs\n", note, osc.freq, t)
     w.Header().Set("Content-Length", strconv.Itoa(contentLength))
     w.Header().Set("Content-Type", "application/octet-stream")
     w.Write(unsafe.Slice((*byte)(unsafe.Pointer(&buffer[0])), contentLength))

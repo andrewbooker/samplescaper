@@ -198,7 +198,7 @@ public:
 
         Synth synth(f);
         const Synth::t_sound& sound(synth.generate());
-        std::cout << "Note " << note << " at " << f << "Hz for " << sound.size() * 1.0 / SAMPLE_RATE << "s\n";
+        std::cout << "generating " << note << " at " << f << "Hz for " << sound.size() * 1.0 / SAMPLE_RATE << "s\n";
         const unsigned long binarySize(sound.size() * sizeof(float));
         std::stringstream responseHeader;
         responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << binarySize << "\r\n";

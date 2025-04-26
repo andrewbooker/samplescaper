@@ -120,6 +120,7 @@ class SampleServer(BaseHTTPRequestHandler):
         if random.random() > 0.7:
             note += 12
         f = freq(note)
+        sys.stdout.write(f"generating {note} at {f:.4f}Hz for {size / SAMPLE_RATE:.4f}s\n\r")
         vol_coeff = 1.0 if note < 60 else 1.0 - (0.5 * (note - 60) / 35)
 
         ramp_up_down = HalfCosineRamp(size)
@@ -141,7 +142,6 @@ class SampleServer(BaseHTTPRequestHandler):
         self.send_header("Content-Length", size * 4)
         self.end_headers()
         self.wfile.write(struct.pack(f"{size}f", *buff))
-        sys.stdout.write(f"generated {size} samples for note {note}\n\r")
         return None
 
 
