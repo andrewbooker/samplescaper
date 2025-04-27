@@ -19,7 +19,8 @@ func frequencyOf(note int) float32 {
 }
 
 func anywhereBetween(l, u float32) float32 {
-    return (rand.Float32() * (u - l)) + l
+    v := float64(rand.Float32() * (u - l))
+    return float32(math.Pow(v, 2.0) / float64(u)) + l
 }
 
 
@@ -123,7 +124,7 @@ func main() {
     }
     port, err := strconv.Atoi(vals[0])
     if err != nil {
-        fmt.Printf("Invalid supply port number\n", err, "\n\n")
+        fmt.Printf("Invalid port number\n", err, "\n\n")
         return
     }
     rand.Seed(time.Now().UnixNano())
