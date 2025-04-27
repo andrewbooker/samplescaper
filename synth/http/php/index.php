@@ -29,26 +29,49 @@ class Envelope {
     }
 }
 
+class ConstVal {
+    function at(int $i) {
+        return 0.0;
+    }
+}
+
+
+class Oscillator {
+    private float $freq;
+    private object $phase;
+
+    function __construct(float $freq, object $phase) {
+        $this->freq = $freq;
+        $this->phase = $phase;
+    }
+
+    function at(int $i) {
+        return sin($this->phase->at($i) + (2 * M_PI * $this->freq * $i / SAMPLE_RATE));
+    }
+}
 
 
 function oscillator($note) {
     $freq = pow(2.0, ($note - 69) / 12.0) * 440;
-    $len = rand(8, 20);
+    $len = rand(8.0, 20.0);
     $size = $len * SAMPLE_RATE;
 
     $stdout = fopen("php://stdout", "w");
     fputs($stdout, "generating " . $note . " at " . number_format($freq, 4, '.', '') . "Hz for " . $len . "s\n");
 
+    $phaseLfo = new Oscillator(rand(0.001, 5.2), new ConstVal());
+    $osc = new Oscillator($freq, $phaseLfo);
     $envelope = new Envelope($size);
     $wave = array();
     $gain = 3.3;
     for ($i = 0; $i != $size; ++$i) {
-        $v = sin(2 * M_PI * $freq * $i / SAMPLE_RATE);
+        $v = $osc->at($i);
         $sign = $v < 0.0 ? -1.0 : 0.0;
         $wave[$i] = $envelope->at($i) * $sign * min(1.0, $gain * abs($v));
     }
     return $wave;
 }
+
 
 function as_bytes(array $numbers) {
     $bytes = "";
