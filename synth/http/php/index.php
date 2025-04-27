@@ -80,6 +80,25 @@ class Depth {
 }
 
 
+class Scaled {
+    private float $coeff;
+    private object $modulator;
+
+    private function __construct($c, $m) {
+        $this->coeff = $c;
+        $this->modulator = $m;
+    }
+
+    static function by($c, $mod) {
+        return new Scaled($c, $mod);
+    }
+
+    function at(int $i) {
+        return $this->coeff * $this->modulator->at($i);
+    }
+}
+
+
 class Oscillator {
     private float $freq;
     private object $phase;
@@ -97,7 +116,7 @@ class Oscillator {
 }
 
 
-function oscillator($note) {
+function generate($note) {
     $freq = pow(2.0, ($note - 69) / 12.0) * 440;
     $len = anything_between(8.0, 20.0);
     $size = floor($len * SAMPLE_RATE);
@@ -106,16 +125,16 @@ function oscillator($note) {
     fputs($stdout, "generating " . $note . " at " . number_format($freq, 4, '.', '') . "Hz for " . $len . "s\n");
 
     $zero = ConstVal::of(0.0);
-    $amplitudeLfo = new Oscillator(anything_between(0.001, 7.0), $zero, ConstVal::of(0.9));
+    $amplitudeLfo = new Oscillator(anything_between(0.001, 7.0), $zero, ConstVal::of(1.0));
     $phaseLfo = new Oscillator(anything_between(0.001, 5.2), $zero, ConstVal::of(anything_between(0.1, 2.0)));
     $osc = new Oscillator($freq, $phaseLfo, Depth::of(anything_between(0.0, 1.0), Positive::of($amplitudeLfo)));
-    $envelope = new Envelope($size);
+    $envelope = Scaled::by(0.9, new Envelope($size));
     $wave = array();
-    $gain = 3.3;
+    $gainLfo = Scaled::by(anything_between(1.0, 20.0), Depth::of(anything_between(0.0, 1.0), Positive::of(new Oscillator(anything_between(0.0001, 2.3), $zero, ConstVal::of(1.0)))));
     for ($i = 0; $i != $size; ++$i) {
         $v = $osc->at($i);
         $sign = $v < 0.0 ? -1.0 : 0.0;
-        $wave[$i] = $envelope->at($i) * $sign * min(1.0, $gain * abs($v));
+        $wave[$i] = $envelope->at($i) * $sign * min(1.0, $gainLfo->at($i) * abs($v));
     }
     return $wave;
 }
@@ -134,7 +153,7 @@ $p = parse_url($_SERVER["REQUEST_URI"], PHP_URL_QUERY);
 $params = explode("=", $p);
 if ($params[0] == "note") {
     $note = $params[1];
-    $s = oscillator($note);
+    $s = generate($note);
     $sound = as_bytes($s);
     $size = count($s) * 4;
     header("Content-Type: application/octet-stream");
