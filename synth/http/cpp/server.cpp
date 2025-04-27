@@ -19,7 +19,7 @@ const float frequencyOf(const unsigned short n) {
 
 const float anywhereBetween(const float& l, const float&u) {
     const float r(rand() * 1.0 / RAND_MAX);
-    return l + (r * (u - l));
+    return l + (std::pow(r * (u - l), 2.0) / u);
 }
 
 
@@ -100,6 +100,20 @@ public:
 };
 
 
+class SquareOscillator : public Envelope {
+    const float& freq;
+    const Envelope& phase;
+
+public:
+    SquareOscillator(const float& f, const Envelope& ph) : freq(f), phase(ph) {}
+
+    const float at(const unsigned long i) const {
+        const float av(2 * M_PI * freq * i / SAMPLE_RATE);
+        return sin(phase.at(i) + av) > 0.0 && cos(av) > 0.0 ? 1.0 : -1.0;
+    }
+};
+
+
 class Synth {
 public:
     typedef std::vector<float> t_sound;
@@ -126,8 +140,9 @@ public:
         const Scaled am(amLfo, amDepth, 1.0 - amDepth);
 
         const RampUpDown amplitude(size);
+        const SquareOscillator osc(freq, phase);
         for (unsigned long i(0); i != size; ++i) {
-            buffer.push_back(am.at(i) * amplitude.at(i) * sin(phase.at(i) + (2 * M_PI * freq * i / SAMPLE_RATE)));
+            buffer.push_back(am.at(i) * amplitude.at(i) * osc.at(i));
         }
         return buffer;
     }
