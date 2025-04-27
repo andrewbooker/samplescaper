@@ -11,14 +11,15 @@ protected:
     virtual bool fetchContent() = 0;
 private:
     std::thread loop;
-    bool closing;
+    bool running;
+    bool paused;
 
     void fetch() {
-        while (!closing) {
-            if (!ready) {
+        while (running) {
+            if (!ready && !paused) {
                 ready = fetchContent();
             } else {
-               std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             }
         }
     }
@@ -28,10 +29,13 @@ private:
     }
 
 public:
-    SoundSource() : ready(false), closing(false), loop(fetchLoop, this) {}
+    SoundSource() : ready(false), running(true), paused(false), loop(fetchLoop, this) {}
+    void setPaused(const bool p) {
+        paused = p;
+    }
     virtual void readInto(float* out, const unsigned long sampleLength) = 0;
     virtual ~SoundSource() {
-        closing = true;
+        running = false;
         std::cout << "Stopping fetch loop... ";
         loop.join();
         std::cout << "stopped\n";

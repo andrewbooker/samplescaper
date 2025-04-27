@@ -7,6 +7,9 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <termios.h>
+#include <stdio.h>
+#include <unistd.h>
 
 
 class SoundSources {
@@ -23,6 +26,14 @@ public:
 
     void readInto(float* out, const unsigned long sampleLength, const unsigned int channel) {
         sources[channel]->readInto(out, sampleLength);
+    }
+
+    void pause() {
+        for (auto* s : sources) s->setPaused(true);
+    }
+
+    void resume() {
+        for (auto* s : sources) s->setPaused(false);
     }
 
     ~SoundSources() {
@@ -59,6 +70,25 @@ private:
         float* out(reinterpret_cast<float*>(outputBuffer));
         reinterpret_cast<AudioPlayer*>(player)->readInto(out, framesPerBuffer);
         return paContinue;
+    }
+
+    static const char getch() {
+        char c(0);
+        struct termios old {0};
+        fflush(stdout);
+        if (tcgetattr(0, &old) < 0) {
+            perror("tcgetattr");
+	}
+        old.c_lflag &= ~ICANON;
+	old.c_lflag &= ~ECHO;
+        old.c_cc[VMIN] = 1;
+        old.c_cc[VTIME] = 0;
+        tcsetattr(0, TCSANOW, &old);
+	read(0, &c, 1);
+        old.c_lflag |= ICANON;
+	old.c_lflag |= ECHO;
+        tcsetattr(0, TCSADRAIN, &old);
+	return c;
     }
 
 public:
@@ -99,9 +129,15 @@ public:
             return false;
         }
         if (Pa_StartStream(audioStream) == paNoError) {
-            std::cout << "Playing audio. Press Enter to stop..." << std::endl;
-            std::cin.get();
-            return true;
+            std::cout << "Playing audio. Press p to pause, r to resume or q to stop." << std::endl;
+            while (true) {
+	        const char input(getch());
+                if (input == 'q') {
+                    return true;
+                }
+	        if (input == 'p') soundSources.pause();
+	        if (input == 'r') soundSources.resume();
+            }
         }
         return false;
     }
