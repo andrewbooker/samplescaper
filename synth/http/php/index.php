@@ -14,7 +14,7 @@ class Envelope {
 
     function __construct(int $size) {
         $this->ramp_up = SAMPLE_RATE * anything_between(2.0, 4.0);
-        $this->ramp_down = $size * anything_between(0.2, 0.5);
+        $this->ramp_down = $size * anything_between(0.3, 0.5);
         $this->start_ramp_down = $size - $this->ramp_down;
     }
 
@@ -30,8 +30,33 @@ class Envelope {
 }
 
 class ConstVal {
+    private float $val;
+
+    private function __construct($v) {
+        $this->val = $v;
+    }
+    static function of($v) {
+        return new ConstVal($v);
+    }
+    function at(int $ignore) {
+        return $this->val;
+    }
+}
+
+
+class Positive {
+    private object $modulator;
+
+    private function __construct(object $modulator) {
+        $this->modulator = $modulator;
+    }
+
+    static function of($mod) {
+        return new Positive($mod);
+    }
+
     function at(int $i) {
-        return 0.0;
+        return 0.5 * (1.0 + $this->modulator->at($i));
     }
 }
 
@@ -39,28 +64,32 @@ class ConstVal {
 class Oscillator {
     private float $freq;
     private object $phase;
+    private object $amplitude;
 
-    function __construct(float $freq, object $phase) {
+    function __construct(float $freq, object $phase, object $amp) {
         $this->freq = $freq;
         $this->phase = $phase;
+        $this->amplitude = $amp;
     }
 
     function at(int $i) {
-        return sin($this->phase->at($i) + (2 * M_PI * $this->freq * $i / SAMPLE_RATE));
+        return $this->amplitude->at($i) * sin($this->phase->at($i) + (2 * M_PI * $this->freq * $i / SAMPLE_RATE));
     }
 }
 
 
 function oscillator($note) {
     $freq = pow(2.0, ($note - 69) / 12.0) * 440;
-    $len = rand(8.0, 20.0);
-    $size = $len * SAMPLE_RATE;
+    $len = anything_between(8.0, 20.0);
+    $size = floor($len * SAMPLE_RATE);
 
     $stdout = fopen("php://stdout", "w");
     fputs($stdout, "generating " . $note . " at " . number_format($freq, 4, '.', '') . "Hz for " . $len . "s\n");
 
-    $phaseLfo = new Oscillator(rand(0.001, 5.2), new ConstVal());
-    $osc = new Oscillator($freq, $phaseLfo);
+    $zero = ConstVal::of(0.0);
+    $amplitudeLfo = new Oscillator(anything_between(0.001, 7.0), $zero, ConstVal::of(0.9));
+    $phaseLfo = new Oscillator(anything_between(0.001, 5.2), $zero, ConstVal::of(anything_between(0.1, 2.0)));
+    $osc = new Oscillator($freq, $phaseLfo, Positive::of($amplitudeLfo));
     $envelope = new Envelope($size);
     $wave = array();
     $gain = 3.3;
