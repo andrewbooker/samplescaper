@@ -133,10 +133,18 @@ public:
             while (true) {
 	        const char input(getch());
                 if (input == 'q') {
+                    std::cout << "Stopping" << std::endl;
+                    soundSources.pause();
                     return true;
                 }
-	        if (input == 'p') soundSources.pause();
-	        if (input == 'r') soundSources.resume();
+	        if (input == 'p') {
+                    std::cout << "Pausing" << std::endl;
+                    soundSources.pause();
+                }
+	        if (input == 'r') {
+                    std::cout << "Resuming" << std::endl;
+                    soundSources.resume();
+                }
             }
         }
         return false;
