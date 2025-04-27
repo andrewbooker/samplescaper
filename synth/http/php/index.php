@@ -61,6 +61,25 @@ class Positive {
 }
 
 
+class Depth {
+    private float $depth;
+    private object $modulator;
+
+    private function __construct($d, $m) {
+        $this->depth = $d;
+        $this->modulator = $m;
+    }
+
+    static function of($d, $mod) {
+        return new Depth($d, $mod);
+    }
+
+    function at(int $i) {
+        return $this->depth + ((1.0 - $this->depth) * $this->modulator->at($i));
+    }
+}
+
+
 class Oscillator {
     private float $freq;
     private object $phase;
@@ -89,7 +108,7 @@ function oscillator($note) {
     $zero = ConstVal::of(0.0);
     $amplitudeLfo = new Oscillator(anything_between(0.001, 7.0), $zero, ConstVal::of(0.9));
     $phaseLfo = new Oscillator(anything_between(0.001, 5.2), $zero, ConstVal::of(anything_between(0.1, 2.0)));
-    $osc = new Oscillator($freq, $phaseLfo, Positive::of($amplitudeLfo));
+    $osc = new Oscillator($freq, $phaseLfo, Depth::of(anything_between(0.0, 1.0), Positive::of($amplitudeLfo)));
     $envelope = new Envelope($size);
     $wave = array();
     $gain = 3.3;
