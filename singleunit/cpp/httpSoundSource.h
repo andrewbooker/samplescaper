@@ -59,7 +59,7 @@ protected:
 public:
     HttpSoundSource(const unsigned int i, const t_hosts& h) :
         hosts(h),
-	hostsSelected(0),
+        hostsSelected(0),
         idx(i),
         pos(0),
         key {57, 59, 60, 62, 64, 65, 67, 69} {}
