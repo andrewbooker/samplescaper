@@ -80,7 +80,7 @@ public:
         outputParameters.sampleFormat = paFloat32;
         outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
 
-        if (Pa_OpenStream(&audioStream, 0, &outputParameters, 44100, paFramesPerBufferUnspecified, paClipOff, &AudioPlayer::audioCallback, this) != paNoError) {
+        if (Pa_OpenStream(&audioStream, 0, &outputParameters, 44100, 1024, paClipOff, &AudioPlayer::audioCallback, this) != paNoError) {
             std::cerr << "Failed to open PortAudio stream." << std::endl;
         }
     }
