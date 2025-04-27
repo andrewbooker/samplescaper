@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
     const unsigned int deviceNumber(argc > 2 ? atoi(argv[2]) : 0);
     std::cout << "playing " << channels << " channels on device " << deviceNumber << "\n";
     if (argc > 3) {
-        for (int i(1); i != argc; ++i) {
+        for (int i(3); i != argc; ++i) {
             const std::string port(argv[i]);
             hosts.push_back(server + ":" + port);
         }
