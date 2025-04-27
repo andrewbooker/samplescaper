@@ -130,7 +130,7 @@ function generate($note) {
     $osc = new Oscillator($freq, $phaseLfo, Depth::of(anything_between(0.0, 1.0), Positive::of($amplitudeLfo)));
     $envelope = Scaled::by(0.9, new Envelope($size));
     $wave = array();
-    $gainLfo = Scaled::by(anything_between(1.0, 20.0), Depth::of(anything_between(0.0, 1.0), Positive::of(new Oscillator(anything_between(0.0001, 2.3), $zero, ConstVal::of(1.0)))));
+    $gainLfo = Scaled::by(anything_between(1.0, 4.0), Depth::of(anything_between(0.0, 1.0), Positive::of(new Oscillator(anything_between(0.0001, 2.3), $zero, ConstVal::of(1.0)))));
     for ($i = 0; $i != $size; ++$i) {
         $v = $osc->at($i);
         $sign = $v < 0.0 ? -1.0 : 0.0;
