@@ -110,7 +110,7 @@ public:
 
     const float at(const unsigned long i) const {
         const float av(2 * M_PI * freq * i / SAMPLE_RATE);
-        const float threshold(1.5 + (0.25 * symmetry.at(i)));
+        const float threshold(0.49 * (1.0 + symmetry.at(i)));
         return sin(phase.at(i) + av) > threshold ? 1.0 : -1.0;
     }
 };
