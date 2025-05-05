@@ -103,13 +103,15 @@ public:
 class SquareOscillator : public Envelope {
     const float& freq;
     const Envelope& phase;
+    const Envelope& symmetry;
 
 public:
-    SquareOscillator(const float& f, const Envelope& ph) : freq(f), phase(ph) {}
+    SquareOscillator(const float& f, const Envelope& ph, const Envelope& sym) : freq(f), phase(ph), symmetry(sym) {}
 
     const float at(const unsigned long i) const {
         const float av(2 * M_PI * freq * i / SAMPLE_RATE);
-        return sin(phase.at(i) + av) > 0.0 && cos(av) > 0.0 ? 1.0 : -1.0;
+        const float threshold(1.5 + (0.25 * symmetry.at(i)));
+        return sin(phase.at(i) + av) > threshold ? 1.0 : -1.0;
     }
 };
 
@@ -133,6 +135,7 @@ public:
 
         const Lfo phaseLfo;
         const Scaled phase(phaseLfo, 0.0, freq * anywhereBetween(0.0005, 0.008));
+        const Lfo symmetryLfo;
 
         const Lfo amLfo;
         const AsPositive amLfoP(amLfo);
@@ -140,7 +143,7 @@ public:
         const Scaled am(amLfo, amDepth, 1.0 - amDepth);
 
         const RampUpDown amplitude(size);
-        const SquareOscillator osc(freq, phase);
+        const SquareOscillator osc(freq, phase, symmetryLfo);
         for (unsigned long i(0); i != size; ++i) {
             buffer.push_back(am.at(i) * amplitude.at(i) * osc.at(i));
         }
