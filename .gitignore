@@ -7,3 +7,4 @@ singleunit/cpp/test
 synth/http/*/bin
 synth/http/rust/Cargo.lock
 synth/http/rust/target
+synth/http/go/server

@@ -1,1 +1,2 @@
-go run server.go $1
+go build server.go
+./server $1
