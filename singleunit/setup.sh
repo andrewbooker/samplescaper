@@ -23,6 +23,7 @@ sudo apt install -y cargo
 sudo apt install -y libcurl4-openssl-dev
 sudo apt install -y php-cli
 sudo apt install -y golang-go
+sudo apt install -y libhttp-server-simple-perl
 
 sudo mkdir /var/log/samplescaper
 sudo chown $USER /var/log/samplescaper
