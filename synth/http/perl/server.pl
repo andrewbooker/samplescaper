@@ -47,6 +47,6 @@ use warnings;
     }
 }
 
-my $port = 9964;
+my $port = $ARGV[0];
 my $server = Server->new($port);
 $server->run;
