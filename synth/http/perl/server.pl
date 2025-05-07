@@ -21,14 +21,33 @@ use warnings;
     sub new {
         my ($class, $freq) = @_;
         my $self = {
-            freq => $freq
+            iterations_per_cycle => (System::SAMPLE_RATE * 1.0) / $freq
         };
         return bless $self, $class;
     }
 
     sub at {
         my ($self, $i) = @_;
-        sin(2 * pi * $self->{freq} * $i / System::SAMPLE_RATE)
+        my $pos = $i / $self->{iterations_per_cycle};
+        my $p = $pos - int($pos);
+        sin(2 * pi * $p)
+    }
+}
+
+{
+    package TriangleOscillator;
+    use base qw(SineOscillator);
+
+    sub at {
+        my ($self, $i) = @_;
+        my $sv = $self->SUPER::at($i);
+        my $pos = $i / $self->{iterations_per_cycle};
+        my $p = 4.0 * ($pos - int($pos));
+
+        if ($sv < 0.0) {
+            return 3.0 - $p;
+        }
+        $p - 1.0
     }
 }
 
@@ -92,12 +111,12 @@ use warnings;
     sub generate {
         my $note = shift;
         my $f = _frequency_of($note);
-        my $synth = SineOscillator->new($f);
+        my $synth = TriangleOscillator->new($f);
         my $s = 8.0 + rand(12.0);
         print STDERR ("generating $note at ", sprintf("%.4fHz", $f), " for ", sprintf("%.4fs\n", $s));
         my $sample_len = int($s * System::SAMPLE_RATE);
         my $ramp = RampUpDown->new($sample_len);
-        my $lfo_am = Scaled->new(rand(1.0), SineOscillator->new(0.001 + rand(5.0)));
+        my $lfo_am = Scaled->new(rand(0.9), SineOscillator->new(0.001 + rand(5.0)));
         my @buffer = (0.0) x $sample_len;
         for my $i (0..$sample_len) {
             $buffer[$i] = $ramp->at($i) * $lfo_am->at($i) * $synth->at($i);
@@ -118,7 +137,6 @@ use warnings;
         my @buffer = Synth::generate($note);
         my $l = @buffer;
         my $cl = $l * 4;
-        print STDERR "returning $cl bytes\n";
         print "HTTP/1.0 200 OK\r\n";
         print "Content-Length: $cl\r\nContent-Type: application/octet-stream\r\n\r\n";
         print pack('f' x $cl, @buffer);
