@@ -14,16 +14,40 @@ use warnings;
 }
 
 {
+    package ConstVal;
+    use base qw(ValueAt);
+
+    sub of {
+        my ($class, $v) = @_;
+        bless { v => $v }, $class
+    }
+
+    sub at {
+        my ($self, $i) = @_;
+        $self->{v}
+    }
+}
+
+{
     package SineOscillator;
     use Math::Trig;
     use base qw(ValueAt);
 
+    sub possible {
+        my $val = shift;
+        if (defined $val) {
+            return $val;
+        }
+        ConstVal->of(0.0)
+    }
+
     sub new {
-        my ($class, $freq) = @_;
+        my ($class, $freq, $phase_osc) = @_;
         my $self = {
-            iterations_per_cycle => (System::SAMPLE_RATE * 1.0) / $freq
+            iterations_per_cycle => (System::SAMPLE_RATE * 1.0) / $freq,
+            phase => possible($phase_osc)
         };
-        return bless $self, $class;
+        bless $self, $class
     }
 
     sub _pos_at {
@@ -34,7 +58,7 @@ use warnings;
 
     sub at {
         my ($self, $i) = @_;
-        sin(2 * pi * $self->_pos_at($i))
+        sin($self->{phase}->at($i) + (2 * pi * $self->_pos_at($i)))
     }
 }
 
@@ -64,7 +88,7 @@ use warnings;
             depth => $depth,
             base_oscillator => $base_osc
         };
-        return bless $self, $class;
+        bless $self, $class
     }
 
     sub at {
@@ -88,7 +112,7 @@ use warnings;
             ramp_down => $ramp_down,
             start_ramp_down => $sample_len - $ramp_down
         };
-        return bless $self, $class;
+        bless $self, $class
     }
 
     sub at {
@@ -114,7 +138,8 @@ use warnings;
     sub generate {
         my $note = shift;
         my $f = _frequency_of($note);
-        my $synth = TriangleOscillator->new($f);
+        my $lfo_phase = SineOscillator->new(0.001 + rand(3.0));
+        my $synth = TriangleOscillator->new($f, $lfo_phase);
         my $s = 8.0 + rand(12.0);
         print STDERR ("generating $note at ", sprintf("%.4fHz", $f), " for ", sprintf("%.4fs\n", $s));
         my $sample_len = int($s * System::SAMPLE_RATE);
