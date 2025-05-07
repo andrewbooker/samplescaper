@@ -14,7 +14,7 @@ use warnings;
 }
 
 {
-    package Oscillator;
+    package SineOscillator;
     use Math::Trig;
     use base qw(ValueAt);
 
@@ -29,6 +29,25 @@ use warnings;
     sub at {
         my ($self, $i) = @_;
         sin(2 * pi * $self->{freq} * $i / System::SAMPLE_RATE)
+    }
+}
+
+{
+    package Scaled;
+    use base qw(ValueAt);
+
+    sub new {
+        my ($class, $depth, $base_osc) = @_;
+        my $self = {
+            depth => $depth,
+            base_oscillator => $base_osc
+        };
+        return bless $self, $class;
+    }
+
+    sub at {
+        my ($self, $i) = @_;
+        (1.0 - $self->{depth}) + (0.5 * $self->{depth} * (1.0 + $self->{base_oscillator}->at($i)));
     }
 }
 
@@ -73,14 +92,15 @@ use warnings;
     sub generate {
         my $note = shift;
         my $f = _frequency_of($note);
-        my $synth = Oscillator->new($f);
+        my $synth = SineOscillator->new($f);
         my $s = 8.0 + rand(12.0);
         print STDERR ("generating $note at ", sprintf("%.4fHz", $f), " for ", sprintf("%.4fs\n", $s));
         my $sample_len = int($s * System::SAMPLE_RATE);
         my $ramp = RampUpDown->new($sample_len);
+        my $lfo_am = Scaled->new(rand(1.0), SineOscillator->new(0.001 + rand(5.0)));
         my @buffer = (0.0) x $sample_len;
         for my $i (0..$sample_len) {
-            $buffer[$i] = $ramp->at($i) * $synth->at($i);
+            $buffer[$i] = $ramp->at($i) * $lfo_am->at($i) * $synth->at($i);
         }
         @buffer
     }
