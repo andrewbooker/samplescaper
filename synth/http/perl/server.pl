@@ -26,11 +26,15 @@ use warnings;
         return bless $self, $class;
     }
 
-    sub at {
+    sub _pos_at {
         my ($self, $i) = @_;
         my $pos = $i / $self->{iterations_per_cycle};
-        my $p = $pos - int($pos);
-        sin(2 * pi * $p)
+        $pos - int($pos)
+    }
+
+    sub at {
+        my ($self, $i) = @_;
+        sin(2 * pi * $self->_pos_at($i))
     }
 }
 
@@ -41,8 +45,7 @@ use warnings;
     sub at {
         my ($self, $i) = @_;
         my $sv = $self->SUPER::at($i);
-        my $pos = $i / $self->{iterations_per_cycle};
-        my $p = 4.0 * ($pos - int($pos));
+        my $p = 4.0 * $self->SUPER::_pos_at($i);
 
         if ($sv < 0.0) {
             return 3.0 - $p;
