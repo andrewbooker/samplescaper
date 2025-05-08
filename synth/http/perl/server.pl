@@ -95,10 +95,13 @@ use warnings;
     sub at {
         my ($self, $i) = @_;
         my $pos = $self->SUPER::_pos_at($i);
-        if ($pos < 0.5) {
-            return CircularOscillator::_from((4.0 * $pos) - 1.0);
+        my $sw = 0.5 + (0.4 * $self->{phase}->at($i));
+        if ($pos < $sw) {
+            my $sc = 4.0 * 0.5 / $sw;
+            return CircularOscillator::_from(($sc * $pos) - 1.0);
         }
-        -CircularOscillator::_from((4.0 * ($pos - 0.5)) - 1.0);
+        my $sc = 4.0 * (0.5 / (1.0 - $sw));
+        -CircularOscillator::_from(($sc * ($pos - $sw)) - 1.0);
     }
 }
 
@@ -163,7 +166,7 @@ use warnings;
         my $note = shift;
         my $f = _frequency_of($note);
         my $lfo_phase = SineOscillator->new(0.001 + rand(3.0));
-        my $synth = CircularOscillator->new($f); #, $lfo_phase);
+        my $synth = CircularOscillator->new($f, $lfo_phase);
         my $s = 8.0 + rand(12.0);
         print STDERR ("generating $note at ", sprintf("%.4fHz", $f), " for ", sprintf("%.4fs\n", $s));
         my $sample_len = int($s * System::SAMPLE_RATE);
