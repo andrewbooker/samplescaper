@@ -29,11 +29,10 @@ use warnings;
 }
 
 {
-    package SineOscillator;
-    use Math::Trig;
+    package Oscillator;
     use base qw(ValueAt);
 
-    sub possible {
+    sub _possible {
         my $val = shift;
         if (defined $val) {
             return $val;
@@ -45,7 +44,7 @@ use warnings;
         my ($class, $freq, $phase_osc) = @_;
         my $self = {
             iterations_per_cycle => (System::SAMPLE_RATE * 1.0) / $freq,
-            phase => possible($phase_osc)
+            phase => _possible($phase_osc)
         };
         bless $self, $class
     }
@@ -55,6 +54,12 @@ use warnings;
         my $pos = $i / $self->{iterations_per_cycle};
         $pos - int($pos)
     }
+}
+
+{
+    package SineOscillator;
+    use Math::Trig;
+    use base qw(Oscillator);
 
     sub at {
         my ($self, $i) = @_;
@@ -75,6 +80,25 @@ use warnings;
             return 3.0 - $p;
         }
         $p - 1.0
+    }
+}
+
+{
+    package CircularOscillator;
+    use base qw(Oscillator);
+
+    sub _from {
+        my $v = shift;
+        sqrt(1.0 - ($v ** 2))
+    }
+
+    sub at {
+        my ($self, $i) = @_;
+        my $pos = $self->SUPER::_pos_at($i);
+        if ($pos < 0.5) {
+            return CircularOscillator::_from((4.0 * $pos) - 1.0);
+        }
+        -CircularOscillator::_from((4.0 * ($pos - 0.5)) - 1.0);
     }
 }
 
@@ -139,7 +163,7 @@ use warnings;
         my $note = shift;
         my $f = _frequency_of($note);
         my $lfo_phase = SineOscillator->new(0.001 + rand(3.0));
-        my $synth = TriangleOscillator->new($f, $lfo_phase);
+        my $synth = CircularOscillator->new($f); #, $lfo_phase);
         my $s = 8.0 + rand(12.0);
         print STDERR ("generating $note at ", sprintf("%.4fHz", $f), " for ", sprintf("%.4fs\n", $s));
         my $sample_len = int($s * System::SAMPLE_RATE);
