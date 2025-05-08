@@ -10,7 +10,7 @@ ports=()
 synthCmds=()
 for s in ${synths[@]}; do
     ports+=($basePort)
-    synthCmds+=("cd $synthDir/$s; echo '$s'; ./run.sh $basePort")
+    synthCmds+=("cd $synthDir/$s; echo '$s on $basePort'; ./run.sh $basePort")
     ((++basePort))
 done
 
