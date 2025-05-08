@@ -18,7 +18,7 @@ private:
     t_sources sources;
 
 public:
-    SoundSources(const unsigned int channels, const HttpSoundSource::t_hosts& hosts) {
+    SoundSources(const unsigned int channels, OptionsProvider& hosts) {
         for (unsigned int c(0); c != channels; ++c) {
             sources.push_back(new HttpSoundSource(c, hosts));
         }
@@ -78,21 +78,21 @@ private:
         fflush(stdout);
         if (tcgetattr(0, &old) < 0) {
             perror("tcgetattr");
-	}
+	    }
         old.c_lflag &= ~ICANON;
-	old.c_lflag &= ~ECHO;
+        old.c_lflag &= ~ECHO;
         old.c_cc[VMIN] = 1;
         old.c_cc[VTIME] = 0;
         tcsetattr(0, TCSANOW, &old);
-	read(0, &c, 1);
+        read(0, &c, 1);
         old.c_lflag |= ICANON;
-	old.c_lflag |= ECHO;
+        old.c_lflag |= ECHO;
         tcsetattr(0, TCSADRAIN, &old);
-	return c;
+	    return c;
     }
 
 public:
-    AudioPlayer(const HttpSoundSource::t_hosts& hosts, const unsigned int ch, const unsigned int devNum) :
+    AudioPlayer(OptionsProvider& hosts, const unsigned int ch, const unsigned int devNum) :
         channels(ch),
         deviceNumber(devNum),
         audioStream(0),
@@ -162,24 +162,26 @@ public:
 
 int main(int argc, char *argv[]) {
     srand(time(0));
-    HttpSoundSource::t_hosts hosts;
-    const std::string server("0.0.0.0");
     const unsigned int channels(argc > 1 ? atoi(argv[1]) : 2);
     const unsigned int deviceNumber(argc > 2 ? atoi(argv[2]) : 0);
     std::cout << "playing " << channels << " channels on device " << deviceNumber << "\n";
+    std::vector<std::string> ports;
     if (argc > 3) {
         for (int i(3); i != argc; ++i) {
-            const std::string port(argv[i]);
-            hosts.push_back(server + ":" + port);
+            ports.push_back(argv[i]);
         }
     }
-    if (hosts.empty()) {
-        std::cout << "No hosts specified. Using ";
-        hosts.push_back("0.0.0.0:9964");
+    if (ports.empty()) {
+        std::cout << "No ports specified. Using ";
+        ports.push_back("9964");
     }
-    for (auto& h : hosts) {
-        std::cout << h << std::endl;
+    OptionsProvider hosts;
+    const std::string server("0.0.0.0");
+    for (auto& p : ports) {
+        std::cout << p << std::endl;
+        hosts.add(server + ":" + p);
     }
+
     AudioPlayer audioPlayer(hosts, channels, deviceNumber);
     if (audioPlayer.start()) {
         audioPlayer.stop();

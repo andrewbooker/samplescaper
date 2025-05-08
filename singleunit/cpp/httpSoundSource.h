@@ -8,6 +8,24 @@
 #include <cstring>
 
 
+class OptionsProvider {
+    typedef std::vector<std::string> t_options;
+    t_options options;
+    unsigned int pos;
+
+public:
+    OptionsProvider() : pos(0) {}
+
+    void add(const std::string& o) {
+        options.push_back(o);
+    }
+
+    const std::string& next() {
+        return options.at((pos++) % options.size());
+    }
+};
+
+
 class HttpSoundSource : public SoundSource {
 public:
     typedef std::vector<std::string> t_hosts;
@@ -18,8 +36,7 @@ private:
     const int idx;
     unsigned long pos;
     const std::vector<unsigned short> key;
-    const t_hosts& hosts;
-    unsigned int hostsSelected;
+    OptionsProvider& hosts;
 
     static size_t write(void* ptr, size_t size, size_t nmemb, void* stream) {
         t_buffer& out(*reinterpret_cast<t_buffer*>(stream));
@@ -36,7 +53,7 @@ protected:
         buffer.clear();
         pos = 0;
         std::stringstream uri;
-        uri << "http://" << hosts.at(hostsSelected++ % hosts.size()) << "/?note=" << key.at(rand() % key.size());
+        uri << "http://" << hosts.next() << "/?note=" << key.at(rand() % key.size());
         if (curl) {
             std::cout << idx << " fetching from " << uri.str() << std::endl;
             curl_easy_setopt(curl, CURLOPT_URL, uri.str().c_str());
@@ -57,9 +74,8 @@ protected:
     }
 
 public:
-    HttpSoundSource(const unsigned int i, const t_hosts& h) :
+    HttpSoundSource(const unsigned int i, OptionsProvider& h) :
         hosts(h),
-        hostsSelected(0),
         idx(i),
         pos(0),
         key {57, 59, 60, 62, 64, 65, 67, 69} {}
