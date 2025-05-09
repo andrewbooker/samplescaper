@@ -24,13 +24,20 @@ for ((i=1; i < ${#synths[@]}; ++i)); do
     tmuxCmds+=("select-pane -t 0 \; split-window -v -l '$pc%' \"${synthCmds[i]}\"\;")
 done
 
-cmdPlay="cd $playDir; ./run_player.sh 6 $device ${ports[@]} 2>/dev/null"
-audioRecFn=randomatones_$(date +"%Y%m%d_%H%M%S").wav
-cmdRecord="sleep 5; ffmpeg -f alsa -channels 2 -sample_rate 44100 -i loopout ~/$audioRecFn"
+recDir=~/Music/recording
+mkdir -p $recDir
+audioRecFn=${recDir}/randomatones_$(date +"%Y%m%d_%H%M%S").wav
+cmdRecord="sleep 1; ffmpeg -f alsa -channels 2 -sample_rate 44100 -i loopout $audioRecFn"
+cmdPlay="cd $playDir; ./player 6 $device ${ports[@]} 2>/dev/null"
 tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '20%' \"$cmdRecord\"\;")
 tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '70%' \"$cmdPlay\"\;")
-
-
+echo 'compiling player...'
+if [ $? == 1 ]; then
+    exit
+fi
+cd cpp
+g++ player.cpp -o player -l sndfile -l portaudio -l curl
+cd ..
 echo "${tmuxCmds[@]}" > _gen.sh
 chmod +x _gen.sh
 ./_gen.sh
