@@ -26,8 +26,8 @@ done
 
 cmdPlay="cd $playDir; ./run_player.sh 6 $device ${ports[@]} 2>/dev/null"
 audioRecFn=randomatones_$(date +"%Y%m%d_%H%M%S").wav
-cmdRecord="ffmpeg -f alsa -channels 2 -sample_rate 44100 -i loopout ~/$audioRecFn"
-#tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '20%' \"$cmdRecord\"\;")
+cmdRecord="sleep 5; ffmpeg -f alsa -channels 2 -sample_rate 44100 -i loopout ~/$audioRecFn"
+tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '20%' \"$cmdRecord\"\;")
 tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '70%' \"$cmdPlay\"\;")
 
 
