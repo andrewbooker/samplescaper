@@ -1,5 +1,4 @@
-synths=("cpp" "py" "php" "perl" "rust" "go")
-
+synths=("cpp" "php" "perl" "rust" "go")
 baseDir="~/Documents/samplescaper"
 synthDir="$baseDir/synth/http"
 playDir="$baseDir/singleunit/cpp"
@@ -15,7 +14,6 @@ for s in ${synths[@]}; do
 done
 
 cmdR0="htop"
-cmdR1="cd $playDir; ./run_player.sh 6 $device ${ports[@]} 2>/dev/null"
 tmuxCmds=()
 tmuxCmds+=("tmux new-session \"${synthCmds[0]}\"\;")
 tmuxCmds+=("split-window -h \"$cmdR0\"\;")
@@ -26,7 +24,12 @@ for ((i=1; i < ${#synths[@]}; ++i)); do
     tmuxCmds+=("select-pane -t 0 \; split-window -v -l '$pc%' \"${synthCmds[i]}\"\;")
 done
 
-tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '80%' \"$cmdR1\"")
+cmdPlay="cd $playDir; ./run_player.sh 6 $device ${ports[@]} 2>/dev/null"
+audioRecFn=randomatones_$(date +"%Y%m%d_%H%M%S").wav
+cmdRecord="ffmpeg -f alsa -channels 2 -sample_rate 44100 -i loopout ~/$audioRecFn"
+#tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '20%' \"$cmdRecord\"\;")
+tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '70%' \"$cmdPlay\"\;")
+
 
 echo "${tmuxCmds[@]}" > _gen.sh
 chmod +x _gen.sh
