@@ -1,3 +1,8 @@
+if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
+    echo 'setting up loopback (requires sudo)'
+    sudo modprobe snd-aloop
+fi
+
 cmdDir="~/Documents/samplescaper/singleunit"
 logDir="/var/log/samplescaper"
 
