@@ -52,8 +52,9 @@ for s in ${!slaves[@]}; do
 
     gain=$(awk "BEGIN {print ($ch / $inputChannels)}")
     for ((i=0; i<$inputChannels; ++i)); do
-        ttables+=("${i}.$((i % ch)) ${gain}")
+        ttables+=("${i}.$(((i % ch) + slave)) ${gain}")
     done
+    ((slave+=ch))
 done
 
 echo "${indent}}"
