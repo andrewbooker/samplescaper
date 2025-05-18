@@ -5,6 +5,7 @@ cards["hdmi"]=8
 cards["front"]=2
 cards["loopin"]=2
 inputChannels=8
+outputGain=0.3
 indent='    '
 
 plug() {
@@ -50,7 +51,11 @@ for s in ${!slaves[@]}; do
         ((binding++))
     done
 
-    gain=$(awk "BEGIN {print ($ch / $inputChannels)}")
+    if [[ $ch = $inputChannels ]]; then
+        gain=$(awk "BEGIN {print ($ch * $outputGain / $inputChannels)}")
+    else
+        gain=$(awk "BEGIN {print ($ch / ($inputChannels * $outputGain))}")
+    fi
     for ((i=0; i<$inputChannels; ++i)); do
         ttables+=("${i}.$(((i % ch) + slave)) ${gain}")
     done
