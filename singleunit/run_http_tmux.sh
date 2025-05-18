@@ -1,3 +1,8 @@
+if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
+    echo 'setting up loopback (requires sudo)'
+    sudo modprobe snd-aloop
+fi
+
 synths=("cpp" "php" "perl" "rust" "go")
 baseDir="~/Documents/samplescaper"
 synthDir="$baseDir/synth/http"
