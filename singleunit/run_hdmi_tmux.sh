@@ -15,7 +15,6 @@ rm  ~/Music/pool/looped/*.wav
 recording=~/Music/randomatones_$(date +"%Y%m%d_%H%M%S").wav
 cmdR2="$cmdDir/fill_pool.sh & $cmdDir/run.sh"
 cmdR0="htop"
-cmdR1="cd ~; exec bash"
 cmdR3="tail -f $logDir/player.log"
 cmdL0="tail -f $logDir/synth.log"
 cmdL1="tail -f $logDir/looper.log"
@@ -30,7 +29,7 @@ split-window -v -l '50%' "$cmdL1"\; \
 select-pane -t 3 \; \
 split-window -v "$cmdR3"\; \
 select-pane -t 3 \; \
-split-window -v "$cmdR1"\; \
+split-window \; send-keys -t 4 -l "cd ~; clear" \; send-keys -t 4 Enter \; \
 select-pane -t 4 \; \
 split-window -v "$cmdR2"\; \
 select-pane -t 4
