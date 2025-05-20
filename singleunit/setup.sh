@@ -24,6 +24,7 @@ sudo apt install -y libcurl4-openssl-dev
 sudo apt install -y php-cli
 sudo apt install -y golang-go
 sudo apt install -y libhttp-server-simple-perl
+sudo apt install -y ruby
 sudo apt install -y ffmpeg
 
 sudo mkdir /var/log/samplescaper
