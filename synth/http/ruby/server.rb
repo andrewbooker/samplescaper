@@ -1,14 +1,36 @@
 #!/usr/bin/env ruby
 
 require 'socket'
+
+class Synth
+    SAMPLE_RATE = 44100
+
+    def initialize(note)
+        @freq = 2.pow((note - 69) / 12.0) * 440;
+        @dur = rand(8.0...20.1)
+        puts "Generating note #{note} at #{'%.4f' % @freq}Hz for #{'%.4f' % @dur}s"
+    end
+
+    def generate
+        samples = [].fill(0.0, 0, Integer(SAMPLE_RATE * @dur))
+        dp = @freq / SAMPLE_RATE
+        p = 0.0
+
+        samples.length.times do |i|
+            samples[i] = (2.0 * p) - 1.0
+            p += dp
+            if p >= 1.0
+                p -= 1.0
+            end
+        end
+
+        samples.pack('f*')
+    end
+end
+
 class HttpServer
     def initialize(port)
         @server = TCPServer.new port
-    end
-
-    def response
-        r = [0.0, 0.0, 0.0, 0.0].pack('f*')
-        "HTTP/1.1 200\r\nContent-Type: text/html\r\nContent-Length: #{r.length}\r\n\r\n#{r}"
     end
 
     def accept_connection
@@ -16,7 +38,9 @@ class HttpServer
             request = session.gets
             verb, path, _ = request.split(' ')
             note = Integer(path.split("=")[1])
-            puts "#{verb} request received for note #{note}"
+
+            sound = Synth.new(note).generate
+            response = "HTTP/1.1 200\r\nContent-Type: text/html\r\nContent-Length: #{sound.length}\r\n\r\n#{sound}"
             session.print response
         end
     end
