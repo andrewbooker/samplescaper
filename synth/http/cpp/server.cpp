@@ -128,7 +128,7 @@ public:
     Synth(const float& f) : freq(f) {}
 
     const t_sound& generate() {
-        const float lengthSecs(anywhereBetween(8, 15));
+        const float lengthSecs(anywhereBetween(8, 20));
         const unsigned long size(SAMPLE_RATE * lengthSecs);
         buffer.clear();
         buffer.reserve(size);
