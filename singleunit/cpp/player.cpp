@@ -16,12 +16,22 @@ class SoundSources {
 private:
     typedef std::vector<SoundSource*> t_sources;
     t_sources sources;
+    enum State { playing, pausing, paused, stopped } state;
 
+    const bool anyPlaying() const {
+        for (const auto* s : sources) {
+            if (s->isPlaying()) {
+                return true;
+            }
+        }
+        return false;
+    }
 public:
-    SoundSources(const unsigned int channels, OptionsProvider& hosts) {
+    SoundSources(const unsigned int channels, OptionsProvider& hosts) : state(State::stopped) {
         for (unsigned int c(0); c != channels; ++c) {
             sources.push_back(new HttpSoundSource(c, hosts));
         }
+        state = State::playing;
     }
 
     void readInto(float* out, const unsigned long sampleLength, const unsigned int channel) {
@@ -29,17 +39,24 @@ public:
     }
 
     void pause() {
+        if (state != State::playing) return;
+        state = State::pausing;
         for (auto* s : sources) s->setPaused(true);
+        while (anyPlaying()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        state = State::paused;
+        std::cout << "Paused" << std::endl;
     }
 
     void resume() {
+        if (state != State::paused) return;
         for (auto* s : sources) s->setPaused(false);
+        state = State::playing;
     }
 
     ~SoundSources() {
-        for (t_sources::const_iterator i(sources.begin()); i != sources.end(); ++i) {
-            delete *i;
-        }
+        for (auto* s : sources) delete s;
     }
 };
 
@@ -131,17 +148,17 @@ public:
         if (Pa_StartStream(audioStream) == paNoError) {
             std::cout << "Playing audio. Press p to pause, r to resume or q to stop." << std::endl;
             while (true) {
-	        const char input(getch());
+	            const char input(getch());
                 if (input == 'q') {
                     std::cout << "Stopping" << std::endl;
                     soundSources.pause();
                     return true;
                 }
-	        if (input == 'p') {
+	            if (input == 'p') {
                     std::cout << "Pausing" << std::endl;
                     soundSources.pause();
                 }
-	        if (input == 'r') {
+	            if (input == 'r') {
                     std::cout << "Resuming" << std::endl;
                     soundSources.resume();
                 }

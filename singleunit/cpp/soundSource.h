@@ -30,17 +30,22 @@ private:
 
 public:
     SoundSource() : ready(false), running(true), paused(false), loop(fetchLoop, this) {}
-    void setPaused(const bool p) {
-        paused = p;
-    }
-    virtual void readInto(float* out, const unsigned long sampleLength) = 0;
+
     virtual ~SoundSource() {
         running = false;
         std::cout << "Stopping fetch loop... ";
         loop.join();
         std::cout << "stopped\n";
     }
+
+    virtual void readInto(float* out, const unsigned long sampleLength) = 0;
+
+    void setPaused(const bool p) {
+        paused = p;
+    }
+
+    const bool isPlaying() const {
+        return ready;
+    }
 };
-
-
 
