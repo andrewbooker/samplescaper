@@ -26,6 +26,15 @@ private:
         }
         return false;
     }
+
+    void stopPlaying() {
+        state = State::pausing;
+        for (auto* s : sources) s->setPaused(true);
+        while (anyPlaying()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }
+
 public:
     SoundSources(const unsigned int channels, OptionsProvider& hosts) : state(State::stopped) {
         for (unsigned int c(0); c != channels; ++c) {
@@ -40,11 +49,7 @@ public:
 
     void pause() {
         if (state != State::playing) return;
-        state = State::pausing;
-        for (auto* s : sources) s->setPaused(true);
-        while (anyPlaying()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
+        stopPlaying();
         state = State::paused;
         std::cout << "Paused" << std::endl;
     }
@@ -53,6 +58,11 @@ public:
         if (state != State::paused) return;
         for (auto* s : sources) s->setPaused(false);
         state = State::playing;
+    }
+
+    void stop() {
+        stopPlaying();
+        state = State::stopped;
     }
 
     ~SoundSources() {
@@ -151,7 +161,7 @@ public:
 	            const char input(getch());
                 if (input == 'q') {
                     std::cout << "Stopping" << std::endl;
-                    soundSources.pause();
+                    soundSources.stop();
                     return true;
                 }
 	            if (input == 'p') {
