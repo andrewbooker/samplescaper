@@ -6,6 +6,13 @@
 #include <iostream>
 #include <curl/curl.h>
 #include <cstring>
+#include <chrono>
+
+
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
+
 
 
 class OptionsProvider {
@@ -67,6 +74,7 @@ protected:
         }
         if (curl) {
             std::cout << idx << " fetching from " << uri.str() << std::endl;
+            const auto start(high_resolution_clock::now());
             curl_easy_setopt(curl, CURLOPT_URL, uri.str().c_str());
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
@@ -76,7 +84,8 @@ protected:
                 std::cerr << curl_easy_strerror(res) << std::endl;
             }
             curl_easy_cleanup(curl);
-            std::cout << idx << " read " << buffer.size() << " bytes" << std::endl;
+            const auto fetchTime(duration_cast<milliseconds>(high_resolution_clock::now() - start));
+            std::cout << idx << " read " << buffer.size() << " bytes in " << fetchTime.count() << "ms" << std::endl;
             return true;
         } else {
             std::cerr << "Failed to initialize curl\n";
