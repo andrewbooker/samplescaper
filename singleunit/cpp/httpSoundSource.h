@@ -48,10 +48,10 @@ private:
     }
 
     void silence() {
-        const float len(1.0 + (rand() * 3.0 / RAND_MAX));
-        std::cout << "silence for " << len << "s\n";
-        buffer.reserve(int(len * 44100 * sizeof(float)));
-        std::fill(buffer.begin(), buffer.end(), 0);
+        const float dur(1.0 + (rand() * 3.0 / RAND_MAX));
+        std::cout << idx << " silence for " << dur << "s\n";
+        const unsigned int len(dur * 44100 * sizeof(float));
+        buffer.assign(len, 0);
     }
 
 protected:
