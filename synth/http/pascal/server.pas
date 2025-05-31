@@ -14,6 +14,26 @@ begin
     anythingBetween := s + ((e - s) * random);
 end;
 
+// sine oscillator
+type
+    SineOscillator = object
+    private
+        freq: single;
+    procedure init(f: single);
+    function at(i: longInt): single;
+    end;
+
+procedure SineOscillator.init(f: single);
+begin
+    freq := f;
+end;
+
+function SineOscillator.at(i: longInt): single;
+begin
+    at := sin(2.0 * pi * freq * i / 44100);
+end;
+
+// ramp
 type
     RampUpDown = object
     private
@@ -64,6 +84,7 @@ var
     preambleLength: integer;
     freq: single;
     ramp: RampUpDown;
+    osc: SineOscillator;
 
 begin
     Randomize;
@@ -87,9 +108,10 @@ begin
     setLength(responseBytes, byteLength);
     move(response[1], responseBytes[0], preambleLength);
     ramp.init(sampleLength);
+    osc.init(freq);
     for idx := 0 to sampleLength - 1 do
     begin
-        sample := ramp.at(idx) * sin(idx * 2.0 * pi * freq / sampleRate);
+        sample := ramp.at(idx) * osc.at(idx);
         move(sample, responseBytes[preambleLength + (idx * sizeOf(single))], sizeOf(single));
     end;
 
