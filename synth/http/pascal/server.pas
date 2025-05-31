@@ -1,9 +1,13 @@
 program SynthServer;
 
-
 uses
-    SysUtils, Sockets;
+    SysUtils, Sockets, Math;
 
+
+function frequencyOf(n: integer): single;
+begin
+    frequencyOf := power(2, (n - 69) / 12.0) * 440;
+end;
 
 procedure respond(socket: LongInt);
 const
@@ -16,8 +20,9 @@ const
 var
     buffer: array[0..1023] of Char;
     received, accepted: LongInt;
-    request, note, response: String;
+    request, response: String;
     ParamStart, ParamEnd: Integer;
+    note: integer;
     sampleTime: real;
     sampleLength: longInt;
     sampleByteLength: longInt;
@@ -26,6 +31,7 @@ var
     byteLength: longInt;
     responseBytes: array of byte;
     preambleLength: integer;
+    freq: single;
 
 begin
     Randomize;
@@ -35,13 +41,12 @@ begin
     request := copy(buffer, 1, received);
     ParamStart := pos(lookFor, request) + length(lookFor);
     ParamEnd := pos(' ', copy(request, ParamStart, length(request))) - 1;
-    note := copy(request, ParamStart, ParamEnd);
+    note := strToInt(copy(request, ParamStart, ParamEnd));
+    freq := frequencyOf(note);
 
-    writeLn('Generating note ', note);
     sampleTime := 8.0 + (random * 12.0);
-    writeLn(sampleTime:0:2, 's');
+    writeLn('Generating note ', note, ' at ', freq:0:2, 'Hz for ', sampleTime:0:2, 's');
     sampleLength := round(sampleTime * sampleRate);
-    writeLn(sampleLength, ' samples');
     sampleByteLength := sampleLength * sizeOf(single);
 
     response := responseCode + crlf + contentType + crlf + 'Content-Length: ' + intToStr(sampleByteLength) + crlf + crlf;
@@ -53,7 +58,7 @@ begin
 
     for idx := 0 to sampleLength - 1 do
     begin
-        sample := sin(idx * 800.0 / sampleRate);
+        sample := sin(idx * 2.0 * pi * freq / sampleRate);
         move(sample, responseBytes[preambleLength + (idx * sizeOf(single))], sizeOf(single));
     end;
 
