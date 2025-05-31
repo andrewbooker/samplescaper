@@ -2,6 +2,24 @@
 
 require 'socket'
 
+class RampUpDown
+    def initialize(size)
+        @rampUp = 44100 * rand(2.0...4.0)
+        @rampDown = size * rand(0.2...0.5)
+        @startRampDown = size - @rampDown
+    end
+
+    def at(i)
+        if i < @rampUp
+            return 0.5 * (1.0 + Math::cos(Math::PI * (i + @rampUp) / @rampUp))
+        end
+        if i > @startRampDown
+            return 0.5 * (1.0 + Math::cos(Math::PI * (i - @startRampDown) / @rampDown))
+        end
+        1.0
+    end
+end
+
 class Synth
     SAMPLE_RATE = 44100
 
@@ -13,11 +31,12 @@ class Synth
 
     def generate
         samples = [].fill(0.0, 0, Integer(SAMPLE_RATE * @dur))
+        ramp = RampUpDown.new(samples.length)
         dp = @freq / SAMPLE_RATE
         p = 0.0
 
         samples.length.times do |i|
-            samples[i] = (2.0 * p) - 1.0
+            samples[i] = ramp.at(i) * ((2.0 * p) - 1.0)
             p += dp
             if p >= 1.0
                 p -= 1.0
