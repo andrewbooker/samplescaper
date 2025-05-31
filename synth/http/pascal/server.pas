@@ -9,6 +9,37 @@ begin
     frequencyOf := power(2, (n - 69) / 12.0) * 440;
 end;
 
+function anythingBetween(s, e: single): single;
+begin
+    anythingBetween := s + ((e - s) * random);
+end;
+
+type
+    RampUpDown = object
+    private
+        rampUp, rampDown, startRampDown: longInt;
+    public
+    procedure init(l: longInt);
+    function at(i: longInt): single;
+    end;
+
+procedure RampUpDown.init(l: longInt);
+begin
+    rampUp := round(anythingBetween(2.0, 5.0) * 44100);
+    rampDown := round(anythingBetween(0.2, 0.5) * l);
+    startRampDown := l - rampDown;
+end;
+
+function RampUpDown.at(i: longInt): single;
+begin
+    if i < rampUp then
+        at := 0.5 * (1.0 + cos(pi * (i + rampUp) / rampUp))
+    else if i > startRampDown then
+        at := 0.5 * (1.0 + cos(pi * (i - startRampDown) / rampDown))
+    else
+        at := 1.0;
+end;
+
 procedure respond(socket: LongInt);
 const
     lookFor: String = '/?note=';
@@ -32,6 +63,7 @@ var
     responseBytes: array of byte;
     preambleLength: integer;
     freq: single;
+    ramp: RampUpDown;
 
 begin
     Randomize;
@@ -44,21 +76,20 @@ begin
     note := strToInt(copy(request, ParamStart, ParamEnd));
     freq := frequencyOf(note);
 
-    sampleTime := 8.0 + (random * 12.0);
+    sampleTime := anythingBetween(8.0, 20.0);
     writeLn('Generating note ', note, ' at ', freq:0:2, 'Hz for ', sampleTime:0:2, 's');
     sampleLength := round(sampleTime * sampleRate);
     sampleByteLength := sampleLength * sizeOf(single);
-
     response := responseCode + crlf + contentType + crlf + 'Content-Length: ' + intToStr(sampleByteLength) + crlf + crlf;
     preambleLength := integer(response[0]);
 
     byteLength := integer(response[0]) + sampleByteLength;
     setLength(responseBytes, byteLength);
     move(response[1], responseBytes[0], preambleLength);
-
+    ramp.init(sampleLength);
     for idx := 0 to sampleLength - 1 do
     begin
-        sample := sin(idx * 2.0 * pi * freq / sampleRate);
+        sample := ramp.at(idx) * sin(idx * 2.0 * pi * freq / sampleRate);
         move(sample, responseBytes[preambleLength + (idx * sizeOf(single))], sizeOf(single));
     end;
 
