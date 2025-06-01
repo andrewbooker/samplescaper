@@ -132,13 +132,13 @@ var
     note: integer;
     sampleTime: real;
     sampleLength, sampleByteLength: longInt;
-    sample, freq: single;
+    sample, freq, amDepth: single;
     idx, byteLength: longInt;
     responseBytes: array of byte;
     preambleLength: integer;
     ramp: RampUpDown;
     osc: CircleSquareOscillator;
-    phase, symmetry, shape: SineOscillator;
+    phase, symmetry, shape, am: SineOscillator;
 
 begin
     Randomize;
@@ -157,14 +157,16 @@ begin
     byteLength := integer(response[0]) + sampleByteLength;
     setLength(responseBytes, byteLength);
     move(response[1], responseBytes[0], preambleLength);
+    amDepth := anythingBetween(0.01, 0.9);
     ramp.init(sampleLength);
     phase.init(anythingBetween(0.1, 4.0));
     symmetry.init(anythingBetween(0.01, 5.0));
     shape.init(anythingBetween(0.01, 5.0));
+    am.init(anythingBetween(0.01, 5.0));
     osc.init(freq, phase, symmetry, shape);
     for idx := 0 to sampleLength - 1 do
     begin
-        sample := ramp.at(idx) * osc.at(idx);
+        sample := ramp.at(idx) * osc.at(idx) * ((1.0 - amDepth) + (amDepth * positive(am.at(idx))));
         move(sample, responseBytes[preambleLength + (idx * sizeOf(single))], sizeOf(single));
     end;
 
