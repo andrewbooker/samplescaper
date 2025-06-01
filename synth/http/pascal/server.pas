@@ -58,7 +58,7 @@ var
 begin
     p := i * cyclesPerIteration;
     pos := p - trunc(p);
-    sw := 0.5;
+    sw := 0.25;
 
     if pos < sw then
         begin
@@ -68,8 +68,8 @@ begin
     else
         begin
             sc := 4.0 * (0.5 / (1.0 - sw));
-            at := -sqrt(1.0 - power((sc * (pos - sw)) - 1.0, 2))
-        end;
+            at := -0.5 - (0.5 * sqrt(1.0 - power((sc * (pos - sw)) - 1.0, 2)))
+        end
 end;
 
 
@@ -102,7 +102,7 @@ begin
 end;
 
 
-procedure respond(socket: LongInt);
+procedure respond(accepted: longInt; request: string);
 const
     lookFor: String = '/?note=';
     responseCode: String = 'HTTP/1.1 200 OK';
@@ -111,9 +111,7 @@ const
     sampleRate: LongInt = 44100;
 
 var
-    buffer: array[0..1023] of Char;
-    received, accepted: LongInt;
-    request, response: String;
+    response: String;
     ParamStart, ParamEnd: Integer;
     note: integer;
     sampleTime: real;
@@ -130,10 +128,6 @@ var
 
 begin
     Randomize;
-    accepted := fpAccept(socket, nil, nil);
-    fillChar(buffer, SizeOf(buffer), 0);
-    received := fpRecv(accepted, @buffer, sizeOf(Buffer), 0);
-    request := copy(buffer, 1, received);
     ParamStart := pos(lookFor, request) + length(lookFor);
     ParamEnd := pos(' ', copy(request, ParamStart, length(request))) - 1;
     note := strToInt(copy(request, ParamStart, ParamEnd));
@@ -162,25 +156,60 @@ begin
 end;
 
 
+function serve(socket: LongInt): boolean;
+var
+    accepted: longInt;
+    buffer: array[0..1023] of Char;
+    received: LongInt;
+    request: String;
+
+begin
+    accepted := fpAccept(socket, nil, nil);
+    fillChar(buffer, SizeOf(buffer), 0);
+    received := fpRecv(accepted, @buffer, sizeOf(Buffer), 0);
+    request := copy(buffer, 1, received);
+    if pos('die', request) > 0 then
+        serve := true
+    else
+        begin
+            respond(accepted, request);
+            serve := false;
+        end;
+end;
+
+
 procedure listenOn(port: integer);
 var
     socket: LongInt;
     sockAddr: TInetSockAddr;
+    done: boolean;
 
 begin
     socket := fpSocket(AF_INET, SOCK_STREAM, 0);
-    if socket < 0 then Halt(1);
+    if socket < 0 then
+    begin
+        writeLn('Could not open server socket');
+        Halt(1);
+    end;
 
     fillChar(sockAddr, sizeOf(sockAddr), 0);
     sockAddr.sin_family := AF_INET;
     sockAddr.sin_port := htons(port);
     sockAddr.sin_addr.s_addr := htonl(INADDR_ANY);
 
-    if fpBind(socket, @sockAddr, sizeOf(sockAddr)) <> 0 then Halt(1);
+    if fpBind(socket, @sockAddr, sizeOf(sockAddr)) <> 0 then
+    begin
+        writeLn('Could bind server socket');
+        Halt(1);
+    end;
+
     if fpListen(socket, 1) <> 0 then Halt(1);
 
     writeLn('Listening on port ', port);
-    while True do respond(socket);
+    repeat
+        done := serve(socket);
+    until done;
+    writeLn('Closing server socket');
     closeSocket(socket);
 end;
 
@@ -191,7 +220,8 @@ begin
     if paramCount > 0 then
         begin
             port := strToInt(paramStr(1));
-            listenOn(port)
+            listenOn(port);
+            writeLn('Stopped');
         end
 	else
         writeln('Must supply port number');
