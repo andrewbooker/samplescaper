@@ -9,9 +9,9 @@ begin
     frequencyOf := power(2, (n - 69) / 12.0) * 440;
 end;
 
-function anythingBetween(s, e: single): single;
+function anythingBetween(l, u: single): single;
 begin
-    anythingBetween := s + ((e - s) * random);
+    anythingBetween := l + (power(random * (u - l), 2.0) / u);
 end;
 
 
@@ -43,19 +43,19 @@ begin
 end;
 
 
-// MixedCircleOscillator
+// CircleSquareOscillator
 
 type
-    MixedCircleOscillator = object
+    CircleSquareOscillator = object
     private
-        freq, cyclesPerIteration, phaseDepth: single;
+        freq, cyclesPerIteration, phaseDepth, shapeDepth: single;
         phase, symmetry, shape: SineOscillator;
 
     procedure init(f: single; ph, sy, sh: SineOscillator);
     function at(i: longInt): single;
 end;
 
-procedure MixedCircleOscillator.init(f: single; ph, sy, sh: SineOscillator);
+procedure CircleSquareOscillator.init(f: single; ph, sy, sh: SineOscillator);
 begin
     freq := f;
     cyclesPerIteration := f / 44100;
@@ -63,9 +63,10 @@ begin
     shape := sh;
     phase := ph;
     phaseDepth := anythingBetween(0.001, 0.2);
+    shapeDepth := anythingBetween(0.1, 0.25);
 end;
 
-function MixedCircleOscillator.at(i: longInt): single;
+function CircleSquareOscillator.at(i: longInt): single;
 var
     p, pos, sw, sc, v, sh: single;
 begin
@@ -82,7 +83,7 @@ begin
         begin
             sc := 4.0 * (0.5 / (1.0 - sw));
             v := sqrt(1.0 - power((sc * (pos - sw)) - 1.0, 2));
-            sh := positive(shape.at(i));
+            sh := 0.5 + (shapeDepth * shape.at(i));
             at := -sh - ((1.0 - sh) * v);
         end
 end;
@@ -136,7 +137,7 @@ var
     responseBytes: array of byte;
     preambleLength: integer;
     ramp: RampUpDown;
-    osc: MixedCircleOscillator;
+    osc: CircleSquareOscillator;
     phase, symmetry, shape: SineOscillator;
 
 begin
