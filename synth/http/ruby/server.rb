@@ -36,32 +36,58 @@ class SineOscillator
 end
 
 class TriangleOscillator
-    def initialize(freq, phasor)
-        @dp = freq / SynthServer::SAMPLE_RATE
-        @p = 0
+    def initialize(freq, phasor, symmetry)
+        @cylesPerSample = freq / SynthServer::SAMPLE_RATE
         @phasor = phasor
+        @symmetry = symmetry
     end
 
     def at(i)
-        v = (2.0 * @p) - 1.0
-        @p += (@dp + (0.00016 * @phasor.at(i)))
-        if @p >= 1.0
-            @p -= 1.0
-        end
-        v
+        apex = 0.5 + @symmetry.at(i)
+        gradientUp = 2.0 / apex
+        gradientDown = -2.0 / (1.0 - apex)
+        p = (i * @cylesPerSample) + @phasor.at(i)
+        x = p - p.floor()
+        up = x <= apex
+        up ? (gradientUp * x) - 1.0 : 1.0 + (gradientDown * (x - apex))
     end
 end
 
+
+class Positive
+    def initialize(v)
+        @v = v
+    end
+
+    def at(i)
+        0.5 * (1.0 + @v.at(i))
+    end
+end
+
+
+class Scaled
+    def initialize(scale, v)
+        @v = v
+        @scale = scale
+    end
+
+    def at(i)
+        @scale * @v.at(i)
+    end
+end
+
+
 class RangeDepth
     def initialize(depth, v)
-        @v = v
+        @v = Positive.new(v)
         @depth = depth
     end
 
     def at(i)
-        1.0 - (@depth * 0.5 * (1.0 + @v.at(i)))
+        1.0 - (@depth * @v.at(i))
     end
 end
+
 
 class Synth
     def initialize(note)
@@ -72,10 +98,11 @@ class Synth
 
     def generate
         samples = [].fill(0.0, 0, Integer(SynthServer::SAMPLE_RATE * @dur))
-        plaseLfo = RangeDepth.new(rand(0.1...0.99), SineOscillator.new(rand(0.001...3.0)))
-        synth = TriangleOscillator.new(@freq, plaseLfo)
+        symmetryLfo = Scaled.new(rand(0.01...0.49), SineOscillator.new(rand(0.001...2.0)))
+        phaseLfo = Scaled.new(rand(0.1...0.8), SineOscillator.new(rand(0.001...3.0)))
+        synth = TriangleOscillator.new(@freq, phaseLfo, symmetryLfo)
         ramp = RampUpDown.new(samples.length)
-        amLfo = RangeDepth.new(rand(0.1...0.99), SineOscillator.new(rand(0.001...4.0)))
+        amLfo = RangeDepth.new(rand(0.1...0.7), SineOscillator.new(rand(0.001...4.0)))
 
         samples.length.times do |i|
             samples[i] = ramp.at(i) * amLfo.at(i) * synth.at(i)
@@ -84,6 +111,7 @@ class Synth
         samples.pack('f*')
     end
 end
+
 
 class HttpServer
     def initialize(port)
