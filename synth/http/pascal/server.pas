@@ -49,22 +49,23 @@ type
     MixedCircleOscillator = object
     private
         freq, cyclesPerIteration: single;
-        symmetry: SineOscillator;
+        symmetry, shape: SineOscillator;
 
-    procedure init(f: single; s: SineOscillator);
+    procedure init(f: single; sy, sh: SineOscillator);
     function at(i: longInt): single;
 end;
 
-procedure MixedCircleOscillator.init(f: single; s: SineOscillator);
+procedure MixedCircleOscillator.init(f: single; sy, sh: SineOscillator);
 begin
     freq := f;
     cyclesPerIteration := f / 44100;
-    symmetry := s;
+    symmetry := sy;
+    shape := sh;
 end;
 
 function MixedCircleOscillator.at(i: longInt): single;
 var
-    p, pos, sw, sc: single;
+    p, pos, sw, sc, v, sh: single;
 begin
     p := i * cyclesPerIteration;
     pos := p - trunc(p);
@@ -78,7 +79,9 @@ begin
     else
         begin
             sc := 4.0 * (0.5 / (1.0 - sw));
-            at := -0.5 - (0.5 * sqrt(1.0 - power((sc * (pos - sw)) - 1.0, 2)))
+            v := sqrt(1.0 - power((sc * (pos - sw)) - 1.0, 2));
+            sh := positive(shape.at(i));
+            at := -sh - ((1.0 - sh) * v);
         end
 end;
 
@@ -132,7 +135,7 @@ var
     preambleLength: integer;
     ramp: RampUpDown;
     osc: MixedCircleOscillator;
-    symmetry: SineOscillator;
+    symmetry, shape: SineOscillator;
 
 begin
     Randomize;
@@ -153,7 +156,8 @@ begin
     move(response[1], responseBytes[0], preambleLength);
     ramp.init(sampleLength);
     symmetry.init(anythingBetween(0.01, 5.0));
-    osc.init(freq, symmetry);
+    shape.init(anythingBetween(0.01, 5.0));
+    osc.init(freq, symmetry, shape);
     for idx := 0 to sampleLength - 1 do
     begin
         sample := ramp.at(idx) * osc.at(idx);
