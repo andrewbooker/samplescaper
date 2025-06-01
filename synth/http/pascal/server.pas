@@ -14,7 +14,9 @@ begin
     anythingBetween := s + ((e - s) * random);
 end;
 
-// sine oscillator
+
+// SineOscillator
+
 type
     SineOscillator = object
     private
@@ -33,7 +35,46 @@ begin
     at := sin(2.0 * pi * freq * i / 44100);
 end;
 
-// ramp
+
+// MixedCircleOscillator
+
+type
+    MixedCircleOscillator = object
+    private
+        freq, cyclesPerIteration: single;
+    procedure init(f: single);
+    function at(i: longInt): single;
+    end;
+
+procedure MixedCircleOscillator.init(f: single);
+begin
+    freq := f;
+    cyclesPerIteration := freq / 44100;
+end;
+
+function MixedCircleOscillator.at(i: longInt): single;
+var
+    p, pos, sw, sc: single;
+begin
+    p := i * cyclesPerIteration;
+    pos := p - trunc(p);
+    sw := 0.5;
+
+    if pos < sw then
+        begin
+            sc := 4.0 * 0.5 / sw;
+            at := sqrt(1.0 - power((sc * pos) - 1.0, 2))
+        end
+    else
+        begin
+            sc := 4.0 * (0.5 / (1.0 - sw));
+            at := -sqrt(1.0 - power((sc * (pos - sw)) - 1.0, 2))
+        end;
+end;
+
+
+// RampUpDown
+
 type
     RampUpDown = object
     private
@@ -60,6 +101,7 @@ begin
         at := 1.0;
 end;
 
+
 procedure respond(socket: LongInt);
 const
     lookFor: String = '/?note=';
@@ -84,7 +126,7 @@ var
     preambleLength: integer;
     freq: single;
     ramp: RampUpDown;
-    osc: SineOscillator;
+    osc: MixedCircleOscillator;
 
 begin
     Randomize;

@@ -1,3 +1,5 @@
+rm server
+rm server.o
 fpc server.pas
 if [[ $? != 0 ]]
 then
