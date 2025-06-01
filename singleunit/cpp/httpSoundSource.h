@@ -85,7 +85,9 @@ protected:
             }
             curl_easy_cleanup(curl);
             const auto fetchTime(duration_cast<milliseconds>(high_resolution_clock::now() - start));
-            std::cout << idx << " read " << buffer.size() << " bytes in " << fetchTime.count() << "ms" << std::endl;
+            std::cout << idx << " read " << buffer.size() << " bytes ("
+                    << buffer.size() / (4 * 44100) << "s) in " << fetchTime.count()
+                    << "ms at " << buffer.size() / (1024.0 * fetchTime.count()) << " MB/ms" << std::endl;
             return true;
         } else {
             std::cerr << "Failed to initialize curl\n";
