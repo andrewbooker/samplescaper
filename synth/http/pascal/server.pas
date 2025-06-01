@@ -23,7 +23,7 @@ type
         freq: single;
     procedure init(f: single);
     function at(i: longInt): single;
-    end;
+end;
 
 procedure SineOscillator.init(f: single);
 begin
@@ -36,20 +36,30 @@ begin
 end;
 
 
+
+function positive(v: single): single;
+begin
+    positive := 0.5 * (1.0 + v);
+end;
+
+
 // MixedCircleOscillator
 
 type
     MixedCircleOscillator = object
     private
         freq, cyclesPerIteration: single;
-    procedure init(f: single);
-    function at(i: longInt): single;
-    end;
+        symmetry: SineOscillator;
 
-procedure MixedCircleOscillator.init(f: single);
+    procedure init(f: single; s: SineOscillator);
+    function at(i: longInt): single;
+end;
+
+procedure MixedCircleOscillator.init(f: single; s: SineOscillator);
 begin
     freq := f;
-    cyclesPerIteration := freq / 44100;
+    cyclesPerIteration := f / 44100;
+    symmetry := s;
 end;
 
 function MixedCircleOscillator.at(i: longInt): single;
@@ -58,7 +68,7 @@ var
 begin
     p := i * cyclesPerIteration;
     pos := p - trunc(p);
-    sw := 0.25;
+    sw := positive(0.9 * symmetry.at(i));
 
     if pos < sw then
         begin
@@ -115,16 +125,14 @@ var
     ParamStart, ParamEnd: Integer;
     note: integer;
     sampleTime: real;
-    sampleLength: longInt;
-    sampleByteLength: longInt;
-    sample: single;
-    idx: longInt;
-    byteLength: longInt;
+    sampleLength, sampleByteLength: longInt;
+    sample, freq: single;
+    idx, byteLength: longInt;
     responseBytes: array of byte;
     preambleLength: integer;
-    freq: single;
     ramp: RampUpDown;
     osc: MixedCircleOscillator;
+    symmetry: SineOscillator;
 
 begin
     Randomize;
@@ -144,7 +152,8 @@ begin
     setLength(responseBytes, byteLength);
     move(response[1], responseBytes[0], preambleLength);
     ramp.init(sampleLength);
-    osc.init(freq);
+    symmetry.init(anythingBetween(0.01, 5.0));
+    osc.init(freq, symmetry);
     for idx := 0 to sampleLength - 1 do
     begin
         sample := ramp.at(idx) * osc.at(idx);
