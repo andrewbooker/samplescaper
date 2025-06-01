@@ -2,6 +2,11 @@
 
 require 'socket'
 
+module SynthServer
+    SAMPLE_RATE = 44100
+end
+
+
 class RampUpDown
     def initialize(size)
         @rampUp = 44100 * rand(2.0...4.0)
@@ -20,9 +25,28 @@ class RampUpDown
     end
 end
 
-class Synth
-    SAMPLE_RATE = 44100
+class SineOscillator
+    def initialize(freq)
+        @freq = freq
+    end
 
+    def at(i)
+        Math::sin(2.0 * Math::PI * i * @freq / SynthServer::SAMPLE_RATE)
+    end
+end
+
+class RangeDepth
+    def initialize(depth, v)
+        @v = v
+        @depth = depth
+    end
+
+    def at(i)
+        1.0 - (@depth * 0.5 * (1.0 + @v.at(i)))
+    end
+end
+
+class Synth
     def initialize(note)
         @freq = 2.pow((note - 69) / 12.0) * 440;
         @dur = rand(8.0...20.1)
@@ -30,13 +54,14 @@ class Synth
     end
 
     def generate
-        samples = [].fill(0.0, 0, Integer(SAMPLE_RATE * @dur))
+        samples = [].fill(0.0, 0, Integer(SynthServer::SAMPLE_RATE * @dur))
         ramp = RampUpDown.new(samples.length)
-        dp = @freq / SAMPLE_RATE
+        lfo = RangeDepth.new(rand(0.1...0.99), SineOscillator.new(rand(0.001...4.0)))
+        dp = @freq / SynthServer::SAMPLE_RATE
         p = 0.0
 
         samples.length.times do |i|
-            samples[i] = ramp.at(i) * ((2.0 * p) - 1.0)
+            samples[i] = 0.5 * (1.0 + lfo.at(i)) * ramp.at(i) * ((2.0 * p) - 1.0)
             p += dp
             if p >= 1.0
                 p -= 1.0
