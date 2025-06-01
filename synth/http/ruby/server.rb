@@ -99,7 +99,7 @@ class Synth
     def generate
         samples = [].fill(0.0, 0, Integer(SynthServer::SAMPLE_RATE * @dur))
         symmetryLfo = Scaled.new(rand(0.01...0.49), SineOscillator.new(rand(0.001...2.0)))
-        phaseLfo = Scaled.new(rand(0.1...0.6), SineOscillator.new(rand(0.001...7.0)))
+        phaseLfo = Scaled.new(rand(0.1...0.4), SineOscillator.new(rand(0.001...6.0)))
         synth = TriangleOscillator.new(@freq, phaseLfo, symmetryLfo)
         ramp = RampUpDown.new(samples.length)
         amLfo = RangeDepth.new(rand(0.1...0.7), SineOscillator.new(rand(0.001...4.0)))
