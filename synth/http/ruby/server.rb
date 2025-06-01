@@ -35,6 +35,22 @@ class SineOscillator
     end
 end
 
+class TriangleOscillator
+    def initialize(freq)
+        @dp = freq / SynthServer::SAMPLE_RATE
+        @p = 0
+    end
+
+    def at(i)
+        v = ((2.0 * @p) - 1.0)
+        @p += @dp
+        if @p >= 1.0
+            @p -= 1.0
+        end
+        v
+    end
+end
+
 class RangeDepth
     def initialize(depth, v)
         @v = v
@@ -55,17 +71,12 @@ class Synth
 
     def generate
         samples = [].fill(0.0, 0, Integer(SynthServer::SAMPLE_RATE * @dur))
+        synth = TriangleOscillator.new(@freq)
         ramp = RampUpDown.new(samples.length)
         lfo = RangeDepth.new(rand(0.1...0.99), SineOscillator.new(rand(0.001...4.0)))
-        dp = @freq / SynthServer::SAMPLE_RATE
-        p = 0.0
 
         samples.length.times do |i|
-            samples[i] = 0.5 * (1.0 + lfo.at(i)) * ramp.at(i) * ((2.0 * p) - 1.0)
-            p += dp
-            if p >= 1.0
-                p -= 1.0
-            end
+            samples[i] = lfo.at(i) * ramp.at(i) * synth.at(i)
         end
 
         samples.pack('f*')
