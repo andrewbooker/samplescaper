@@ -17,7 +17,7 @@ const float frequencyOf(const unsigned short n) {
 }
 
 
-const float anywhereBetween(const float& l, const float&u) {
+const float anywhereBetween(const float& l, const float& u) {
     const float r(rand() * 1.0 / RAND_MAX);
     return l + (std::pow(r * (u - l), 2.0) / u);
 }
