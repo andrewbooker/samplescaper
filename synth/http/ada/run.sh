@@ -1,4 +1,4 @@
-[[ -d ./server ]] && rm server
+rm server
 [[ -d ./server.ali ]] && rm server.ali
 [[ -d ./server.o ]] && rm server.o
 
