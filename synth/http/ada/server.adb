@@ -6,10 +6,10 @@ with GNAT.Sockets;
 with Ada.Streams;
 
 
-
 procedure Server is
     use GNAT.Sockets;
     use Ada.Streams;
+
     serverSocket : Socket_Type;
     clientSocket : Socket_Type;
     addr : Sock_Addr_Type;
@@ -40,9 +40,12 @@ procedure Server is
     end read_request;
 
     function read_note_from (request : String) return Integer is
+        note : String(1 .. 2) := (others => Character'Val(0));
     begin
-        Ada.Text_IO.Put_Line ("request: " & request);
-        return 64;
+        note (1) := request (request'First + 11);
+        note (2) := request (request'First + 12);
+        Ada.Text_IO.Put_Line ("note: " & note);
+        return Integer'Value (note);
     end read_note_from;
 
 begin
