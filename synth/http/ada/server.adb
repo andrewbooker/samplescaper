@@ -4,6 +4,7 @@ with Ada.Streams.Stream_IO;
 with Ada.Command_Line;
 with GNAT.Sockets;
 with Ada.Streams;
+with Ada.Strings.Fixed;
 
 
 procedure Server is
@@ -48,6 +49,28 @@ procedure Server is
         return Integer'Value (note);
     end read_note_from;
 
+    procedure respond_to(note : Integer; stream : Stream_Access) is
+        buffer : Stream_Element_Array(1 .. 256) := (others => 0);
+        ns : String := Ada.Strings.Fixed.Trim (note'Image, Ada.Strings.Left);
+        responseHeader : String :=
+              "HTTP/1.1 200 OK" & ASCII.CR & ASCII.LF &
+              "Content-Type: text/plain" & ASCII.CR & ASCII.LF &
+              "Content-Length: 4" & ASCII.CR & ASCII.LF & ASCII.CR & ASCII.LF;
+    begin
+        for i in buffer'Range loop
+            if Integer (i) <= responseHeader'Length then
+                buffer (i) := Stream_Element (Character'Pos (responseHeader (Integer (i))));
+            end if;
+        end loop;
+        
+        buffer (responseHeader'Length + 1) := Stream_Element (Character'Pos (ns (1)));
+        buffer (responseHeader'Length + 2) := Stream_Element (Character'Pos (ns (2)));
+        buffer (responseHeader'Length + 3) := Stream_Element (Character'Pos (ASCII.CR));
+        buffer (responseHeader'Length + 4) := Stream_Element (Character'Pos (ASCII.LF));
+
+        Write (stream.all, buffer);
+    end;
+
 begin
     port := Port_Type (Integer'Value (Ada.Command_Line.Argument (1)));
     GNAT.Sockets.Initialize;
@@ -64,10 +87,15 @@ begin
         Accept_Socket (serverSocket, clientSocket, addr);
         Ada.Text_IO.Put_Line ("Received request");
 
-        note := read_note_from (read_request (Stream (clientSocket)));
-        Ada.Text_IO.Put_Line ("Generating note" & note'Img);
-        Close_Socket (clientSocket);
-        exit;
+        declare
+            clientStream : Stream_Access := Stream (clientSocket);
+        begin
+            note := read_note_from (read_request (clientStream));
+            Ada.Text_IO.Put_Line ("Generating note" & note'Img);
+            respond_to (note, clientStream);
+            Close_Socket (clientSocket);
+            exit;
+        end;
     end loop;
     Close_Socket (serverSocket);
     Ada.Text_IO.Put_Line ("Finished");
