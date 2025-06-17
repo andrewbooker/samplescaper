@@ -51,6 +51,7 @@ procedure Server is
 
     procedure respond_to(note : Integer; stream : Stream_Access) is
         buffer : Stream_Element_Array(1 .. 256) := (others => 0);
+        data : Stream_Element_Array(1 .. 4);
         ns : String := Ada.Strings.Fixed.Trim (note'Image, Ada.Strings.Left);
         responseHeader : String :=
               "HTTP/1.1 200 OK" & ASCII.CR & ASCII.LF &
@@ -62,13 +63,14 @@ procedure Server is
                 buffer (i) := Stream_Element (Character'Pos (responseHeader (Integer (i))));
             end if;
         end loop;
-        
-        buffer (responseHeader'Length + 1) := Stream_Element (Character'Pos (ns (1)));
-        buffer (responseHeader'Length + 2) := Stream_Element (Character'Pos (ns (2)));
-        buffer (responseHeader'Length + 3) := Stream_Element (Character'Pos (ASCII.CR));
-        buffer (responseHeader'Length + 4) := Stream_Element (Character'Pos (ASCII.LF));
 
-        Write (stream.all, buffer);
+        data (1) := Stream_Element (Character'Pos (ns (1)));
+        data (2) := Stream_Element (Character'Pos (ns (2)));
+        data (3) := Stream_Element (Character'Pos (ASCII.CR));
+        data (4) := Stream_Element (Character'Pos (ASCII.LF));
+
+        Write (stream.all, buffer (1 .. responseHeader'Length));
+        Write (stream.all, data);
     end;
 
 begin
