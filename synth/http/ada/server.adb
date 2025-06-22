@@ -49,28 +49,41 @@ procedure Server is
         return Integer'Value (note);
     end read_note_from;
 
-    procedure respond_to(note : Integer; stream : Stream_Access) is
-        buffer : Stream_Element_Array(1 .. 256) := (others => 0);
-        data : Stream_Element_Array(1 .. 4);
-        ns : String := Ada.Strings.Fixed.Trim (note'Image, Ada.Strings.Left);
-        responseHeader : String :=
-              "HTTP/1.1 200 OK" & ASCII.CR & ASCII.LF &
-              "Content-Type: text/plain" & ASCII.CR & ASCII.LF &
-              "Content-Length: 4" & ASCII.CR & ASCII.LF & ASCII.CR & ASCII.LF;
+    function write_audio_to(data : out Stream_Element_Array; note : integer) return integer is
+        length: integer;
+    begin
+        length := 1 * 44100 * 4;
+        return length;
+    end;
+
+    function add_to(buffer : out Stream_Element_Array; header : String) return integer is
     begin
         for i in buffer'Range loop
-            if Integer (i) <= responseHeader'Length then
-                buffer (i) := Stream_Element (Character'Pos (responseHeader (Integer (i))));
+            if Integer (i) <= header'Length then
+                buffer (i) := Stream_Element (Character'Pos (header (Integer (i))));
             end if;
         end loop;
+        return header'Length;
+    end;
 
-        data (1) := Stream_Element (Character'Pos (ns (1)));
-        data (2) := Stream_Element (Character'Pos (ns (2)));
-        data (3) := Stream_Element (Character'Pos (ASCII.CR));
-        data (4) := Stream_Element (Character'Pos (ASCII.LF));
+    procedure respond_to(note : Integer; stream : Stream_Access) is
+        buffer : Stream_Element_Array(1 .. 256) := (others => 0);
+        data : Stream_Element_Array(1 .. 44100 * 20 * 4) := (others => 0);
+        baseResponseHeader : constant String := "HTTP/1.1 200 OK" & ASCII.CR & ASCII.LF & "Content-Type: application/octet-stream" & ASCII.CR & ASCII.LF;
+        headerLength : integer;
+        contentLength : integer;
+        sent : integer := 0;
+        chunk : integer := 512;
+    begin
+        contentLength := write_audio_to(data, note);
+        headerLength := add_to (buffer, baseResponseHeader & "Content-Length:" & contentLength'Img & ASCII.CR & ASCII.LF & ASCII.CR & ASCII.LF);
 
-        Write (stream.all, buffer (1 .. responseHeader'Length));
-        Write (stream.all, data);
+        Write (stream.all, buffer (1 .. Stream_Element_Offset (headerLength)));
+        while sent < contentLength loop
+            Write (stream.all, data (Stream_Element_Offset (sent + 1) .. Stream_Element_Offset (sent + chunk)));
+            sent := sent + chunk;
+            chunk := Integer'Min (chunk, contentLength - sent);
+        end loop;
     end;
 
 begin
