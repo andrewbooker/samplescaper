@@ -5,11 +5,16 @@ with Ada.Command_Line;
 with GNAT.Sockets;
 with Ada.Streams;
 with Ada.Strings.Fixed;
+with Ada.Numerics;
+with Ada.Numerics.Elementary_Functions;
+with Ada.Unchecked_Conversion;
 
 
 procedure Server is
     use GNAT.Sockets;
     use Ada.Streams;
+    use Ada.Numerics;
+    use Ada.Numerics.Elementary_Functions;
 
     serverSocket : Socket_Type;
     clientSocket : Socket_Type;
@@ -50,9 +55,23 @@ procedure Server is
     end read_note_from;
 
     function write_audio_to(data : out Stream_Element_Array; note : integer) return integer is
-        length: integer;
+        type Sample is array (1 .. 4) of Stream_Element;
+        function To_Bytes is new Ada.Unchecked_Conversion (Source => Float, Target => Sample);
+        singleSample : Sample;
+        length : integer;
+        freq : float;
+        value : float;
     begin
-        length := 1 * 44100 * 4;
+        length := 1 * 44100;
+        freq := 440.0;
+
+        for i in 1 .. length loop
+            value := 1.0 * Sin (2.0 * Pi * freq * float (i) / 44100.0);
+            singleSample := To_Bytes (value);
+            for j in 1 .. 4 loop
+                data (Stream_Element_Offset ((4 * i) + j)) := singleSample (Integer'Val (j));
+            end loop;
+        end loop;
         return length;
     end;
 
