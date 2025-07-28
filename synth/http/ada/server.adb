@@ -24,7 +24,7 @@ procedure Server is
 
     function read_request (requestStream : Stream_Access) return String is
         last : Ada.Streams.Stream_Element_Offset;
-        buffer : Stream_Element_Array(1 .. 64);
+        buffer : Stream_Element_Array (1 .. 64);
         request : String (1 .. 1024) := (others => Character'Val(0));
         c : Character;
     begin
@@ -45,7 +45,7 @@ procedure Server is
         return request;
     end read_request;
 
-    function read_note_from (request : String) return Integer is
+    function read_note_from(request : String) return Integer is
         note : String(1 .. 2) := (others => Character'Val(0));
     begin
         note (1) := request (request'First + 11);
@@ -72,7 +72,7 @@ procedure Server is
                 data (Stream_Element_Offset ((4 * i) + j)) := singleSample (Integer'Val (j));
             end loop;
         end loop;
-        return length;
+        return length * 4;
     end;
 
     function add_to(buffer : out Stream_Element_Array; header : String) return integer is
@@ -92,17 +92,13 @@ procedure Server is
         headerLength : integer;
         contentLength : integer;
         sent : integer := 0;
-        chunk : integer := 512;
+        chunk : integer := 1024;
     begin
         contentLength := write_audio_to(data, note);
         headerLength := add_to (buffer, baseResponseHeader & "Content-Length:" & contentLength'Img & ASCII.CR & ASCII.LF & ASCII.CR & ASCII.LF);
-
+        Ada.Text_IO.Put_Line ("writing" & contentLength'Img & " bytes");
         Write (stream.all, buffer (1 .. Stream_Element_Offset (headerLength)));
-        while sent < contentLength loop
-            Write (stream.all, data (Stream_Element_Offset (sent + 1) .. Stream_Element_Offset (sent + chunk)));
-            sent := sent + chunk;
-            chunk := Integer'Min (chunk, contentLength - sent);
-        end loop;
+        Write (stream.all, data (1 .. Stream_Element_Offset (contentLength)));
     end;
 
 begin
@@ -127,10 +123,9 @@ begin
             note := read_note_from (read_request (clientStream));
             Ada.Text_IO.Put_Line ("Generating note" & note'Img);
             respond_to (note, clientStream);
-            Close_Socket (clientSocket);
-            exit;
         end;
     end loop;
+    Close_Socket (clientSocket);
     Close_Socket (serverSocket);
     Ada.Text_IO.Put_Line ("Finished");
 end Server;

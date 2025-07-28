@@ -76,6 +76,7 @@ protected:
             std::cout << idx << " fetching from " << uri.str() << std::endl;
             const auto start(high_resolution_clock::now());
             curl_easy_setopt(curl, CURLOPT_URL, uri.str().c_str());
+            curl_easy_setopt(curl, CURLOPT_USERAGENT, "Randomatone");
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
 
