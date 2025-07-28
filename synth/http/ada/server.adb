@@ -63,7 +63,8 @@ procedure Server is
         value : float;
     begin
         length := 1 * 44100;
-        freq := 440.0;
+        freq := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
+        Ada.Text_IO.Put_Line (freq'Img & "Hz");
 
         for i in 1 .. length loop
             value := 1.0 * Sin (2.0 * Pi * freq * float (i) / 44100.0);
