@@ -31,7 +31,6 @@ procedure Server is
         c : Character;
     begin
         Read (requestStream.all, buffer, last);
-        Ada.Text_IO.Put_Line ("request length" & last'Img);
 
         for i in 1 .. last loop
             c := Character'Val (buffer (i));
@@ -42,8 +41,6 @@ procedure Server is
                 exit;
             end if;
         end loop;
-
-        Ada.Text_IO.Put_Line (request);
         return request;
     end;
 
@@ -52,7 +49,6 @@ procedure Server is
     begin
         note (1) := request (request'First + 11);
         note (2) := request (request'First + 12);
-        Ada.Text_IO.Put_Line ("note: " & note);
         return Integer'Value (note);
     end;
 
@@ -76,15 +72,16 @@ procedure Server is
         type Sample is array (1 .. 4) of Stream_Element;
         function To_Bytes is new Ada.Unchecked_Conversion (Source => Float, Target => Sample);
         singleSample : Sample;
-        length : float := 44100.0 * random_value_between (8.0, 16.0);
+        durSecs : float := random_value_between (8.0, 16.0);
+        length : float := 44100.0 * durSecs;
+        intLen : integer := integer (length + 0.5);
         ramp_up : float := length * random_value_between (0.1, 0.3);
         ramp_down : float := length * random_value_between (0.3, 0.5);
         freq : float;
         value : float;
-        intLen : integer := integer (length + 0.5);
     begin
         freq := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
-        Ada.Text_IO.Put_Line (freq'Img & "Hz");
+        Ada.Text_IO.Put_Line ("generating" & note'Img & " at" & freq'Img & "Hz for" & durSecs'Img & "s");
 
         for i in 1 .. intLen loop
             value := ramp_at (float (i), length, ramp_up, ramp_down) * Sin (2.0 * Pi * freq * float (i) / 44100.0);
@@ -117,7 +114,6 @@ procedure Server is
     begin
         contentLength := write_audio_to(data, note);
         headerLength := add_to (buffer, baseResponseHeader & "Content-Length:" & contentLength'Img & ASCII.CR & ASCII.LF & ASCII.CR & ASCII.LF);
-        Ada.Text_IO.Put_Line ("writing" & contentLength'Img & " bytes");
         Write (stream.all, buffer (1 .. Stream_Element_Offset (headerLength)));
         Write (stream.all, data (1 .. Stream_Element_Offset (contentLength)));
     end;
@@ -137,13 +133,11 @@ begin
 
     loop
         Accept_Socket (serverSocket, clientSocket, addr);
-        Ada.Text_IO.Put_Line ("Received request");
 
         declare
             clientStream : Stream_Access := Stream (clientSocket);
         begin
             note := read_note_from (read_request (clientStream));
-            Ada.Text_IO.Put_Line ("Generating note" & note'Img);
             respond_to (note, clientStream);
         end;
     end loop;
