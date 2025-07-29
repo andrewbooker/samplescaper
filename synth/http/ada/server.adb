@@ -68,6 +68,16 @@ procedure Server is
         return 1.0;
     end;
 
+    procedure report(note: integer; freq: float; durSecs: float) is
+        package F_IO is new Ada.Text_IO.Float_IO (float);
+    begin
+        Ada.Text_IO.Put ("generating" & note'Img & " at ");
+        F_IO.Put(Item => freq, Fore => 1, Aft => 4, Exp => 0);
+        Ada.Text_IO.Put ("Hz for ");
+        F_IO.Put(Item => durSecs, Fore => 1, Aft => 4, Exp => 0);
+        Ada.Text_IO.Put_Line ("s");
+    end;
+
     function write_audio_to(data : out Stream_Element_Array; note : integer) return integer is
         type Sample is array (1 .. 4) of Stream_Element;
         function To_Bytes is new Ada.Unchecked_Conversion (Source => Float, Target => Sample);
@@ -81,7 +91,7 @@ procedure Server is
         value : float;
     begin
         freq := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
-        Ada.Text_IO.Put_Line ("generating" & note'Img & " at" & freq'Img & "Hz for" & durSecs'Img & "s");
+        report (note, freq, durSecs);
 
         for i in 1 .. intLen loop
             value := ramp_at (float (i), length, ramp_up, ramp_down) * Sin (2.0 * Pi * freq * float (i) / 44100.0);
