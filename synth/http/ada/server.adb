@@ -8,6 +8,7 @@ with Ada.Strings.Fixed;
 with Ada.Numerics;
 with Ada.Numerics.Elementary_Functions;
 with Ada.Unchecked_Conversion;
+with Ada.Numerics.Float_Random;
 
 
 procedure Server is
@@ -21,6 +22,7 @@ procedure Server is
     addr : Sock_Addr_Type;
     port : Port_Type;
     note : Integer;
+    G : Ada.Numerics.Float_Random.Generator;
 
     function read_request (requestStream : Stream_Access) return String is
         last : Ada.Streams.Stream_Element_Offset;
@@ -43,7 +45,7 @@ procedure Server is
 
         Ada.Text_IO.Put_Line (request);
         return request;
-    end read_request;
+    end;
 
     function read_note_from(request : String) return Integer is
         note : String(1 .. 2) := (others => Character'Val(0));
@@ -52,11 +54,14 @@ procedure Server is
         note (2) := request (request'First + 12);
         Ada.Text_IO.Put_Line ("note: " & note);
         return Integer'Value (note);
-    end read_note_from;
+    end;
 
-    function ramp_at(i: float; length: float) return float is
-        ramp_up : float := length / 6.0;
-        ramp_down : float := length / 4.0;
+    function random_value_between(l: float; u: float) return float is
+    begin
+        return l + ((u - l) * Ada.Numerics.Float_Random.Random (G));
+    end;
+
+    function ramp_at(i: float; length: float; ramp_up: float; ramp_down: float) return float is
         start_ramp_down : float := length - ramp_down;
     begin
         if i < ramp_up then
@@ -71,22 +76,24 @@ procedure Server is
         type Sample is array (1 .. 4) of Stream_Element;
         function To_Bytes is new Ada.Unchecked_Conversion (Source => Float, Target => Sample);
         singleSample : Sample;
-        length : integer;
+        length : float := 44100.0 * random_value_between (8.0, 16.0);
+        ramp_up : float := length * random_value_between (0.1, 0.3);
+        ramp_down : float := length * random_value_between (0.3, 0.5);
         freq : float;
         value : float;
+        intLen : integer := integer (length + 0.5);
     begin
-        length := 1 * 44100;
         freq := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
         Ada.Text_IO.Put_Line (freq'Img & "Hz");
 
-        for i in 1 .. length loop
-            value := ramp_at (float (i), float (length)) * Sin (2.0 * Pi * freq * float (i) / 44100.0);
+        for i in 1 .. intLen loop
+            value := ramp_at (float (i), length, ramp_up, ramp_down) * Sin (2.0 * Pi * freq * float (i) / 44100.0);
             singleSample := To_Bytes (value);
             for j in 1 .. 4 loop
                 data (Stream_Element_Offset ((4 * i) + j)) := singleSample (Integer'Val (j));
             end loop;
         end loop;
-        return length * 4;
+        return intLen * 4;
     end;
 
     function add_to(buffer : out Stream_Element_Array; header : String) return integer is
@@ -116,6 +123,7 @@ procedure Server is
     end;
 
 begin
+    Ada.Numerics.Float_Random.Reset (G);
     port := Port_Type (Integer'Value (Ada.Command_Line.Argument (1)));
     GNAT.Sockets.Initialize;
     Create_Socket (serverSocket, Family_Inet, Socket_Stream);
