@@ -54,6 +54,19 @@ procedure Server is
         return Integer'Value (note);
     end read_note_from;
 
+    function ramp_at(i: float; length: float) return float is
+        ramp_up : float := length / 6.0;
+        ramp_down : float := length / 4.0;
+        start_ramp_down : float := length - ramp_down;
+    begin
+        if i < ramp_up then
+            return 0.5 * (1.0 + Cos (Pi * (i + ramp_up) / ramp_up));
+        elsif i > start_ramp_down then
+            return 0.5 * (1.0 + Cos (Pi * (i - start_ramp_down) / ramp_down));
+        end if;
+        return 1.0;
+    end;
+
     function write_audio_to(data : out Stream_Element_Array; note : integer) return integer is
         type Sample is array (1 .. 4) of Stream_Element;
         function To_Bytes is new Ada.Unchecked_Conversion (Source => Float, Target => Sample);
@@ -67,7 +80,7 @@ procedure Server is
         Ada.Text_IO.Put_Line (freq'Img & "Hz");
 
         for i in 1 .. length loop
-            value := 1.0 * Sin (2.0 * Pi * freq * float (i) / 44100.0);
+            value := ramp_at (float (i), float (length)) * Sin (2.0 * Pi * freq * float (i) / 44100.0);
             singleSample := To_Bytes (value);
             for j in 1 .. 4 loop
                 data (Stream_Element_Offset ((4 * i) + j)) := singleSample (Integer'Val (j));
