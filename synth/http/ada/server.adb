@@ -24,6 +24,22 @@ procedure Server is
     note : Integer;
     G : Ada.Numerics.Float_Random.Generator;
 
+
+    type SineOscillator is tagged record
+        freq: float;
+    end record;
+
+    function create (f : float) return SineOscillator is
+    begin
+        return SineOscillator'(freq => f);
+    end;
+
+    function valueAt (s: SineOscillator; i: integer) return float is
+    begin
+        return Sin (2.0 * Pi * s.freq * float (i) / 44100.0);
+    end;
+
+
     function read_request (requestStream : Stream_Access) return String is
         last : Ada.Streams.Stream_Element_Offset;
         buffer : Stream_Element_Array (1 .. 64);
@@ -51,6 +67,7 @@ procedure Server is
         note (2) := request (request'First + 12);
         return Integer'Value (note);
     end;
+
 
     function random_value_between(l: float; u: float) return float is
     begin
@@ -87,14 +104,14 @@ procedure Server is
         intLen : integer := integer (length + 0.5);
         ramp_up : float := length * random_value_between (0.1, 0.3);
         ramp_down : float := length * random_value_between (0.3, 0.5);
-        freq : float;
+        freq : float := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
         value : float;
+        oscillator : SineOscillator := create (freq);
     begin
-        freq := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
         report (note, freq, durSecs);
 
         for i in 1 .. intLen loop
-            value := ramp_at (float (i), length, ramp_up, ramp_down) * Sin (2.0 * Pi * freq * float (i) / 44100.0);
+            value := ramp_at (float (i), length, ramp_up, ramp_down) * valueAt (oscillator, i);
             singleSample := To_Bytes (value);
             for j in 1 .. 4 loop
                 data (Stream_Element_Offset ((4 * i) + j)) := singleSample (Integer'Val (j));
