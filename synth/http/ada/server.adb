@@ -40,6 +40,29 @@ procedure Server is
     end;
 
 
+    type RampUpDown is tagged record
+        ramp_up: float;
+        ramp_down: float;
+        start_ramp_down: float;
+    end record;
+
+    function create (up: float; down: float; length: float) return RampUpDown is
+    begin
+        return RampUpDown'(ramp_up => up, ramp_down => down, start_ramp_down => length - down);
+    end;
+
+    function valueAt (r: RampUpDown; idx: integer) return float is
+        i : float := float (idx);
+    begin
+        if i < r.ramp_up then
+            return 0.5 * (1.0 + Cos (Pi * (i + r.ramp_up) / r.ramp_up));
+        elsif i > r.start_ramp_down then
+            return 0.5 * (1.0 + Cos (Pi * (i - r.start_ramp_down) / r.ramp_down));
+        end if;
+        return 1.0;
+    end;
+
+
     function read_request (requestStream : Stream_Access) return String is
         last : Ada.Streams.Stream_Element_Offset;
         buffer : Stream_Element_Array (1 .. 64);
@@ -74,16 +97,6 @@ procedure Server is
         return l + ((u - l) * Ada.Numerics.Float_Random.Random (G));
     end;
 
-    function ramp_at(i: float; length: float; ramp_up: float; ramp_down: float) return float is
-        start_ramp_down : float := length - ramp_down;
-    begin
-        if i < ramp_up then
-            return 0.5 * (1.0 + Cos (Pi * (i + ramp_up) / ramp_up));
-        elsif i > start_ramp_down then
-            return 0.5 * (1.0 + Cos (Pi * (i - start_ramp_down) / ramp_down));
-        end if;
-        return 1.0;
-    end;
 
     procedure report(note: integer; freq: float; durSecs: float) is
         package F_IO is new Ada.Text_IO.Float_IO (float);
@@ -107,11 +120,12 @@ procedure Server is
         freq : float := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
         value : float;
         oscillator : SineOscillator := create (freq);
+        ramp : RampUpDown := create(ramp_up, ramp_down, length);
     begin
         report (note, freq, durSecs);
 
         for i in 1 .. intLen loop
-            value := ramp_at (float (i), length, ramp_up, ramp_down) * valueAt (oscillator, i);
+            value := valueAt (ramp, i) * valueAt (oscillator, i);
             singleSample := To_Bytes (value);
             for j in 1 .. 4 loop
                 data (Stream_Element_Offset ((4 * i) + j)) := singleSample (Integer'Val (j));
