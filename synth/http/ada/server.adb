@@ -24,6 +24,11 @@ procedure Server is
     note : Integer;
     G : Ada.Numerics.Float_Random.Generator;
 
+    function random_value_between(l: float; u: float) return float is
+    begin
+        return l + ((u - l) * Ada.Numerics.Float_Random.Random (G));
+    end;
+
 
     type SineOscillator is tagged record
         freq: float;
@@ -46,9 +51,15 @@ procedure Server is
         start_ramp_down: float;
     end record;
 
-    function create (up: float; down: float; length: float) return RampUpDown is
+    function create (length: float) return RampUpDown is
+        up : float := length * random_value_between (0.1, 0.3);
+        down : float := length * random_value_between (0.3, 0.5);
     begin
-        return RampUpDown'(ramp_up => up, ramp_down => down, start_ramp_down => length - down);
+        return RampUpDown'(
+            ramp_up => up,
+            ramp_down => down,
+            start_ramp_down => length - down
+        );
     end;
 
     function valueAt (r: RampUpDown; idx: integer) return float is
@@ -92,12 +103,6 @@ procedure Server is
     end;
 
 
-    function random_value_between(l: float; u: float) return float is
-    begin
-        return l + ((u - l) * Ada.Numerics.Float_Random.Random (G));
-    end;
-
-
     procedure report(note: integer; freq: float; durSecs: float) is
         package F_IO is new Ada.Text_IO.Float_IO (float);
     begin
@@ -115,12 +120,10 @@ procedure Server is
         durSecs : float := random_value_between (8.0, 16.0);
         length : float := 44100.0 * durSecs;
         intLen : integer := integer (length + 0.5);
-        ramp_up : float := length * random_value_between (0.1, 0.3);
-        ramp_down : float := length * random_value_between (0.3, 0.5);
         freq : float := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
         value : float;
         oscillator : SineOscillator := create (freq);
-        ramp : RampUpDown := create(ramp_up, ramp_down, length);
+        ramp : RampUpDown := create (length);
     begin
         report (note, freq, durSecs);
 
