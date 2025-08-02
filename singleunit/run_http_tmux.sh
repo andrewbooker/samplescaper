@@ -3,7 +3,7 @@ if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
     sudo modprobe snd-aloop
 fi
 
-synths=("cpp" "php" "perl" "rust" "go")
+synths=("cpp" "ada" "pascal" "rust" "go")
 baseDir="~/Documents/samplescaper"
 synthDir="$baseDir/synth/http"
 playDir="$baseDir/singleunit/cpp"
