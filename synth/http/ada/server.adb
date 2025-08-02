@@ -47,18 +47,18 @@ procedure Server is
 
     type CirleSawOscillator is tagged record
         freq, cyclesPerIteration, phaseDepth: float;
-        symmetry: SineOscillator;
+        symmetry, phase: SineOscillator;
     end record;
 
-    function create (f : float; sym: SineOscillator) return CirleSawOscillator is
+    function create (f : float; sym: SineOscillator; ph: SineOscillator; phDepth: float) return CirleSawOscillator is
     begin
-        return CirleSawOscillator'(freq => f, cyclesPerIteration => f / 44100.0, phaseDepth => 0.0, symmetry => sym);
+        return CirleSawOscillator'(freq => f, cyclesPerIteration => f / 44100.0, phaseDepth => phDepth, symmetry => sym, phase => ph);
     end;
 
     function valueAt (s: CirleSawOscillator; i: integer) return float is
         g, p, x, sc, sw: float;
     begin
-        p := (float (i) * s.cyclesPerIteration); -- + (phaseDepth * phase.at(i));
+        p := (float (i) * s.cyclesPerIteration) + (s.phaseDepth * valueAt(s.phase, i));
         x := p - float'Floor (p);
         sw := 0.5 + (0.4 * valueAt(s.symmetry, i));
 
@@ -148,8 +148,10 @@ procedure Server is
         intLen : integer := integer (length + 0.5);
         freq : float := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
         value : float;
+        phase : SineOscillator := create (random_value_between (0.2, 2.0));
+        phaseDepth : float := random_value_between (0.01, 0.4);
         symmetry : SineOscillator := create (random_value_between (0.2, 2.0));
-        oscillator : CirleSawOscillator := create (freq, symmetry);
+        oscillator : CirleSawOscillator := create (freq, symmetry, phase, phaseDepth);
         ramp : RampUpDown := create (length);
     begin
         report (note, freq, durSecs);
