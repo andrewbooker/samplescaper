@@ -41,17 +41,19 @@ use warnings;
     }
 
     sub new {
-        my ($class, $freq, $phase_osc) = @_;
+        my ($class, $freq, $phase_osc, $symmetry_osc) = @_;
         my $self = {
             iterations_per_cycle => (System::SAMPLE_RATE * 1.0) / $freq,
-            phase => _possible($phase_osc)
+            phase => _possible($phase_osc),
+            phase_depth => ConstVal->of(0.01 + rand(0.3)),
+            symmetry => _possible($symmetry_osc)
         };
         bless $self, $class
     }
 
     sub _pos_at {
         my ($self, $i) = @_;
-        my $pos = $i / $self->{iterations_per_cycle};
+        my $pos = ($i / $self->{iterations_per_cycle}) + ($self->{phase_depth}->at($i) * $self->{phase}->at($i));
         $pos - int($pos)
     }
 }
@@ -95,7 +97,7 @@ use warnings;
     sub at {
         my ($self, $i) = @_;
         my $pos = $self->SUPER::_pos_at($i);
-        my $sw = 0.5 + (0.4 * $self->{phase}->at($i));
+        my $sw = 0.5 + (0.4 * $self->{symmetry}->at($i));
         if ($pos < $sw) {
             my $sc = 4.0 * 0.5 / $sw;
             return CircularOscillator::_from(($sc * $pos) - 1.0);
@@ -165,8 +167,9 @@ use warnings;
     sub generate {
         my $note = shift;
         my $f = _frequency_of($note);
-        my $lfo_phase = SineOscillator->new(0.001 + rand(3.0));
-        my $synth = CircularOscillator->new($f, $lfo_phase);
+        my $lfo_phase = SineOscillator->new(0.001 + rand(2.0));
+        my $lfo_symmetry = SineOscillator->new(0.001 + rand(3.0));
+        my $synth = CircularOscillator->new($f, $lfo_phase, $lfo_symmetry);
         my $s = 8.0 + rand(12.0);
         print STDERR ("generating $note at ", sprintf("%.4fHz", $f), " for ", sprintf("%.4fs\n", $s));
         my $sample_len = int($s * System::SAMPLE_RATE);
