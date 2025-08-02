@@ -47,11 +47,12 @@ procedure Server is
 
     type CirleSawOscillator is tagged record
         freq, cyclesPerIteration, phaseDepth: float;
+        symmetry: SineOscillator;
     end record;
 
-    function create (f : float) return CirleSawOscillator is
+    function create (f : float; sym: SineOscillator) return CirleSawOscillator is
     begin
-        return CirleSawOscillator'(freq => f, cyclesPerIteration => f / 44100.0, phaseDepth => 0.0);
+        return CirleSawOscillator'(freq => f, cyclesPerIteration => f / 44100.0, phaseDepth => 0.0, symmetry => sym);
     end;
 
     function valueAt (s: CirleSawOscillator; i: integer) return float is
@@ -59,7 +60,7 @@ procedure Server is
     begin
         p := (float (i) * s.cyclesPerIteration); -- + (phaseDepth * phase.at(i));
         x := p - float'Floor (p);
-        sw := 0.5; --positive(0.9 * symmetry.at(i));
+        sw := 0.5 + (0.4 * valueAt(s.symmetry, i));
 
         if x < sw then
             sc := 4.0 * 0.5 / sw;
@@ -147,7 +148,8 @@ procedure Server is
         intLen : integer := integer (length + 0.5);
         freq : float := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
         value : float;
-        oscillator : CirleSawOscillator := create (freq);
+        symmetry : SineOscillator := create (random_value_between (0.2, 2.0));
+        oscillator : CirleSawOscillator := create (freq, symmetry);
         ramp : RampUpDown := create (length);
     begin
         report (note, freq, durSecs);
