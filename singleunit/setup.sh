@@ -18,14 +18,7 @@ sudo apt -y install tmux
 sudo apt -y install openssh-server
 sudo apt -y install alsa-utils
 sudo apt install -y alsa-base
-sudo apt install -y rustc
-sudo apt install -y cargo
 sudo apt install -y libcurl4-openssl-dev
-sudo apt install -y php-cli
-sudo apt install -y golang-go
-sudo apt install -y libhttp-server-simple-perl
-sudo apt install -y ruby
-sudo apt install -y fpc
 sudo apt install -y ffmpeg
 
 sudo mkdir /var/log/samplescaper
