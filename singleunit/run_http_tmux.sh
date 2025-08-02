@@ -3,7 +3,8 @@ if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
     sudo modprobe snd-aloop
 fi
 
-synths=( "$@" )
+args=( "$@" )
+synths=( "${args[@]:1}" )
 baseDir="~/Documents/samplescaper"
 synthDir="$baseDir/synth/http"
 playDir="$baseDir/singleunit/cpp"
@@ -29,13 +30,19 @@ for ((i=1; i < ${#synths[@]}; ++i)); do
     tmuxCmds+=("select-pane -t 0 \; split-window -v -l '$pc%' \"${synthCmds[i]}\"\;")
 done
 
-recDir=~/Music/recording
-mkdir -p $recDir
-audioRecFn=${recDir}/randomatones_$(date +"%Y%m%d_%H%M%S").wav
-cmdRecord="sleep 1; ffmpeg -f alsa -channels 2 -sample_rate 44100 -i loopout $audioRecFn"
+playSize=80
+recording=${args[0]}
+if [ $recording = 1 ]; then
+    recDir=~/Music/recording
+    mkdir -p $recDir
+    audioRecFn=${recDir}/randomatones_$(date +"%Y%m%d_%H%M%S").wav
+    cmdRecord="sleep 1; ffmpeg -f alsa -channels 2 -sample_rate 44100 -i loopout $audioRecFn"
+    tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '20%' \"$cmdRecord\"\;")
+    playSize=70
+fi
+
 cmdPlay="cd $playDir; ./player 6 $device ${ports[@]} 2>/dev/null"
-tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '20%' \"$cmdRecord\"\;")
-tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '70%' \"$cmdPlay\"\;")
+tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '${playSize}%' \"$cmdPlay\"\;")
 echo 'compiling player...'
 if [ $? == 1 ]; then
     exit

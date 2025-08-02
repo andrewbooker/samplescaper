@@ -1,1 +1,1 @@
-/bin/bash run_http_tmux.sh perl php ruby python
+/bin/bash run_http_tmux.sh 0 perl php ruby python
