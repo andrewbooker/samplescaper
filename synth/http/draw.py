@@ -5,7 +5,7 @@ import struct
 from PIL import Image, ImageDraw
 
 WIDTH = 882
-SMPL = 44100
+SMPL = 44100 * (int(sys.argv[2]) if len(sys.argv) > 2 else 3)
 
 data = []
 with open(sys.argv[1], "rb") as in_file:

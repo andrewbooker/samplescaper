@@ -45,6 +45,31 @@ procedure Server is
     end;
 
 
+    type CirleSawOscillator is tagged record
+        freq, cyclesPerIteration, phaseDepth: float;
+    end record;
+
+    function create (f : float) return CirleSawOscillator is
+    begin
+        return CirleSawOscillator'(freq => f, cyclesPerIteration => f / 44100.0, phaseDepth => 0.0);
+    end;
+
+    function valueAt (s: CirleSawOscillator; i: integer) return float is
+        g, p, x, sc, sw: float;
+    begin
+        p := (float (i) * s.cyclesPerIteration); -- + (phaseDepth * phase.at(i));
+        x := p - float'Floor (p);
+        sw := 0.5; --positive(0.9 * symmetry.at(i));
+
+        if x < sw then
+            sc := 4.0 * 0.5 / sw;
+            return Sqrt(1.0 - (((sc * x) - 1.0) ** 2));
+        end if;
+        g := 1.0 / (1.0 - sw);
+        return (g * (x - sw)) - 1.0;
+    end;
+
+
     type RampUpDown is tagged record
         ramp_up: float;
         ramp_down: float;
@@ -122,13 +147,13 @@ procedure Server is
         intLen : integer := integer (length + 0.5);
         freq : float := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
         value : float;
-        oscillator : SineOscillator := create (freq);
+        oscillator : CirleSawOscillator := create (freq);
         ramp : RampUpDown := create (length);
     begin
         report (note, freq, durSecs);
 
         for i in 1 .. intLen loop
-            value := valueAt (ramp, i) * valueAt (oscillator, i);
+            value := valueAt (ramp, i) * (-1.0) * valueAt (oscillator, i);
             singleSample := To_Bytes (value);
             for j in 1 .. 4 loop
                 data (Stream_Element_Offset ((4 * i) + j)) := singleSample (Integer'Val (j));
