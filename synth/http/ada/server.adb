@@ -31,7 +31,7 @@ procedure Server is
 
 
     type ValueProvider is interface;
-    function ValueAt (v: ValueProvider; i: integer) return float is begin return 0.0; end;
+    function ValueAt (v: ValueProvider; i: integer) return float is abstract;
 
 
     type SineOscillator is new ValueProvider with record
@@ -153,7 +153,7 @@ procedure Server is
         freq : float := (2.0 ** (float (note - 69) / 12.0)) * 440.0;
         value : float;
         phase : SineOscillator := create (random_value_between (0.2, 2.0));
-        phaseDepth : float := random_value_between (0.01, 0.4);
+        phaseDepth : float := random_value_between (0.01, 0.2);
         symmetry : SineOscillator := create (random_value_between (0.2, 2.0));
         oscillator : CirleSawOscillator := create (freq, symmetry, phase, phaseDepth);
         ramp : RampUpDown := create (length);
