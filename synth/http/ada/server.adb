@@ -30,7 +30,11 @@ procedure Server is
     end;
 
 
-    type SineOscillator is tagged record
+    type ValueProvider is interface;
+    function ValueAt (v: ValueProvider; i: integer) return float is begin return 0.0; end;
+
+
+    type SineOscillator is new ValueProvider with record
         freq: float;
     end record;
 
@@ -45,7 +49,7 @@ procedure Server is
     end;
 
 
-    type CirleSawOscillator is tagged record
+    type CirleSawOscillator is new ValueProvider with record
         freq, cyclesPerIteration, phaseDepth: float;
         symmetry, phase: SineOscillator;
     end record;
@@ -71,7 +75,7 @@ procedure Server is
     end;
 
 
-    type RampUpDown is tagged record
+    type RampUpDown is new ValueProvider with record
         ramp_up: float;
         ramp_down: float;
         start_ramp_down: float;
