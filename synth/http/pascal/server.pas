@@ -159,10 +159,10 @@ begin
     move(response[1], responseBytes[0], preambleLength);
     amDepth := anythingBetween(0.01, 0.9);
     ramp.init(sampleLength);
-    phase.init(anythingBetween(0.1, 4.0));
-    symmetry.init(anythingBetween(0.01, 5.0));
-    shape.init(anythingBetween(0.01, 5.0));
-    am.init(anythingBetween(0.01, 5.0));
+    phase.init(anythingBetween(0.1, 3.0));
+    symmetry.init(anythingBetween(0.01, 3.0));
+    shape.init(anythingBetween(0.01, 3.0));
+    am.init(anythingBetween(0.01, 3.0));
     osc.init(freq, phase, symmetry, shape);
     for idx := 0 to sampleLength - 1 do
     begin
