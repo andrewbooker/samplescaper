@@ -1,6 +1,4 @@
-rm server
-[[ -d ./server.ali ]] && rm server.ali
-[[ -d ./server.o ]] && rm server.o
+mkdir -p bin
 
-gnatmake server.adb
+gnatmake server.adb -D bin
 ./server $1
