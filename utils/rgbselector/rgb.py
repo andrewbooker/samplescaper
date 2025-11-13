@@ -12,7 +12,7 @@ class RgbSelector:
     def __init__(self):
         self.freq = 400
         self.port_numbers = [
-            (23, 67), (24, 100), (25, 100), (8, 100)
+            (23, 67), (24, 20), (25, 100), (8, 20)
         ]
         self.ports = []
         self.values = dict()
