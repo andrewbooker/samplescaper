@@ -46,7 +46,7 @@ class Controller(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self.__standardResponse()
-        self.send_header("Access-Control-Allow-Methods", "GET, POST")
+        self.send_header("Access-Control-Allow-Methods", "GET, PUT")
         self.end_headers()
 
     def do_GET(self):

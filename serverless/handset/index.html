@@ -97,6 +97,7 @@
                     </div>
                 </div>
                 <div class="system">
+                    <div><button id="button-setColour">Set colour</button></div>
                     <div><button id="button-setTime">Set time</button></div>
                     <div><button id="button-shutdown">Shutdown</button></div>
                 </div>
@@ -446,8 +447,18 @@
                     }
                 };
             })();
+            document.getElementById("button-setColour").setAttribute("onclick", "setColour();");
             document.getElementById("button-setTime").setAttribute("onclick", "setTime();");
             document.getElementById("button-setKey").setAttribute("onclick", "setKey();");
+
+            function setColour() {
+                ips().forEach((ip, i) => {
+                    const put = new XMLHttpRequest();
+                    put.responseType = "json";
+                    put.open("PUT", urlBase + ip + ":9988/", false);
+                    put.send();
+                });
+            }
 
             function setTime() {
                 ips().forEach((ip, i) => {
