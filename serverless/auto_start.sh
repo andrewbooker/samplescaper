@@ -27,4 +27,5 @@ cd -
 python ~/Documents/samplescaper/record/remoteCtlCamera.py &
 python ~/Documents/samplescaper/serverless/detect_auto.py $LED $BUTTON &
 python ~/Documents/rotation/propellorServo.py $(jq .isPilot ~/Documents/static.json) $(jq .tonic ~/Documents/samplescaper/key.json) &
+python ~/Documents/samplescaper/utils/rgbselector/rgb.py &
 ~/Documents/samplescaper/serverless/start.sh
