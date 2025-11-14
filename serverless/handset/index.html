@@ -455,7 +455,7 @@
                 ips().forEach((ip, i) => {
                     const put = new XMLHttpRequest();
                     put.responseType = "json";
-                    put.open("PUT", urlBase + ip + ":9988/", false);
+                    put.open("PUT", urlBase + ip + ":9988/", true);
                     put.send();
                 });
             }
