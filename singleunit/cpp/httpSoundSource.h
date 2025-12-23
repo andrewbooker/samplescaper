@@ -67,7 +67,8 @@ protected:
         buffer.clear();
         pos = 0;
         std::stringstream uri;
-        uri << "http://" << hosts.next() << "/?note=" << key.at(rand() % key.size());
+        const int octave(12 * (rand() % 2));
+        uri << "http://" << hosts.next() << "/?note=" << octave + (key.at(rand() % key.size()));
         if ((rand() * 1.0 / RAND_MAX) > 0.7) {
             silence();
             return true;
