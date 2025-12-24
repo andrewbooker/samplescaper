@@ -27,6 +27,19 @@ public:
 };
 
 
+class Merged : public Envelope {
+private:
+    const Envelope& env1;
+    const Envelope& env2;
+public:
+    Merged(const Envelope& e1, const Envelope& e2) : env1(e1), env2(e2) {}
+    const float at(const unsigned long i) const {
+        return env1.at(i) * env2.at(i);
+    }
+};
+
+
+
 class ConstVal : public Envelope {
     const float& val;
 
@@ -98,11 +111,27 @@ public:
 };
 
 
+typedef std::vector<float> t_sound;
+
+class SampleRepeater {
+private:
+    const t_sound& source;
+    const unsigned int length;
+
+public:
+    SampleRepeater(const t_sound& s, const unsigned int l) : source(s), length(l) {}
+
+    t_sound& onto(t_sound& buffer, const unsigned int size, const Envelope& am) const {
+        for (unsigned long i(0); i != size; ++i) {
+            const float sample(i < length ? source[i] : 0.0);
+            buffer.push_back(am.at(i) * sample);
+        }
+        return buffer;
+    }
+};
+
 
 class SampleFetcher {
-public:
-    typedef std::vector<float> t_sound;
-
 private:
     typedef std::vector<std::string> t_fileNames;
     t_sound buffer;
@@ -127,7 +156,8 @@ public:
         const float amDepth(anywhereBetween(0.0, 1.0));
         const Scaled am(amLfo, amDepth, 1.0 - amDepth);
 
-        const RampUpDown amplitude(size);
+        const RampUpDown ramp(size);
+        const Merged amplitude(am, ramp);
 
         t_fileNames fileNames;
         for (const auto & entry : std::filesystem::directory_iterator(location)) {
@@ -146,11 +176,8 @@ public:
         sf_close(soundFile);
         std::cout << "read " << read << " samples" << std::endl;
         std::cout << "prepping " << size << " samples" << std::endl;
-        for (unsigned long i(0); i != size; ++i) {
-            const float sample(i < read ? fileBuffer[i] : 0.0);
-            buffer.push_back(am.at(i) * amplitude.at(i) * sample);
-        }
-
+        SampleRepeater repeat(fileBuffer, sampleLength);
+        repeat.onto(buffer, size, amplitude);
         return buffer;
     }
 };
@@ -205,7 +232,7 @@ public:
             return true;
         }
         SampleFetcher fetcher(fileLoc);
-        const SampleFetcher::t_sound& sound(fetcher.fetch());
+        const t_sound& sound(fetcher.fetch());
         std::cout << "generating " << fetcher.describeLatest() << " for " << sound.size() * 1.0 / SAMPLE_RATE << "s\n";
         const unsigned long binarySize(sound.size() * sizeof(float));
         std::stringstream responseHeader;
