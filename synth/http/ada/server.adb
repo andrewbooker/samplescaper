@@ -186,8 +186,6 @@ procedure Server is
         baseResponseHeader : constant String := "HTTP/1.1 200 OK" & ASCII.CR & ASCII.LF & "Content-Type: application/octet-stream" & ASCII.CR & ASCII.LF;
         headerLength : integer;
         contentLength : integer;
-        sent : integer := 0;
-        chunk : integer := 1024;
     begin
         contentLength := write_audio_to(data, note);
         headerLength := add_to (buffer, baseResponseHeader & "Content-Length:" & contentLength'Img & ASCII.CR & ASCII.LF & ASCII.CR & ASCII.LF);
