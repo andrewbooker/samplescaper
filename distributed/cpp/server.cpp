@@ -189,7 +189,6 @@ public:
         t_sound fileBuffer;
         latest = fileNames[selection];
         loadFileInto(fileBuffer, latest);
-        std::cout << "prepping " << size << " samples" << std::endl;
         SampleRepeater repeat(fileBuffer);
         return repeat.onto(buffer, size, amplitude);
     }
@@ -244,6 +243,9 @@ public:
         if (client_fd < 0) {
             return true;
         }
+        char ignore[1024] {};
+        read(client_fd, ignore, sizeof(ignore));
+
         SampleFetcher fetcher(fileLoc);
         const t_sound& sound(fetcher.fetch());
         const unsigned long binarySize(sound.size() * sizeof(float));
@@ -254,9 +256,7 @@ public:
         const std::string& resp(responseHeader.str());
         send(client_fd, resp.c_str(), resp.size(), 0);
         send(client_fd, sound.data(), binarySize, 0);
-
         close(client_fd);
-        std::cout << "done" << std::endl << std::endl;
         return false;
     }
 };
