@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <sstream>
 #include <string>
-#include <regex>
 #include <cmath>
 #include <math.h>
 #include <vector>
@@ -116,15 +115,28 @@ typedef std::vector<float> t_sound;
 class SampleRepeater {
 private:
     const t_sound& source;
-    const unsigned int length;
+    const unsigned long length;
+    const unsigned long xFade;
+    const unsigned long usableLength;
+
+    const float sampleAt(const unsigned long s) const {
+        if (s < xFade) {
+            const float f(s * 1.0 / xFade);
+            return (f * source[s]) + ((1.0 - f) * source[s + length - xFade]);
+        }
+        return source[s];
+    }
 
 public:
-    SampleRepeater(const t_sound& s, const unsigned int l) : source(s), length(l) {}
+    SampleRepeater(const t_sound& s) :
+        source(s),
+        length(s.size()),
+        xFade(anywhereBetween(0.1, 0.4) * length),
+        usableLength(length - xFade) {}
 
-    t_sound& onto(t_sound& buffer, const unsigned int size, const Envelope& am) const {
+    t_sound& onto(t_sound& buffer, const unsigned long size, const Envelope& am) const {
         for (unsigned long i(0); i != size; ++i) {
-            const float sample(i < length ? source[i] : 0.0);
-            buffer.push_back(am.at(i) * sample);
+            buffer.push_back(am.at(i) * sampleAt(i % usableLength));
         }
         return buffer;
     }
@@ -137,6 +149,16 @@ private:
     t_sound buffer;
     const std::string location;
     std::string latest;
+
+    void loadFileInto(t_sound& fileBuffer, const std::string& f) const {
+        SF_INFO info;
+        SNDFILE* soundFile(sf_open(latest.c_str(), SFM_READ, &info));
+        const unsigned long sampleLength(info.frames);
+        fileBuffer.reserve(sampleLength);
+        fileBuffer.assign(sampleLength, 0.0);
+        const unsigned long read(sf_readf_float(soundFile, fileBuffer.data(), sampleLength));
+        sf_close(soundFile);
+    }
 
 public:
     SampleFetcher(const char* loc) : location(loc), latest("") {}
@@ -164,21 +186,12 @@ public:
             fileNames.push_back(entry.path());
         }
         const unsigned int selection(rand() % fileNames.size());
-        SF_INFO info;
-        latest = fileNames[selection];
-        std::cout << "opening " << latest << std::endl;
-        SNDFILE* soundFile(sf_open(latest.c_str(), SFM_READ, &info));
-        const unsigned int sampleLength(info.frames);
-        std::cout << "expecting " << sampleLength << " frames" << std::endl;
         t_sound fileBuffer;
-        fileBuffer.reserve(sampleLength);
-        const unsigned long read(sf_readf_float(soundFile, fileBuffer.data(), sampleLength));
-        sf_close(soundFile);
-        std::cout << "read " << read << " samples" << std::endl;
+        latest = fileNames[selection];
+        loadFileInto(fileBuffer, latest);
         std::cout << "prepping " << size << " samples" << std::endl;
-        SampleRepeater repeat(fileBuffer, sampleLength);
-        repeat.onto(buffer, size, amplitude);
-        return buffer;
+        SampleRepeater repeat(fileBuffer);
+        return repeat.onto(buffer, size, amplitude);
     }
 };
 
@@ -233,8 +246,8 @@ public:
         }
         SampleFetcher fetcher(fileLoc);
         const t_sound& sound(fetcher.fetch());
-        std::cout << "generating " << fetcher.describeLatest() << " for " << sound.size() * 1.0 / SAMPLE_RATE << "s\n";
         const unsigned long binarySize(sound.size() * sizeof(float));
+        std::cout << "sending " << fetcher.describeLatest() << " for " << sound.size() * 1.0 / SAMPLE_RATE << "s (" << binarySize << " bytes)\n";
         std::stringstream responseHeader;
         responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << binarySize << "\r\n";
         responseHeader << "\r\n";
@@ -243,6 +256,7 @@ public:
         send(client_fd, sound.data(), binarySize, 0);
 
         close(client_fd);
+        std::cout << "done" << std::endl << std::endl;
         return false;
     }
 };
