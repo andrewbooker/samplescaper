@@ -12,7 +12,12 @@ import struct
 import numpy as np
 
 
-def playOneFrom(url, startedAt):
+def asSample(v, chs, ch):
+    s = [0.0] * chs
+    s[ch] = int(v * (2 ** 15))
+    return s
+
+def playOneFrom(url, panCh, startedAt):
     print(f"fetching from {url}")
     channel = pg.mixer.find_channel()
     if channel is None:
@@ -28,7 +33,7 @@ def playOneFrom(url, startedAt):
         buf = struct.unpack(f"<{fl}f", rawBytes)
         print(len(buf), "floats unpacked")
         print(buf[:2])
-        sa = np.array([int(b * (2 ** 15)) for b in buf], dtype=np.int16)
+        sa = np.array([asSample(b, 2, panCh) for b in buf], dtype=np.int16)
         sound = pg.sndarray.make_sound(sa)
     except requests.exceptions.RequestException as e:
         print("No audio available from %s" % server)
@@ -46,8 +51,9 @@ def playUntil(url, shouldStop):
     startedAt = time.monotonic()
     threads = []
     start = time.time()
+    played = 0
     while not shouldStop.is_set():
-        nextSound = threading.Thread(target=playOneFrom, args=(url, startedAt), daemon=True)
+        nextSound = threading.Thread(target=playOneFrom, args=(url, played % 2, startedAt), daemon=True)
         nextSound.start()
         threads.append(nextSound)
 
@@ -57,6 +63,7 @@ def playUntil(url, shouldStop):
                 threads.remove(t)
 
         time.sleep(random.random() * 10)
+        played += 1
 
     for t in threads:
         t.join()
@@ -65,7 +72,7 @@ def playUntil(url, shouldStop):
 
 class Player():
     def __init__(self, numberOfChannels):
-        pg.mixer.init(frequency=44100, size=-16, channels=1, buffer=1024)
+        pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
         pg.init()
 
         random.seed()
@@ -96,7 +103,7 @@ class Player():
         self.thread = threading.Thread(target=playUntil, args=(url, self.shouldStop), daemon=True)
         self.thread.start()
 
-player = Player(3)
+player = Player(4)
 player.shouldStop.clear()
 player.start()
 player.thread.join()
