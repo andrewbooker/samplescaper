@@ -127,8 +127,33 @@ class Player():
         self.thread.start()
 
 
+class MotorRunner(SoundListener):
+    def __init__(self):
+        self.refCount = 0
+        self.url = "http://0.0.0.0"
 
-soundListener = SoundListener()
+    def _send(self, action):
+        try:
+            response = requests.post(f"{self.url}:9977/{action}")
+            log.info(f"{action} response: {response.status_code}")
+        except requests.exceptions.ConnectionError as e:
+            print(e)
+
+
+    def startOne(self):
+        if self.count < 1:
+            log.info("starting motor")
+            self._send("random")
+        self.count += 1
+
+    def stopOne(self):
+        self.count -= 1
+        if self.count < 0:
+            log.info("stopping motor")
+            self._send("stop")
+
+
+soundListener = MotorRunner()
 player = Player(4, soundListener)
 player.shouldStop.clear()
 player.start()
