@@ -36,7 +36,7 @@ def playOneFrom(url, panCh, startedAt):
         sa = np.array([asSample(b, 2, panCh) for b in buf], dtype=np.int16)
         sound = pg.sndarray.make_sound(sa)
     except requests.exceptions.RequestException as e:
-        print("No audio available from %s" % server)
+        print(f"No audio available from {url}")
         time.sleep(10)
         return True
 
