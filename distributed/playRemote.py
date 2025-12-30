@@ -10,6 +10,20 @@ import threading
 import requests
 import struct
 import numpy as np
+import datetime
+import logging
+
+ts = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+log_fn = os.path.join("/var/log/randomatones", f"randomtone_playRemote_{ts}.log")
+logging.basicConfig(filename=log_fn, level=logging.INFO)
+
+def createLog(module_name):
+    log = logging.getLogger(module_name)
+    sys.stdout.write = log.info
+    sys.stderr.write = log.error
+    return log
+
+log = createLog("playRemote")
 
 
 def asSample(v, chs, ch):
@@ -18,10 +32,10 @@ def asSample(v, chs, ch):
     return s
 
 def playOneFrom(url, panCh, startedAt):
-    print(f"fetching from {url}")
+    log.info(f"fetching from {url}")
     channel = pg.mixer.find_channel()
     if channel is None:
-        print("%.6f: all channels busy" % time.time())
+        log.info("%.6f: all channels busy" % time.time())
         return
     try:
         response = requests.get(url, stream=True)
@@ -29,13 +43,12 @@ def playOneFrom(url, panCh, startedAt):
         del response
         bl = len(rawBytes)
         fl = int(bl / 4)
-        print("expecting", fl, "samples")
         buf = struct.unpack(f"<{fl}f", rawBytes)
-        print(len(buf), "samples unpacked")
+        log.info(f"{len(buf)} samples unpacked")
         sa = np.array([asSample(b, 2, panCh) for b in buf], dtype=np.int16)
         sound = pg.sndarray.make_sound(sa)
     except requests.exceptions.RequestException as e:
-        print(f"No audio available from {url}")
+        log.info(f"No audio available from {url}")
         time.sleep(10)
         return True
 
@@ -46,7 +59,7 @@ def playOneFrom(url, panCh, startedAt):
 
 
 def playUntil(url, shouldStop):
-    print("starting")
+    log.info("starting")
     startedAt = time.monotonic()
     threads = []
     start = time.time()
@@ -66,7 +79,7 @@ def playUntil(url, shouldStop):
 
     for t in threads:
         t.join()
-    print("stopped")
+    log.info("stopped")
 
 
 class Player():
