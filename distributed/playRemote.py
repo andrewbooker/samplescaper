@@ -14,7 +14,7 @@ import datetime
 import logging
 
 ts = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
-log_fn = os.path.join("/var/log/randomatones", f"randomtone_playRemote_{ts}.log")
+log_fn = os.path.join("/var/log/randomatones", f"distributed_client_{ts}.log")
 logging.basicConfig(filename=log_fn, level=logging.INFO)
 
 def createLog(module_name):
@@ -58,13 +58,14 @@ def playOneFrom(url, panCh, startedAt):
         time.sleep(0.1)
 
 
-def playUntil(url, shouldStop):
+def playUntil(shouldStop, url, soundListener):
     log.info("starting")
     startedAt = time.monotonic()
     threads = []
     start = time.time()
     played = 0
     while not shouldStop.is_set():
+        soundListener.startOne()
         nextSound = threading.Thread(target=playOneFrom, args=(url, played % 2, startedAt), daemon=True)
         nextSound.start()
         threads.append(nextSound)
@@ -74,16 +75,25 @@ def playUntil(url, shouldStop):
                 t.join()
                 threads.remove(t)
 
-        time.sleep(random.random() * 10)
+        soundListener.stopOne()
         played += 1
+        time.sleep(random.random() * 10)
 
     for t in threads:
         t.join()
     log.info("stopped")
 
 
+class SoundListener:
+    def startOne(self):
+        pass
+
+    def stopOne(self):
+        pass
+
+
 class Player():
-    def __init__(self, numberOfChannels):
+    def __init__(self, numberOfChannels, soundListener):
         pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
         pg.init()
 
@@ -93,6 +103,7 @@ class Player():
         self.serverIp = "192.168.1.88"
         self.shouldStop = threading.Event();
         self.thread = None
+        self.soundListener = soundListener
 
     def __del__(self):
         self.pause()
@@ -112,10 +123,13 @@ class Player():
 
         url = f"http://{self.serverIp}:3064"
         self.shouldStop.clear()
-        self.thread = threading.Thread(target=playUntil, args=(url, self.shouldStop), daemon=True)
+        self.thread = threading.Thread(target=playUntil, args=(self.shouldStop, url, self.soundListener), daemon=True)
         self.thread.start()
 
-player = Player(4)
+
+
+soundListener = SoundListener()
+player = Player(4, soundListener)
 player.shouldStop.clear()
 player.start()
 player.thread.join()
