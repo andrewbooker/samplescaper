@@ -140,7 +140,6 @@ class MotorRunner(SoundListener):
         except requests.exceptions.ConnectionError as e:
             print(e)
 
-
     def startOne(self):
         if self.count < 1:
             log.info("starting motor")
