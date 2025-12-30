@@ -1,10 +1,16 @@
 #!/bin/bash
+sudo swapoff -a
+value_of() {
+    raspi-gpio get $1 | sed 's/.*level=\([0-1]\).*/\1/'
+}
 
 LED=14
 BUTTON=15
+JUMP=26
 raspi-gpio set $BUTTON pu
-if [ $(raspi-gpio get $BUTTON | sed 's/.*level=\([0-1]\).*/\1/') = 0 ]
-then
+raspi-gpio set $JUMP pu
+
+if [ $(value_of $BUTTON) = 0 ]; then
     raspi-gpio set $LED op
     raspi-gpio set $LED dh
     cd ~/Documents/rotation/
@@ -16,16 +22,22 @@ then
         zip -9 -r archives/$f.zip $f
         rm -rf $f
     done
-    exit
+elif [ $(value_of $JUMP) = 0 ]; then
+    cd ~/Documents/rotation/
+    ./setup.sh remote ~/Documents/config.json
+    cd -
+    python ~/Documents/rotation/propellorServo.py 0 &
+    ~/Documents/samplescaper/distributed/start.sh
+else
+    cd ~/Documents/rotation/
+    ./setup.sh remote ~/Documents/config.json
+    cd -
+    ~/Documents/samplescaper/record/ambient.sh
+    python ~/Documents/samplescaper/serverless/detect_auto.py $LED $BUTTON &
+    python ~/Documents/rotation/propellorServo.py $(jq .isPilot ~/Documents/static.json) $(jq .tonic ~/Documents/samplescaper/key.json) &
+    python ~/Documents/samplescaper/utils/rgbselector/rgb.py &
+    ~/Documents/samplescaper/serverless/start.sh
 fi
 
-sudo swapoff -a
-cd ~/Documents/rotation/
-./setup.sh remote ~/Documents/config.json
-cd -
-~/Documents/samplescaper/record/ambient.sh
-python ~/Documents/samplescaper/record/remoteCtlCamera.py &
-python ~/Documents/samplescaper/serverless/detect_auto.py $LED $BUTTON &
-python ~/Documents/rotation/propellorServo.py $(jq .isPilot ~/Documents/static.json) $(jq .tonic ~/Documents/samplescaper/key.json) &
-python ~/Documents/samplescaper/utils/rgbselector/rgb.py &
-~/Documents/samplescaper/serverless/start.sh
+
+
