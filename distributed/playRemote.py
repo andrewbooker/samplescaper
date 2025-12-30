@@ -31,8 +31,7 @@ def playOneFrom(url, panCh, startedAt):
         fl = int(bl / 4)
         print("expecting", fl, "samples")
         buf = struct.unpack(f"<{fl}f", rawBytes)
-        print(len(buf), "floats unpacked")
-        print(buf[:2])
+        print(len(buf), "samples unpacked")
         sa = np.array([asSample(b, 2, panCh) for b in buf], dtype=np.int16)
         sound = pg.sndarray.make_sound(sa)
     except requests.exceptions.RequestException as e:
