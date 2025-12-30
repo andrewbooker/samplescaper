@@ -131,6 +131,7 @@ class MotorRunner(SoundListener):
     def __init__(self):
         self.refCount = 0
         self.url = "http://0.0.0.0"
+        self.direction = "clockwise"
 
     def _send(self, action):
         try:
@@ -143,14 +144,15 @@ class MotorRunner(SoundListener):
     def startOne(self):
         if self.count < 1:
             log.info("starting motor")
-            self._send("random")
+            self._send(self.direction)
         self.count += 1
 
     def stopOne(self):
         self.count -= 1
         if self.count < 0:
             log.info("stopping motor")
-            self._send("stop")
+            self._send(f"{self.direction}Stop")
+            self.direction = "antiClockwise" if self.direction == "clockwise" else "clockwise"
 
 
 soundListener = MotorRunner()
