@@ -27,7 +27,7 @@ elif [ $(value_of $JUMP) = 0 ]; then
     ./setup.sh remote ~/Documents/config.json
     cd -
     python ~/Documents/rotation/propellorServo.py 0 &
-    ~/Documents/samplescaper/distributed/start.sh
+    ~/Documents/samplescaper/distributed/run_client.sh
 else
     cd ~/Documents/rotation/
     ./setup.sh remote ~/Documents/config.json
