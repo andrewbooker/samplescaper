@@ -168,23 +168,29 @@ public:
     }
 
     const t_sound& fetch() {
+        buffer.clear();
+        t_fileNames fileNames;
+        for (const auto & entry : std::filesystem::directory_iterator(location)) {
+            fileNames.push_back(entry.path());
+        }
+        if (fileNames.empty()) {
+            latest = "silence";
+            buffer.reserve(SAMPLE_RATE);
+            buffer.assign(SAMPLE_RATE, 0.0);
+            return buffer;
+        }
+
         const float lengthSecs(anywhereBetween(8, 20));
         const unsigned long size(SAMPLE_RATE * lengthSecs);
-        buffer.clear();
         buffer.reserve(size);
 
         const Lfo amLfo;
         const AsPositive amLfoP(amLfo);
         const float amDepth(anywhereBetween(0.0, 1.0));
         const Scaled am(amLfo, amDepth, 1.0 - amDepth);
-
         const RampUpDown ramp(size);
         const Merged amplitude(am, ramp);
 
-        t_fileNames fileNames;
-        for (const auto & entry : std::filesystem::directory_iterator(location)) {
-            fileNames.push_back(entry.path());
-        }
         const unsigned int selection(rand() % fileNames.size());
         t_sound fileBuffer;
         latest = fileNames[selection];
