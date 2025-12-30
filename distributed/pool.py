@@ -7,6 +7,7 @@ import sounddevice as sd
 import os
 import sys
 import shutil
+import soundfile as sf
 
 localParentDir = os.path.dirname(os.getcwd())
 parentDir = os.path.dirname(localParentDir)
@@ -20,12 +21,18 @@ def checkImport(lib):
 
 checkImport("mediautils")
 from mediautils.audiodevices import UsbAudioDevices
-from capture.LoopableSample import LoopableSample # this has been broken since being moved into distributed
 from utils.LevelMonitor import LevelMonitor
 
 SAMPLE_RATE = 44100.0
 MINIMAL_LEVEL = 5.0
 MAX_LIVE_POOL_SIZE = 30
+
+class SampleCatcher():
+    def __init__(self):
+        self.data = []
+
+    def addBuffer(self, buffer):
+        self.data.extend(buffer)
 
 
 class Buffer():
@@ -43,9 +50,10 @@ class PoolFeeder():
         self.outDir = outDir
         self.monitor = monitor
         self.reset()
+        self.out = None
 
     def reset(self):
-        self.out = []
+        self.out = None
         self.sampleLength = 0
         self.monitor.setRecording(0)
 
@@ -54,27 +62,27 @@ class PoolFeeder():
 
         if self.sampleLength > 2.0:
             self.monitor.setRecording(2)
+            self.monitor.setMessage("recording")
         elif dropped:
-            self.reset()
+            if self.out is not None:
+                self.reset()
             return
 
-        if self.out == []:
-            self.out = [LoopableSample(), LoopableSample()]
+        if self.out is None:
+            self.out = SampleCatcher()
             self.monitor.setRecording(1)
 
-        if dropped or self.sampleLength > 6.0:
-            for i in [0, 1]:
-                fn = "%s_%d.wav" % (datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S"), i)
-                fqfn = os.path.join(self.outDir, fn)
-                self.out[i].create(fqfn)
+        if dropped or self.sampleLength > 5.0:
+            fd = datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H%M%S")
+            fqfn = os.path.join(self.outDir, f"{fd}.wav")
+            sf.write(fqfn, self.out.data, 44100)
+            self.monitor.setMessage(f"Written {len(self.out.data)} samples to to {fqfn}")
             self.reset()
-            self.monitor.setMessage("Written to %s" % fqfn)
             return
 
-        self.out[0].addBuffer(b)
-        self.out[1].addBuffer(b[0::2])
+        self.out.addBuffer(b)
         self.sampleLength += (len(b) / SAMPLE_RATE)
-    
+
 
 class Recorder():
     def __init__(self, device, consumers):
@@ -90,7 +98,7 @@ class Recorder():
 
     def start(self, shouldStop):
         self.stream = sd.InputStream(samplerate=SAMPLE_RATE, device=self.device, channels=1, callback=self.buffer.make(), blocksize=512)
-        
+
         self.stream.start()
         while not shouldStop.is_set():
             b = self.buffer.q.get()
