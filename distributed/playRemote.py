@@ -28,15 +28,14 @@ def playOneFrom(url, startedAt):
         buf = struct.unpack(f"<{fl}f", rawBytes)
         print(len(buf), "floats unpacked")
         print(buf[:2])
-        sa = np.array([int((1.0 + b) * (2 ** 15)) for b in buf], dtype=np.int16)
+        sa = np.array([int(b * (2 ** 15)) for b in buf], dtype=np.int16)
         sound = pg.sndarray.make_sound(sa)
-        print(f"received {bl} bytes")
     except requests.exceptions.RequestException as e:
         print("No audio available from %s" % server)
         time.sleep(10)
         return True
 
-    channel.set_volume(0.1)
+    channel.set_volume(1.0)
     channel.play(sound)
     while channel.get_busy():
         time.sleep(0.1)
