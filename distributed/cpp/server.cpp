@@ -149,6 +149,7 @@ private:
     t_sound buffer;
     const std::string location;
     std::string latest;
+    bool hasContent;
 
     void loadFileInto(t_sound& fileBuffer, const std::string& f) const {
         SF_INFO info;
@@ -161,10 +162,14 @@ private:
     }
 
 public:
-    SampleFetcher(const char* loc) : location(loc), latest("") {}
+    SampleFetcher(const char* loc) : location(loc), latest(""), hasContent(false) {}
 
     const std::string& describeLatest() const {
         return latest;
+    }
+
+    const bool isSilence() const {
+        return !hasContent;
     }
 
     const t_sound& fetch() {
@@ -174,12 +179,13 @@ public:
             fileNames.push_back(entry.path());
         }
         if (fileNames.empty()) {
+            hasContent = false;
             latest = "silence";
             buffer.reserve(SAMPLE_RATE);
             buffer.assign(SAMPLE_RATE, 0.0);
             return buffer;
         }
-
+        hasContent = true;
         const float lengthSecs(anywhereBetween(8, 20));
         const unsigned long size(SAMPLE_RATE * lengthSecs);
         buffer.reserve(size);
@@ -257,7 +263,8 @@ public:
         const unsigned long binarySize(sound.size() * sizeof(float));
         std::cout << "sending " << fetcher.describeLatest() << " for " << sound.size() * 1.0 / SAMPLE_RATE << "s (" << binarySize << " bytes)\n";
         std::stringstream responseHeader;
-        responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << binarySize << "\r\n";
+        const int statusCode(fetcher.isSilence() ? 204 : 200);
+        responseHeader << "HTTP/1.1 " << statusCode << " OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << binarySize << "\r\n";
         responseHeader << "\r\n";
         const std::string& resp(responseHeader.str());
         send(client_fd, resp.c_str(), resp.size(), 0);

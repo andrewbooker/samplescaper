@@ -37,9 +37,12 @@ def playOneFrom(url, panCh, startedAt, soundListener):
     if channel is None:
         log.info("%.6f: all channels busy" % time.time())
         return
+
+    isSilence = True
     try:
         response = requests.get(url, stream=True)
         rawBytes = response.raw.read()
+        isSilence = response.status_code == 204
         del response
         bl = len(rawBytes)
         fl = int(bl / 4)
@@ -54,10 +57,12 @@ def playOneFrom(url, panCh, startedAt, soundListener):
 
     channel.set_volume(1.0)
     channel.play(sound)
-    soundListener.startOne()
+    if not isSilence:
+        soundListener.startOne()
     while channel.get_busy():
         time.sleep(0.1)
-    soundListener.stopOne()
+    if not isSilence:
+        soundListener.stopOne()
 
 
 def playUntil(shouldStop, url, soundListener):
