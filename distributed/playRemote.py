@@ -31,7 +31,7 @@ def asSample(v, chs, ch):
     s[ch] = int(v * (2 ** 15))
     return s
 
-def playOneFrom(url, panCh, startedAt):
+def playOneFrom(url, panCh, startedAt, soundListener):
     log.info(f"fetching from {url}")
     channel = pg.mixer.find_channel()
     if channel is None:
@@ -50,12 +50,14 @@ def playOneFrom(url, panCh, startedAt):
     except requests.exceptions.RequestException as e:
         log.info(f"No audio available from {url}")
         time.sleep(10)
-        return True
+        return
 
     channel.set_volume(1.0)
     channel.play(sound)
+    soundListener.startOne()
     while channel.get_busy():
         time.sleep(0.1)
+    soundListener.stopOne()
 
 
 def playUntil(shouldStop, url, soundListener):
@@ -65,8 +67,7 @@ def playUntil(shouldStop, url, soundListener):
     start = time.time()
     played = 0
     while not shouldStop.is_set():
-        soundListener.startOne()
-        nextSound = threading.Thread(target=playOneFrom, args=(url, played % 2, startedAt), daemon=True)
+        nextSound = threading.Thread(target=playOneFrom, args=(url, played % 2, startedAt, soundListener), daemon=True)
         nextSound.start()
         threads.append(nextSound)
 
@@ -75,7 +76,6 @@ def playUntil(shouldStop, url, soundListener):
                 t.join()
                 threads.remove(t)
 
-        soundListener.stopOne()
         played += 1
         time.sleep(random.random() * 10)
 
@@ -129,7 +129,7 @@ class Player():
 
 class MotorRunner(SoundListener):
     def __init__(self):
-        self.refCount = 0
+        self.count = 0
         self.url = "http://0.0.0.0"
         self.direction = "clockwise"
 
@@ -145,6 +145,7 @@ class MotorRunner(SoundListener):
             log.info("starting motor")
             self._send(self.direction)
         self.count += 1
+        log.info(f"{self.count} played")
 
     def stopOne(self):
         self.count -= 1
