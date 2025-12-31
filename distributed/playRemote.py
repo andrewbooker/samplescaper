@@ -42,9 +42,10 @@ def playOneFrom(url, panCh, startedAt, soundListener):
     try:
         response = requests.get(url, stream=True)
         rawBytes = response.raw.read()
-        isSilence = response.status_code == 204
-        del response
         bl = len(rawBytes)
+        isSilence = response.status_code != 200
+        log.info(f"response {response.status_code} fetching {bl} bytes")
+        del response
         fl = int(bl / 4)
         buf = struct.unpack(f"<{fl}f", rawBytes)
         log.info(f"{len(buf)} samples unpacked")
@@ -52,6 +53,7 @@ def playOneFrom(url, panCh, startedAt, soundListener):
         sound = pg.sndarray.make_sound(sa)
     except requests.exceptions.RequestException as e:
         log.info(f"No audio available from {url}")
+        log.info(e)
         time.sleep(10)
         return
 
