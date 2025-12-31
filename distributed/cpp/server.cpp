@@ -263,7 +263,7 @@ public:
         const unsigned long binarySize(sound.size() * sizeof(float));
         std::cout << "sending " << fetcher.describeLatest() << " for " << sound.size() * 1.0 / SAMPLE_RATE << "s (" << binarySize << " bytes)\n";
         std::stringstream responseHeader;
-        const int statusCode(fetcher.isSilence() ? 204 : 200);
+        const int statusCode(fetcher.isSilence() ? 202 : 200);
         responseHeader << "HTTP/1.1 " << statusCode << " OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << binarySize << "\r\n";
         responseHeader << "\r\n";
         const std::string& resp(responseHeader.str());
