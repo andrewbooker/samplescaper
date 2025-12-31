@@ -152,11 +152,12 @@ class MotorRunner(SoundListener):
             log.info("starting motor")
             self._send(self.direction)
         self.count += 1
-        log.info(f"{self.count} played")
+        log.info(f"{self.count} playing on start")
 
     def stopOne(self):
         self.count -= 1
-        if self.count < 0:
+        log.info(f"{self.count} playing on stop")
+        if self.count < 1:
             log.info("stopping motor")
             self._send(f"{self.direction}Stop")
             self.direction = "antiClockwise" if self.direction == "clockwise" else "clockwise"
