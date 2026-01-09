@@ -40,9 +40,13 @@ class Motors():
         self.pins[pin] = 0
 
 
-motors = Motors([6, 12])
-
+channelMapping = {
+    0: 6,
+    1: 12
+}
+motors = Motors([v for _, v in channelMapping.items()])
 PORT = 9971
+
 
 class Controller(BaseHTTPRequestHandler):
     def __standardResponse(self):
@@ -73,7 +77,9 @@ class Controller(BaseHTTPRequestHandler):
         p = ps[0][1:]
         q = ps[1]
         idx = int(q)
-        getattr(self, f"_{p}")(idx)
+        port = channelMapping[idx]
+        print(p, port)
+        getattr(self, f"_{p}")(port)
         self.do_GET()
 
 

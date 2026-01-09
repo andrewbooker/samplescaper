@@ -37,23 +37,44 @@ class SoundPlayListener {
 private:
     const unsigned int idx;
     unsigned int last;
+    CURL* curl;
+
+    void send(const unsigned int v) {
+        last = v;
+        std::stringstream url;
+        url << "http://localhost:9971/" << (v ? "start" : "stop") << "?" << v;
+        curl_easy_setopt(curl, CURLOPT_URL, url.str().c_str());
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Randomatone");
+	curl_easy_setopt(curl, CURLOPT_POST, 1);
+
+        CURLcode res(curl_easy_perform(curl));
+        const bool success(res == CURLE_OK);
+        if (!success) {
+            std::cerr << "Listener failure posting to " << url.str() << ": " << curl_easy_strerror(res) << std::endl;
+        }
+    }
 
 public:
-    SoundPlayListener(const unsigned int i) : idx(i), last(0) {}
+    SoundPlayListener(const unsigned int i) : idx(i), last(0), curl(curl_easy_init()) {}
+
+    ~SoundPlayListener() {
+        curl_easy_cleanup(curl);
+    }
+
     void on() {
-        if (last == 1) {
+        if (last == 1 || !curl) {
             return;
 	}
         std::cout << "playing " << idx << std::endl;
-        last = 1;
+	send(1);
     }
 
     void off() {
         if (last == 0) {
             return;
         }
-        last = 0;
         std::cout << "stopping " << idx << std::endl;
+	send(0);
     }
 };
 
@@ -110,7 +131,7 @@ protected:
 
             CURLcode res(curl_easy_perform(curl));
             const bool success(res == CURLE_OK);
-	    if (!success) {
+            if (!success) {
                 std::cerr << "Fetch failure: " << curl_easy_strerror(res) << std::endl;
             }
             curl_easy_cleanup(curl);
