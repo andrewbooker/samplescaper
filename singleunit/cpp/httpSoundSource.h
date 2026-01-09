@@ -63,16 +63,16 @@ private:
 
 protected:
     bool fetchContent() {
-        CURL* curl(curl_easy_init());
         buffer.clear();
         pos = 0;
-        std::stringstream uri;
-        const int octave(12 * (rand() % 2));
-        uri << "http://" << hosts.next() << "/?note=" << octave + (key.at(rand() % key.size()));
         if ((rand() * 1.0 / RAND_MAX) > 0.7) {
             silence();
             return true;
         }
+        std::stringstream uri;
+        const int octave(12 * (rand() % 2));
+        uri << "http://" << hosts.next() << "/?note=" << octave + (key.at(rand() % key.size()));
+        CURL* curl(curl_easy_init());
         if (curl) {
             std::cout << idx << " fetching from " << uri.str() << std::endl;
             const auto start(high_resolution_clock::now());
