@@ -33,6 +33,31 @@ public:
 };
 
 
+class SoundPlayListener {
+private:
+    const unsigned int idx;
+    unsigned int last;
+
+public:
+    SoundPlayListener(const unsigned int i) : idx(i), last(0) {}
+    void on() {
+        if (last == 1) {
+            return;
+	}
+        std::cout << "playing " << idx << std::endl;
+        last = 1;
+    }
+
+    void off() {
+        if (last == 0) {
+            return;
+        }
+        last = 0;
+        std::cout << "stopping " << idx << std::endl;
+    }
+};
+
+
 class HttpSoundSource : public SoundSource {
 public:
     typedef std::vector<std::string> t_hosts;
@@ -44,6 +69,7 @@ private:
     unsigned long pos;
     const std::vector<unsigned short> key;
     OptionsProvider& hosts;
+    SoundPlayListener listener;
 
     static size_t write(void* ptr, size_t size, size_t nmemb, void* stream) {
         t_buffer& out(*reinterpret_cast<t_buffer*>(stream));
@@ -93,6 +119,7 @@ protected:
                 std::cout << idx << " read " << buffer.size() << " bytes ("
                         << buffer.size() / (4 * 44100) << "s) in " << fetchTime.count()
                         << "ms at " << buffer.size() / (1024.0 * fetchTime.count()) << " MB/ms" << std::endl;
+		listener.on();
             }
             return success;
         } else {
@@ -105,6 +132,7 @@ public:
     HttpSoundSource(const unsigned int i, OptionsProvider& h) :
         hosts(h),
         idx(i),
+        listener(i),
         pos(0),
         key {57, 59, 60, 62, 64, 65, 67, 69} {}
 
@@ -118,6 +146,9 @@ public:
         memcpy(out, buffer.data() + pos, toRead);
         pos += toRead;
         ready = (toRead == byteLength);
+	if (!ready) {
+            listener.off();
+	}
     }
 };
 
