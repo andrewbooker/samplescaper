@@ -37,12 +37,12 @@ class SoundPlayListener {
 private:
     const unsigned int idx;
     unsigned int last;
-    CURL* curl;
 
     void send(const unsigned int v) {
         last = v;
         std::stringstream url;
-        url << "http://localhost:9971/" << (v ? "start" : "stop") << "?" << v;
+        url << "http://localhost:9971/" << (v ? "start" : "stop") << "?" << idx;
+	CURL* curl(curl_easy_init());
         curl_easy_setopt(curl, CURLOPT_URL, url.str().c_str());
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "Randomatone");
 	curl_easy_setopt(curl, CURLOPT_POST, 1);
@@ -52,17 +52,14 @@ private:
         if (!success) {
             std::cerr << "Listener failure posting to " << url.str() << ": " << curl_easy_strerror(res) << std::endl;
         }
-    }
-
-public:
-    SoundPlayListener(const unsigned int i) : idx(i), last(0), curl(curl_easy_init()) {}
-
-    ~SoundPlayListener() {
         curl_easy_cleanup(curl);
     }
 
+public:
+    SoundPlayListener(const unsigned int i) : idx(i), last(0) {}
+
     void on() {
-        if (last == 1 || !curl) {
+        if (last == 1) {
             return;
 	}
         std::cout << "playing " << idx << std::endl;
