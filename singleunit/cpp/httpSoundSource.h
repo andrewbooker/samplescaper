@@ -73,6 +73,7 @@ protected:
         const int octave(12 * (rand() % 2));
         uri << "http://" << hosts.next() << "/?note=" << octave + (key.at(rand() % key.size()));
         CURL* curl(curl_easy_init());
+	bool success(false);
         if (curl) {
             std::cout << idx << " fetching from " << uri.str() << std::endl;
             const auto start(high_resolution_clock::now());
@@ -82,15 +83,18 @@ protected:
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
 
             CURLcode res(curl_easy_perform(curl));
-            if (res != CURLE_OK) {
-                std::cerr << curl_easy_strerror(res) << std::endl;
+            const bool success(res == CURLE_OK);
+	    if (!success) {
+                std::cerr << "Fetch failure: " << curl_easy_strerror(res) << std::endl;
             }
             curl_easy_cleanup(curl);
-            const auto fetchTime(duration_cast<milliseconds>(high_resolution_clock::now() - start));
-            std::cout << idx << " read " << buffer.size() << " bytes ("
-                    << buffer.size() / (4 * 44100) << "s) in " << fetchTime.count()
-                    << "ms at " << buffer.size() / (1024.0 * fetchTime.count()) << " MB/ms" << std::endl;
-            return true;
+	    if (success) {
+                const auto fetchTime(duration_cast<milliseconds>(high_resolution_clock::now() - start));
+                std::cout << idx << " read " << buffer.size() << " bytes ("
+                        << buffer.size() / (4 * 44100) << "s) in " << fetchTime.count()
+                        << "ms at " << buffer.size() / (1024.0 * fetchTime.count()) << " MB/ms" << std::endl;
+            }
+            return success;
         } else {
             std::cerr << "Failed to initialize curl\n";
         }
