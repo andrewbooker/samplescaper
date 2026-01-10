@@ -78,7 +78,6 @@ class Controller(BaseHTTPRequestHandler):
         q = ps[1]
         idx = int(q)
         port = channelMapping[idx]
-        print(p, port)
         getattr(self, f"_{p}")(port)
         self.do_GET()
 
