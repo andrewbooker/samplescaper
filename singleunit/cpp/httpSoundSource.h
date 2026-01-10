@@ -88,6 +88,7 @@ private:
     const std::vector<unsigned short> key;
     OptionsProvider& hosts;
     SoundPlayListener listener;
+    bool isSilent;
 
     static size_t write(void* ptr, size_t size, size_t nmemb, void* stream) {
         t_buffer& out(*reinterpret_cast<t_buffer*>(stream));
@@ -99,7 +100,7 @@ private:
     }
 
     void silence() {
-        const float dur(1.0 + (rand() * 3.0 / RAND_MAX));
+        const float dur(1.0 + (rand() / RAND_MAX));
         std::cout << idx << " silence for " << dur << "s\n";
         const unsigned int len(dur * 44100 * sizeof(float));
         buffer.assign(len, 0);
@@ -109,8 +110,9 @@ protected:
     bool fetchContent() {
         buffer.clear();
         pos = 0;
-        if ((rand() * 1.0 / RAND_MAX) > 0.7) {
+        if (isSilent) {
             silence();
+            isSilent = false;
             return true;
         }
         std::stringstream uri;
@@ -138,6 +140,7 @@ protected:
                         << buffer.size() / (4 * 44100) << "s) in " << fetchTime.count()
                         << "ms at " << buffer.size() / (1024.0 * fetchTime.count()) << " MB/ms" << std::endl;
 		listener.on();
+		isSilent = !isSilent;
             }
             return success;
         } else {
@@ -152,6 +155,7 @@ public:
         idx(i),
         listener(i),
         pos(0),
+        isSilent(false),
         key {57, 59, 60, 62, 64, 65, 67, 69} {}
 
     void readInto(float* out, const unsigned long sampleLength) {
