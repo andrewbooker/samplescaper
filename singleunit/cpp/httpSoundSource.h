@@ -37,6 +37,15 @@ class SoundPlayListener {
 private:
     const unsigned int idx;
     unsigned int last;
+    struct {
+        char *response;
+        size_t size;
+    } dump;
+
+    static size_t swallowResponse(void* ptr, size_t size, size_t nmemb, void* stream) {
+        size_t read(size * nmemb);
+        return read;
+    }
 
     void send(const unsigned int v) {
         last = v;
@@ -46,6 +55,8 @@ private:
         curl_easy_setopt(curl, CURLOPT_URL, url.str().c_str());
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "Randomatone");
         curl_easy_setopt(curl, CURLOPT_POST, 1);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, swallowResponse);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&dump);
 
         CURLcode res(curl_easy_perform(curl));
         const bool success(res == CURLE_OK);
@@ -56,7 +67,9 @@ private:
     }
 
 public:
-    SoundPlayListener(const unsigned int i) : idx(i), last(0) {}
+    SoundPlayListener(const unsigned int i) : idx(i), last(0) {
+        dump = {0};
+    }
 
     void on() {
         if (last == 1) {
