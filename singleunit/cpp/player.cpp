@@ -203,10 +203,10 @@ int main(int argc, char *argv[]) {
         ports.push_back("9964");
     }
     OptionsProvider hosts;
-    const std::string server("0.0.0.0");
+    const std::string localhost("0.0.0.0");
     for (auto& p : ports) {
         std::cout << p << std::endl;
-        hosts.add(server + ":" + p);
+        hosts.add(p.find(':') == std::string::npos ? (localhost + ":" + p) : p);
     }
 
     AudioPlayer audioPlayer(hosts, channels, deviceNumber);
