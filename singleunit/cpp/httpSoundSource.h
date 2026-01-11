@@ -42,10 +42,10 @@ private:
         last = v;
         std::stringstream url;
         url << "http://localhost:9971/" << (v ? "start" : "stop") << "?" << idx;
-	CURL* curl(curl_easy_init());
+        CURL* curl(curl_easy_init());
         curl_easy_setopt(curl, CURLOPT_URL, url.str().c_str());
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "Randomatone");
-	curl_easy_setopt(curl, CURLOPT_POST, 1);
+        curl_easy_setopt(curl, CURLOPT_POST, 1);
 
         CURLcode res(curl_easy_perform(curl));
         const bool success(res == CURLE_OK);
@@ -61,9 +61,9 @@ public:
     void on() {
         if (last == 1) {
             return;
-	}
+        }
         std::cout << "playing " << idx << std::endl;
-	send(1);
+        send(1);
     }
 
     void off() {
@@ -71,7 +71,7 @@ public:
             return;
         }
         std::cout << "stopping " << idx << std::endl;
-	send(0);
+        send(0);
     }
 };
 
@@ -119,7 +119,7 @@ protected:
         const int octave(12 * (rand() % 2));
         uri << "http://" << hosts.next() << "/?note=" << octave + (key.at(rand() % key.size()));
         CURL* curl(curl_easy_init());
-	bool success(false);
+        bool success(false);
         if (curl) {
             std::cout << idx << " fetching from " << uri.str() << std::endl;
             const auto start(high_resolution_clock::now());
@@ -134,13 +134,13 @@ protected:
                 std::cerr << "Fetch failure: " << curl_easy_strerror(res) << std::endl;
             }
             curl_easy_cleanup(curl);
-	    if (success) {
+            if (success) {
                 const auto fetchTime(duration_cast<milliseconds>(high_resolution_clock::now() - start));
                 std::cout << idx << " read " << buffer.size() << " bytes ("
                         << buffer.size() / (4 * 44100) << "s) in " << fetchTime.count()
                         << "ms at " << buffer.size() / (1024.0 * fetchTime.count()) << " MB/ms" << std::endl;
-		listener.on();
-		isSilent = !isSilent;
+                listener.on();
+                isSilent = !isSilent;
             }
             return success;
         } else {
@@ -168,9 +168,9 @@ public:
         memcpy(out, buffer.data() + pos, toRead);
         pos += toRead;
         ready = (toRead == byteLength);
-	if (!ready) {
+        if (!ready) {
             listener.off();
-	}
+        }
     }
 };
 
