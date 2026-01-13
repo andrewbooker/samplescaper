@@ -100,14 +100,14 @@ class SoundListener:
 
 
 class Player():
-    def __init__(self, numberOfChannels, soundListener):
+    def __init__(self, numberOfChannels, soundListener, serverIp):
         pg.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
         pg.init()
 
         random.seed()
         pg.mixer.set_num_channels(numberOfChannels)
 
-        self.serverIp = "192.168.1.88"
+        self.serverIp = serverIp
         self.shouldStop = threading.Event();
         self.thread = None
         self.soundListener = soundListener
@@ -163,8 +163,9 @@ class MotorRunner(SoundListener):
             self.direction = "antiClockwise" if self.direction == "clockwise" else "clockwise"
 
 
+serverIp = sys.argv[1] if len(sys.argv) > 1 else "192.168.1.88"
 soundListener = MotorRunner()
-player = Player(4, soundListener)
+player = Player(4, soundListener, serverIp)
 player.shouldStop.clear()
 player.start()
 player.thread.join()
