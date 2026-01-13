@@ -11,7 +11,7 @@ assert_success() {
     then
         echo "can $2"
     else
-        die "cannot $2"
+        die "!! cannot $2 !!"
     fi
 }
 
@@ -32,5 +32,8 @@ assert_success "$(lsusb | grep 'Texas Instruments PCM2902 Audio Codec')" "see lo
 assert_success "$(v4l2-ctl --list-devices | grep 'Webcam gadget: UVC Camera')" "access webcam"
 test_ssh_to '192.168.1.99'
 test_has_sound_device '192.168.1.99'
+
+test_ssh_to '192.168.1.19'
+test_ssh_to '192.168.1.12'
 
 echo 'all good'
