@@ -30,8 +30,7 @@ elif [ $(value_of $JUMP) = 0 ]; then
     ./setup.sh remote ~/Documents/config.json
     cd -
     sleep 3
-    ipa=$(hostname -I)
-    echo "IP address ${ipa}" >> $rplog
+    hostname -I >> $rplog
     sudo wpa_cli -i wlan0 list_networks >> $rplog
     python ~/Documents/rotation/propellorServo.py 0 &
     echo "motors started" >> $rplog
