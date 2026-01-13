@@ -5,23 +5,30 @@ die() {
     exit 1
 }
 
-test_ssh_to() {
-    host=$1
-    if [[ -n $(nc -zv $host 22 2>&1 | grep succeeded) ]]
+
+assert_success() {
+    if [[ -n $1 ]]
     then
-        echo "can reach $host for ssh"
+        echo "can $2"
     else
-        die "cannot reach $host"
+        die "cannot $2"
     fi
 }
 
-if [[ -n $(hostname -I | grep '1\.88') ]]
-then
-    echo 'localhost correct IP'
-else
-    die 'incorrect localhost IP address '
-fi
+test_ssh_to() {
+    host=$1
+    assert_success "$(nc -zv $host 22 2>&1 | grep succeeded)" "reach $host for ssh"
+}
 
+test_has_sound_device() {
+    host=$1
+    sd=$(ssh pi@$host "~/Documents/samplescaper/singleunit/play.py" | grep randomatones)
+    assert_success "$sd" "play sounds on $host"
+}
+
+
+assert_success "$(hostname -I | grep '1\.88')" "see correct localhost IP address"
 test_ssh_to '192.168.1.99'
+test_has_sound_device '192.168.1.99'
 
 echo 'all good'
