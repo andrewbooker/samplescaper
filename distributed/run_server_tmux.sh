@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+localIp=192.168.1.88
 capturePort=3064
 captureBaseLoc='~/Music/pool'
 captureLoc=$captureBaseLoc/live
@@ -13,9 +14,10 @@ cameraCmd="~/Documents/mediautils/webcamShow.py 2"
 
 remoteHanging="ssh pi@192.168.1.99"
 remoteHangingMotors="cd ~/Documents/samplescaper/singleunit/motors; ./server.py"
-remoteHangingPlayer="cd ~/Documents/samplescaper/singleunit/cpp; ./run_player.sh 2 8 192.168.1.88:$capturePort"
+remoteHangingPlayer="cd ~/Documents/samplescaper/singleunit/cpp; ./run_player.sh 2 8 $localIp:$capturePort"
 
 remoteBlue="ssh pi@192.168.1.19"
+blueClientPlay="~/Documents/samplescaper/distributed/run_client.sh $localIp"
 blueClientLog="cd /var/log/randomatones; ./tail_last.sh"
 
 panes=0
@@ -24,15 +26,16 @@ tmuxCmds+=("tmux new-session \"$captureCmd\"\;")
 tmuxCmds+=("split-window -h \"$remoteHanging\"\;")
 tmuxCmds+=("select-pane -t 0 \; split-window -v -l '84%' \"$fileListCmd\"\;")
 tmuxCmds+=("select-pane -t 1 \; split-window -v -l '20%' \"$cameraCmd & htop\"\;")
-#tmuxCmds+=("select-pane -t 1 \; split-window -v -l '10%' \"$cameraCmd\"\;")
 tmuxCmds+=("select-pane -t 1 \; split-window -v \"$converterCmd\" \;")
 topRightPaneIdx=$((${#tmuxCmds[@]}-1))
 tmuxCmds+=("select-pane -t $topRightPaneIdx \; split-window -v -l '85%' \"$remoteHanging\" \;")
 tmuxCmds+=("select-pane -t $((topRightPaneIdx+1)) \; split-window -v \"$remoteHanging\" \;")
+tmuxCmds+=("select-pane -t $((topRightPaneIdx+2)) \; split-window -v \"$remoteBlue\" \;")
 
-tmuxCmds+=("send-keys -t $((topRightPaneIdx+2)) \"htop\" ENTER \;")
 tmuxCmds+=("send-keys -t $topRightPaneIdx \"$remoteHangingMotors\" ENTER \;")
 tmuxCmds+=("send-keys -t $((topRightPaneIdx+1)) \"$remoteHangingPlayer\" ENTER \;")
+tmuxCmds+=("send-keys -t $((topRightPaneIdx+2)) \"$blueClientPlay\" ENTER \;")
+tmuxCmds+=("send-keys -t $((topRightPaneIdx+3)) \"$blueClientLog\" ENTER \;")
 
 echo "${tmuxCmds[@]}" > _gen.sh
 chmod +x _gen.sh
