@@ -18,7 +18,7 @@ remoteHangingPlayer="cd ~/Documents/samplescaper/singleunit/cpp; ./run_player.sh
 
 remoteBlue="ssh pi@192.168.1.19"
 blueClientPlay="~/Documents/samplescaper/distributed/run_client.sh $localIp"
-blueClientLog="cd /var/log/randomatones; ./tail_last.sh"
+blueClientLog="cd /var/log/randomatones; sleep 2; ./tail_last.sh"
 
 panes=0
 tmuxCmds=()
