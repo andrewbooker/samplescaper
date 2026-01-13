@@ -23,11 +23,18 @@ if [ $(value_of $BUTTON) = 0 ]; then
         rm -rf $f
     done
 elif [ $(value_of $JUMP) = 0 ]; then
+    rplog='/var/log/randomatones/remote_player_startup.log'
+    echo $(date) > $rplog
+    echo 'starting in distributed remote-player mode' >> $rplog
     cd ~/Documents/rotation/
     ./setup.sh remote ~/Documents/config.json
     cd -
+    sleep 3
+    ipa=$(hostname -I)
+    echo "IP address ${ipa}" >> $rplog
+    sudo wpa_cli -i wlan0 list_networks >> $rplog
     python ~/Documents/rotation/propellorServo.py 0 &
-    ~/Documents/samplescaper/distributed/run_client.sh
+    echo "motors started" >> $rplog
 else
     cd ~/Documents/rotation/
     ./setup.sh remote ~/Documents/config.json
