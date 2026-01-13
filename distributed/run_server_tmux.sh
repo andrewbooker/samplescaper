@@ -27,17 +27,18 @@ tmuxCmds+=("split-window -h \"$remoteHanging\"\;")
 tmuxCmds+=("select-pane -t 0 \; split-window -v -l '84%' \"$fileListCmd\"\;")
 tmuxCmds+=("select-pane -t 1 \; split-window -v -l '20%' \"$cameraCmd & htop\"\;")
 tmuxCmds+=("select-pane -t 1 \; split-window -v \"$converterCmd\" \;")
-topRightPaneIdx=$((${#tmuxCmds[@]}-1))
-tmuxCmds+=("select-pane -t $topRightPaneIdx \; split-window -v -l '85%' \"$remoteHanging\" \;")
-tmuxCmds+=("select-pane -t $((topRightPaneIdx+1)) \; split-window -v \"$remoteHanging\" \;")
-tmuxCmds+=("select-pane -t $((topRightPaneIdx+2)) \; split-window -v \"$remoteBlue\" \;")
+topRightPane=$((${#tmuxCmds[@]}-1))
+tmuxCmds+=("select-pane -t $topRightPane \; split-window -v -l '85%' \"$remoteHanging\" \;")
+tmuxCmds+=("select-pane -t $((topRightPane+1)) \; split-window -v \"$remoteBlue\" \;")
+tmuxCmds+=("select-pane -t $((topRightPane+2)) \; split-window -v \"$remoteBlue\" \;")
 
-tmuxCmds+=("send-keys -t $topRightPaneIdx \"$remoteHangingMotors\" ENTER \;")
-tmuxCmds+=("send-keys -t $((topRightPaneIdx+1)) \"$remoteHangingPlayer\" ENTER \;")
-tmuxCmds+=("send-keys -t $((topRightPaneIdx+2)) \"$blueClientPlay\" ENTER \;")
-tmuxCmds+=("send-keys -t $((topRightPaneIdx+3)) \"$blueClientLog\" ENTER \;")
+tmuxCmds+=("send-keys -t $topRightPane \"$remoteHangingMotors\" ENTER \;")
+tmuxCmds+=("send-keys -t $((topRightPane+1)) \"$remoteHangingPlayer\" ENTER \;")
+tmuxCmds+=("send-keys -t $((topRightPane+2)) \"$blueClientPlay\" ENTER \;")
+tmuxCmds+=("send-keys -t $((topRightPane+3)) \"$blueClientLog\" ENTER \;")
 
-echo "${tmuxCmds[@]}" > _gen.sh
-chmod +x _gen.sh
-./_gen.sh
-rm _gen.sh
+cmdf=_gen1.sh
+echo "${tmuxCmds[@]}" > $cmdf
+chmod +x $cmdf
+./$cmdf
+rm $cmdf
