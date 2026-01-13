@@ -6,8 +6,8 @@ captureBaseLoc='~/Music/pool'
 captureLoc=$captureBaseLoc/live
 captureCmd="~/Documents/samplescaper/distributed/pool.py $captureBaseLoc"
 converterCmd="~/Documents/samplescaper/distributed/cpp/bin/server $port $captureLoc"
-localPlayerCmd="~/Documents/samplescaper/singleunit/cpp/player 2 5 $port"
-fileListCmd="watch -n1 'ls -l $captureLoc'"
+localPlayerCmd="~/Documents/samplescaper/singleunit/cpp/player 2 5 $port; bash -i"
+fileListCmd="watch -n1 'ls -lth $captureLoc'"
 
 tmuxCmds=()
 tmuxCmds+=("tmux new-session \"$captureCmd\"\;")
