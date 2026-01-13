@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-localIp=192.168.1.88
+localIp=$(hostname -I | cut -d' ' -f1)
 capturePort=3064
 captureBaseLoc='~/Music/pool'
 captureLoc=$captureBaseLoc/live
@@ -34,8 +34,8 @@ tmuxCmds+=("select-pane -t $((topRightPane+2)) \; split-window -v \"$remoteBlue\
 
 tmuxCmds+=("send-keys -t $topRightPane \"$remoteHangingMotors\" ENTER \;")
 tmuxCmds+=("send-keys -t $((topRightPane+1)) \"$remoteHangingPlayer\" ENTER \;")
-tmuxCmds+=("send-keys -t $((topRightPane+2)) \"$blueClientPlay\" ENTER \;")
-tmuxCmds+=("send-keys -t $((topRightPane+3)) \"$blueClientLog\" ENTER \;")
+tmuxCmds+=("send-keys -t $((topRightPane+3)) \"$blueClientPlay\" ENTER \;")
+tmuxCmds+=("send-keys -t $((topRightPane+2)) \"$blueClientLog\" ENTER \;")
 
 cmdf=_gen1.sh
 echo "${tmuxCmds[@]}" > $cmdf
