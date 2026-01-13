@@ -28,6 +28,8 @@ test_has_sound_device() {
 
 
 assert_success "$(hostname -I | grep '1\.88')" "see correct localhost IP address"
+assert_success "$(lsusb | grep 'Texas Instruments PCM2902 Audio Codec')" "see local USB soundcard"
+assert_success "$(v4l2-ctl --list-devices | grep 'Webcam gadget: UVC Camera')" "access webcam"
 test_ssh_to '192.168.1.99'
 test_has_sound_device '192.168.1.99'
 
