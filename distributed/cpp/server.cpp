@@ -173,6 +173,21 @@ public:
         return !hasContent;
     }
 
+    void potentiallyModify(t_sound& fileBuffer) {
+        if ((rand() * 1.0 / RAND_MAX) > 0.5) {
+            std::cout << "reversing" << std::endl;
+            std::reverse(fileBuffer.begin(), fileBuffer.end());
+        }
+        if ((rand() * 1.0 / RAND_MAX) < 0.2) {
+            std::cout << "octave increase" << std::endl;
+            t_sound newBuffer(fileBuffer.size() / 2, 0.0);
+            for (unsigned int i(0); i != newBuffer.size(); ++i) {
+                newBuffer[i] = fileBuffer.at(2 * i);
+            }
+            fileBuffer.swap(newBuffer);
+        }
+    }
+
     const t_sound& fetch() {
         buffer.clear();
         t_fileNames fileNames;
@@ -202,10 +217,7 @@ public:
         t_sound fileBuffer;
         latest = fileNames[selection];
         loadFileInto(fileBuffer, latest);
-        if ((rand() * 1.0 / RAND_MAX) > 0.5) {
-            std::cout << "reversing" << std::endl;
-            std::reverse(fileBuffer.begin(), fileBuffer.end());
-        }
+        potentiallyModify(fileBuffer);
         SampleRepeater repeat(fileBuffer);
         return repeat.onto(buffer, size, amplitude);
     }
