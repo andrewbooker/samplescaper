@@ -145,6 +145,7 @@ protected:
             const bool success(res == CURLE_OK);
             if (!success) {
                 std::cerr << "Fetch failure: " << curl_easy_strerror(res) << std::endl;
+                isSilent = true;
             }
             curl_easy_cleanup(curl);
             if (success) {
