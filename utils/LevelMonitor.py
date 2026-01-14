@@ -11,7 +11,7 @@ class LevelMonitor():
         self.scale = 50
         self.height = 3    
         self.refreshMillis = 100
-        self.recording = False
+        self.recording = 0
         self.lastValue = 0.0
         self.msg = ""
 
@@ -24,18 +24,20 @@ class LevelMonitor():
 
             if started:
                 sys.stdout.write("\x1b[A" * (self.height + 1))
+                sys.stdout.flush()
 
             bar = int(self.scale * v.value)
-            fill = self.scale - bar
             rec = ("\u2588" if self.recording > 0 else " ")
-            recColour = "\033[1;96m" if self.recording > 1 else "\033[0;35m"
+            recColour = "\033[1;32m" if self.recording > 1 else "\033[0;31m"
             for h in range(self.height):
-                sys.stdout.write("\033[92m%s\033[0m" % ("\u2589" * bar))
-                sys.stdout.write(" " * fill) #\u2591
+                sys.stdout.write("\033[96m%s\033[0m" % ("\u2589" * bar))
+                sys.stdout.write(" " * (self.scale - bar)) #\u2591
                 sys.stdout.write("%s%s\033[0m" % (recColour, rec * 10))
                 sys.stdout.write("\n\r")
 
-            sys.stdout.write("%s\n\r" % self.msg)
+            sys.stdout.write(self.msg)
+            sys.stdout.write(" " * (self.scale - len(self.msg)))
+            sys.stdout.write("\n\r")
             sys.stdout.flush()
             started = True
             time.sleep(self.refreshMillis / 1000.0)
