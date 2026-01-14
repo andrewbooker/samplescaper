@@ -10,6 +10,7 @@
 #include <vector>
 #include <filesystem>
 #include <sndfile.h>
+#include <algorithm>
 
 
 #define SAMPLE_RATE 44100
@@ -201,6 +202,10 @@ public:
         t_sound fileBuffer;
         latest = fileNames[selection];
         loadFileInto(fileBuffer, latest);
+        if ((rand() * 1.0 / RAND_MAX) > 0.5) {
+            std::cout << "reversing" << std::endl;
+            std::reverse(fileBuffer.begin(), fileBuffer.end());
+        }
         SampleRepeater repeat(fileBuffer);
         return repeat.onto(buffer, size, amplitude);
     }
