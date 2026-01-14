@@ -25,7 +25,8 @@ from utils.LevelMonitor import LevelMonitor
 
 SAMPLE_RATE = 44100.0
 MINIMAL_LEVEL = 5.0
-MAX_LIVE_POOL_SIZE = 30
+MAX_LIVE_POOL_SIZE = 10
+
 
 class SampleCatcher():
     def __init__(self):
@@ -115,20 +116,29 @@ class PoolMaintainer():
     def __init__(self, poolDir):
         self.outDir = self._create(poolDir, "live")
         self.oldDir = self._create(poolDir, "dead")
+        self.maxSize = MAX_LIVE_POOL_SIZE
+
+    def clear(self):
+        self.maxSize = 0
+
+    def setSize(self, s):
+        self.maxSize = s
 
     def start(self, shouldStop):
         i = 0
         while not shouldStop.is_set():
-            if i > 100:
+            if i > 10:
                 files = [os.path.join(self.outDir, f) for f in os.listdir(self.outDir)]
                 sortedFiles = sorted(files, key=lambda f: os.path.getmtime(f))
                 number = len(sortedFiles)
-                if number > MAX_LIVE_POOL_SIZE:
-                    for f in sortedFiles[:(number - MAX_LIVE_POOL_SIZE)]:
+                if number > self.maxSize:
+                    for f in sortedFiles[:(number - self.maxSize)]:
                         shutil.move(f, self.oldDir)
+                    if self.maxSize == 0:
+                        self.maxSize = MAX_LIVE_POOL_SIZE
                 i = 0
 
-            time.sleep(0.05)
+            time.sleep(0.2)
             i += 1
 
 devices = UsbAudioDevices()
@@ -162,6 +172,15 @@ while not done:
     if c == "q":
         shouldStop.set()
         done = True
+    if c == "c":
+        level.setMessage("clearing the pool")
+        maintainer.clear()
+    if c == "m":
+        maintainer.setSize(MAX_LIVE_POOL_SIZE)
+    if ord(c) >= 48 and ord(c) < 58:
+        maintainer.setSize(int(c))
+        level.setMessage(f"pool size set to {c}")
+
 
 [t.join() for t in threads]
 
