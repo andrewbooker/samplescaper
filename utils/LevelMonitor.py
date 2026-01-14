@@ -13,6 +13,7 @@ class LevelMonitor():
         self.refreshMillis = 100
         self.recording = 0
         self.lastValue = 0.0
+        self.lastMsgLength = 0
         self.msg = ""
 
     def start(self, shouldStop):
@@ -36,7 +37,7 @@ class LevelMonitor():
                 sys.stdout.write("\n\r")
 
             sys.stdout.write(self.msg)
-            sys.stdout.write(" " * (self.scale - len(self.msg)))
+            sys.stdout.write(" " * (max(self.scale, self.lastMsgLength) - len(self.msg)))
             sys.stdout.write("\n\r")
             sys.stdout.flush()
             started = True
@@ -46,6 +47,7 @@ class LevelMonitor():
         self.recording = r
 
     def setMessage(self, m):
+        self.lastMsgLength = len(self.msg)
         self.msg = m
 
     def addBuffer(self, b):

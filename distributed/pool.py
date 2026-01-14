@@ -177,6 +177,7 @@ while not done:
         maintainer.clear()
     if c == "m":
         maintainer.setSize(MAX_LIVE_POOL_SIZE)
+        level.setMessage(f"pool size set to {MAX_LIVE_POOL_SIZE}")
     if ord(c) >= 48 and ord(c) < 58:
         maintainer.setSize(int(c))
         level.setMessage(f"pool size set to {c}")
