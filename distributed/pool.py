@@ -166,7 +166,7 @@ threads.append(threading.Thread(target=maintainer.start, args=(shouldStop,), dae
 done = False
 
 import readchar
-print("Started. Press 'q' to exit")
+print("Started. Press 'q' to exit, 'c' to clear the pool, 'm' to max pool size")
 while not done:
     c = readchar.readchar()
     if c == "q":
