@@ -28,7 +28,7 @@ class LevelMonitor():
 
             bar = int(self.scale * v.value)
             rec = ("\u2588" if self.recording > 0 else " ")
-            recColour = "\033[1;32m" if self.recording > 1 else "\033[0;31m"
+            recColour = "\033[1;31m" if self.recording > 1 else "\033[0;32m"
             for h in range(self.height):
                 sys.stdout.write("\033[96m%s\033[0m" % ("\u2589" * bar))
                 sys.stdout.write(" " * (self.scale - bar)) #\u2591
