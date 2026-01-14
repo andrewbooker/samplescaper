@@ -4,14 +4,12 @@ set -e
 capturePort=3064
 captureBaseLoc='~/Music/pool'
 captureLoc=$captureBaseLoc/live
-deviceName='USB Audio CODEC'
-#deviceName='front, ALSA'
-device=$(~/Documents/samplescaper/singleunit/play.py | sed -nE 's/\s*([0-9]+) front, ALSA.*/\1/p')
+device=$(~/Documents/samplescaper/singleunit/play.py | sed -nE 's/\s*([0-9]+) USB Audio CODEC.*/\1/p')
 
 captureCmd="~/Documents/samplescaper/distributed/pool.py $captureBaseLoc"
 converterCmd="~/Documents/samplescaper/distributed/cpp/bin/server $capturePort $captureLoc"
 fileListCmd="watch -n1 'ls -lth $captureLoc'"
-localPlayer="cd ~/Documents/samplescaper/singleunit/cpp; ./run_player.sh 2 device 3064"
+localPlayer="cd ~/Documents/samplescaper/singleunit/cpp; ./run_player.sh 2 $device 3064"
 
 panes=0
 tmuxCmds=()
