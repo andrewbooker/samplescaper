@@ -12,6 +12,7 @@ import struct
 import numpy as np
 import datetime
 import logging
+import io
 
 ts = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
 log_fn = os.path.join("/var/log/randomatones", f"distributed_client_{ts}.log")
@@ -41,8 +42,16 @@ def playOneFrom(url, panCh, startedAt, soundListener):
     sound = None
     isSilence = True
     try:
+        buf = io.BytesIO()
         response = requests.get(url, stream=True)
-        rawBytes = response.raw.read()
+        response.raise_for_status()
+        for chunk in response.iter_content(chunk_size=8192):
+            if not chunk:
+                continue
+            buf.write(chunk)
+
+        buf.seek(0)
+        rawBytes = buf.getvalue()
         bl = len(rawBytes)
         isSilence = response.status_code != 200
         log.info(f"response {response.status_code} fetching {bl} bytes")
