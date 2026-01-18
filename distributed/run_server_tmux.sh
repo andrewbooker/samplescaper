@@ -14,7 +14,7 @@ cameraCmd="~/Documents/mediautils/webcamShow.py 2"
 
 remoteHanging="ssh pi@192.168.1.99"
 remoteHangingMotors="cd ~/Documents/samplescaper/singleunit/motors; ./server.py"
-remoteHangingPlayer="cd ~/Documents/samplescaper/singleunit/cpp; ./run_player.sh 2 8 $localIp:9964 $localIp:9965"
+remoteHangingPlayer="cd ~/Documents/samplescaper/singleunit/cpp; ./run_player.sh 2 7 $localIp:9964 $localIp:9965"
 
 remoteBlue="ssh pi@192.168.1.19"
 blueClientPlay="~/Documents/samplescaper/distributed/run_client.sh $localIp"
