@@ -43,19 +43,25 @@ def playOneFrom(url, panCh, startedAt, soundListener):
     isSilence = True
     try:
         buf = io.BytesIO()
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-        for chunk in response.iter_content(chunk_size=8192):
-            if not chunk:
-                continue
-            buf.write(chunk)
+        expected = 0
+        status = 0
+        with requests.get(url, stream=True) as response:
+            status = response.status_code
+            expected = int(response.headers["Content-Length"])
+            log.info(f"expecting {expected} bytes")
+            response.raise_for_status()
+            for chunk in response.iter_content(chunk_size=8192):
+                if not chunk:
+                    continue
+                buf.write(chunk)
 
         buf.seek(0)
         rawBytes = buf.getvalue()
         bl = len(rawBytes)
-        isSilence = response.status_code != 200
-        log.info(f"response {response.status_code} fetching {bl} bytes")
-        del response
+        isSilence = status != 200
+        log.info(f"response {status} fetched {bl} bytes")
+        if expected != bl:
+            log.warning("retrieval incomplete")
         fl = int(bl / 4)
         buf = struct.unpack(f"<{fl}f", rawBytes)
         log.info(f"{len(buf)} samples unpacked")
