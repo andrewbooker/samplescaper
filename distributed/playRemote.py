@@ -72,7 +72,7 @@ def playOneFrom(url, panCh, startedAt, soundListener):
     except requests.exceptions.RequestException as e:
         log.info(f"No audio available from {url}")
         log.info(e)
-        time.sleep(10)
+        time.sleep(2)
         return
 
     if sound is None:
@@ -82,16 +82,13 @@ def playOneFrom(url, panCh, startedAt, soundListener):
     channel.play(sound)
     if not isSilence:
         soundListener.startOne()
-    while channel.get_busy():
-        time.sleep(0.1)
+    time.sleep(expectedLength)
+    channel.fadeout(100)
     if not isSilence:
         soundListener.stopOne()
         dur = time.time() - startTime
         msg = f"stopping {expectedLength:.4f}s sound after {dur:.4f}s"
-        if dur < expectedLength:
-            log.warning(f"{msg} only")
-        else:
-            log.info(msg)
+        log.info(msg)
     del sound
 
 
