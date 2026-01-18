@@ -41,6 +41,7 @@ def playOneFrom(url, panCh, startedAt, soundListener):
 
     sound = None
     isSilence = True
+    expectedLength = 0.0
     try:
         buf = io.BytesIO()
         expected = 0
@@ -64,7 +65,8 @@ def playOneFrom(url, panCh, startedAt, soundListener):
             log.warning("retrieval incomplete")
         fl = int(bl / 4)
         buf = struct.unpack(f"<{fl}f", rawBytes)
-        log.info(f"{len(buf)} samples unpacked")
+        expectedLength = len(buf) / 44100.0
+        log.info(f"{len(buf)} samples ({expectedLength:.4f}s) unpacked")
         sa = np.array([asSample(b, 2, panCh) for b in buf], dtype=np.int16)
         sound = pg.sndarray.make_sound(sa)
     except requests.exceptions.RequestException as e:
@@ -75,6 +77,7 @@ def playOneFrom(url, panCh, startedAt, soundListener):
 
     if sound is None:
         return
+    startTime = time.time()
     channel.set_volume(1.0)
     channel.play(sound)
     if not isSilence:
@@ -83,6 +86,12 @@ def playOneFrom(url, panCh, startedAt, soundListener):
         time.sleep(0.1)
     if not isSilence:
         soundListener.stopOne()
+        dur = time.time() - startTime
+        msg = f"stopping {expectedLength:.4f}s sound after {dur:.4f}s"
+        if dur < expectedLength:
+            log.warning(f"{msg} only")
+        else:
+            log.info(msg)
     del sound
 
 
