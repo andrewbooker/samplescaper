@@ -2,6 +2,9 @@ import System.Random
 
 sampleRate = 1
 
+frequencyOf :: Int -> Float
+frequencyOf note = (2.0 ** (fromIntegral(note - 69) / 12.0)) * 440.0;
+
 sineOscillator :: Float -> Int -> Float
 sineOscillator f i = sin (f * 2 * pi * fromIntegral (i) / 44100)
 
@@ -16,7 +19,9 @@ main = do
     gen <- randomIO :: IO Float
     v <- randomRIO (sampleRate * 6, sampleRate * 14)
     let samples = valueOf v
-    putStrLn ("generating " ++ show samples ++ " samples")
-    let w = wave 440.0 samples
+    let note = 57
+    let f = frequencyOf note
+    putStrLn ("generating " ++ show samples ++ " samples for note " ++ show note ++ " (" ++ show f ++ "Hz)")
+    let w = wave f samples
     print(w)
 
