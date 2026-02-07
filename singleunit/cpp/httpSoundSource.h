@@ -35,6 +35,7 @@ public:
 
 class SoundPlayListener {
 private:
+    const bool enabled;
     const unsigned int idx;
     unsigned int last;
     struct {
@@ -67,12 +68,12 @@ private:
     }
 
 public:
-    SoundPlayListener(const unsigned int i) : idx(i), last(0) {
+    SoundPlayListener(const unsigned int i) : idx(i), last(0), enabled(false) {
         dump = {0};
     }
 
     void on() {
-        if (last == 1) {
+        if (!enabled || last == 1) {
             return;
         }
         std::cout << "playing " << idx << std::endl;
@@ -80,7 +81,7 @@ public:
     }
 
     void off() {
-        if (last == 0) {
+        if (!enabled || last == 0) {
             return;
         }
         std::cout << "stopping " << idx << std::endl;
