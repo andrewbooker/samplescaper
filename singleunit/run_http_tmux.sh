@@ -19,15 +19,15 @@ for s in ${synths[@]}; do
     ((++basePort))
 done
 
-cmdR0="htop"
+
 tmuxCmds=()
-tmuxCmds+=("tmux new-session \"${synthCmds[0]}\"\;")
-tmuxCmds+=("split-window -h \"$cmdR0\"\;")
+tmuxCmds+=("tmux new-session \"htop\"\;")
+tmuxCmds+=("split-window -h \"${synthCmds[0]}\"\;")
 
 for ((i=1; i < ${#synths[@]}; ++i)); do
     calc="100 * (1.0 / (${#synths[@]} - ($i - 1)))"
     pc=$(awk "BEGIN {print int(0.5 + ($calc))}")
-    tmuxCmds+=("select-pane -t 0 \; split-window -v -l '$pc%' \"${synthCmds[i]}\"\;")
+    tmuxCmds+=("select-pane -t 1 \; split-window -v -l '$pc%' \"${synthCmds[i]}\"\;")
 done
 
 playSize=80
@@ -41,8 +41,8 @@ if [ $recording = 1 ]; then
     playSize=70
 fi
 
-cmdPlay="cd $playDir; ./player 6 $device ${ports[@]} 2>/dev/null"
-tmuxCmds+=("select-pane -t ${#ports[@]} \; split-window -v -l '${playSize}%' \"$cmdPlay\"\;")
+cmdPlay="cd $playDir; ./player 8 $device ${ports[@]} 2>/dev/null"
+tmuxCmds+=("select-pane -t 0 \; split-window -v -l '${playSize}%' \"$cmdPlay\"\;")
 echo 'compiling player...'
 if [ $? == 1 ]; then
     exit
