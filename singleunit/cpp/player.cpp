@@ -47,15 +47,23 @@ public:
         sources[channel]->readInto(out, sampleLength);
     }
 
+    const bool canPause() const {
+        return state == State::playing;
+    }
+
+    const bool canResume() const {
+        return state != State::playing;
+    }
+
     void pause() {
-        if (state != State::playing) return;
+        if (!canPause()) return;
         stopPlaying();
         state = State::paused;
         std::cout << "Paused" << std::endl;
     }
 
     void resume() {
-        if (state != State::paused) return;
+        if (!canResume()) return;
         for (auto* s : sources) s->setPaused(false);
         state = State::playing;
     }
@@ -164,11 +172,11 @@ public:
                     soundSources.stop();
                     return true;
                 }
-	            if (input == 'p') {
+	            if (input == 'p' && soundSources.canPause()) {
                     std::cout << "Pausing" << std::endl;
                     soundSources.pause();
                 }
-	            if (input == 'r') {
+	            if (input == 'r' && soundSources.canResume()) {
                     std::cout << "Resuming" << std::endl;
                     soundSources.resume();
                 }
