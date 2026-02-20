@@ -6,12 +6,20 @@ if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
     sudo modprobe snd-aloop
 fi
 
+die() {
+    echo $1
+    exit
+}
+
+
 args=( "$@" )
 synths=( "${args[@]:1}" )
 baseDir="~/Documents/samplescaper"
 synthDir="$baseDir/synth/http"
 playDir="$baseDir/singleunit/cpp"
 device=$(~/Documents/samplescaper/singleunit/play.py | sed -nE 's/\s*([0-9]+) randomatones, ALSA.*/\1/p')
+[ -n "$device" ] || die "no randomatones audio device"
+
 basePort=9960
 
 ports=()
@@ -45,7 +53,7 @@ if [ $recording = 1 ]; then
 fi
 
 
-cmdPlay="cd $playDir; ./player 2 7 ${ports[@]} 2>/dev/null"
+cmdPlay="cd $playDir; ./player 8 $device ${ports[@]} 2>/dev/null"
 cmdAuto="watch -n20 './auto_turbine_room.sh 00:09 22:32'"
 tmuxCmds+=("select-pane -t 0 \; split-window -v -l '${playSize}%' \"$cmdPlay\"\;")
 tmuxCmds+=("select-pane -t 1 \; split-window -v -l '12%' \"$cmdAuto\"\;")
