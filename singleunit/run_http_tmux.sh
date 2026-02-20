@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
 if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
     echo 'setting up loopback (requires sudo)'
     sudo modprobe snd-aloop
@@ -41,12 +44,13 @@ if [ $recording = 1 ]; then
     playSize=70
 fi
 
-cmdPlay="cd $playDir; ./player 8 $device ${ports[@]} 2>/dev/null"
+
+cmdPlay="cd $playDir; ./player 2 7 ${ports[@]} 2>/dev/null"
+cmdAuto="watch -n20 './auto_turbine_room.sh 00:09 22:32'"
 tmuxCmds+=("select-pane -t 0 \; split-window -v -l '${playSize}%' \"$cmdPlay\"\;")
+tmuxCmds+=("select-pane -t 1 \; split-window -v -l '12%' \"$cmdAuto\"\;")
+tmuxCmds+=("select-pane -t 1 \;")
 echo 'compiling player...'
-if [ $? == 1 ]; then
-    exit
-fi
 cd cpp
 g++ player.cpp -o player -l sndfile -l portaudio -l curl
 cd ..
