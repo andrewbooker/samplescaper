@@ -1,15 +1,68 @@
 #!/bin/bash
-
+set -e
 startAt="$1"
 stopAt="$2"
 
+
+as_mins() {
+    hs=${1%:*}
+    ms=${1#*:}
+    hh=$((10#$hs))
+    mm=$((10#$ms))
+    echo $(((60 * hh) + mm))
+}
+
+plural() {
+    if [ $1 -eq 1 ]; then echo ''; else echo 's'; fi
+}
+
+as_time() {
+    t=$1
+    hh=$((t / 60))
+    mm=$((t % 60))
+
+    ts=()
+    if [ $hh -gt 0 ]
+    then
+        hp=$(plural $hh)
+        ts+=(${hh}hr$hp)
+    fi
+    mp=$(plural $mm)
+    ts+=(${mm}min$mp)
+    echo "${ts[*]}"
+}
+
+time_diff() {
+    from=$(as_mins "$1")
+    to=$(as_mins "$2")
+    d=$((to-from))
+    echo $(as_time $d)
+}
+
+
+instruct_player() {
+    tmux send-keys -t 1 $1
+    echo "sending $1"
+    exit
+}
+
+
 timeNow=$(date +%H:%M)
+
+
 if [ ! "$timeNow" \< "$stopAt" ]
 then
-    echo "stopped at $timeNow"
-    tmux send-keys -t 1 'p'
-elif [ ! "$timeNow" \< "$startAt" ]
+    echo "stopped at $stopAt ($(time_diff $stopAt $timeNow) ago)"
+    echo "resumes at $startAt tomorrow"
+    instruct_player 'p'
+fi
+
+if [ "$timeNow" \< "$startAt" ]
 then
+    echo "resuming at $startAt in $(time_diff $timeNow $startAt)"
+    instruct_player 'p'
+else
     echo "running at $timeNow"
-    tmux send-keys -t 1 'r'
+    echo "pausing at $stopAt in $(time_diff $timeNow $stopAt)"
+    instruct_player 'r'
 fi
