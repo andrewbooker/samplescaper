@@ -42,7 +42,6 @@ time_diff() {
 
 instruct_player() {
     tmux send-keys -t 1 $1
-    echo "sending $1"
     exit
 }
 
