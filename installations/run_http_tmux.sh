@@ -54,7 +54,7 @@ fi
 
 
 cmdPlay="cd $playDir; ./player 8 $device ${ports[@]} 2>/dev/null"
-cmdAuto="watch -n20 './auto_start_stop 00:09 22:32'"
+cmdAuto="sleep 10 && watch -n30 './auto_start_stop 09:32 15:27'"
 tmuxCmds+=("select-pane -t 0 \; split-window -v -l '${playSize}%' \"$cmdPlay\"\;")
 tmuxCmds+=("select-pane -t 1 \; split-window -v -l '12%' \"$cmdAuto\"\;")
 tmuxCmds+=("select-pane -t 1 \;")
