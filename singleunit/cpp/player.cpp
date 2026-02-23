@@ -17,6 +17,7 @@ private:
     typedef std::vector<SoundSource*> t_sources;
     t_sources sources;
     enum State { playing, pausing, paused, stopped } state;
+    float maxSilence;
 
     const bool anyPlaying() const {
         for (const auto* s : sources) {
@@ -36,7 +37,7 @@ private:
     }
 
 public:
-    SoundSources(const unsigned int channels, OptionsProvider& hosts) : state(State::stopped) {
+    SoundSources(const unsigned int channels, OptionsProvider& hosts) : state(State::stopped), maxSilence(1.0) {
         for (unsigned int c(0); c != channels; ++c) {
             sources.push_back(new HttpSoundSource(c, hosts));
         }
@@ -71,6 +72,21 @@ public:
     void stop() {
         stopPlaying();
         state = State::stopped;
+    }
+
+    float incrementMaxSilence() {
+        maxSilence += 0.5;
+        for (auto* s : sources) s->setMaxSilenceTo(maxSilence);
+        return maxSilence;
+    }
+
+    float decrementMaxSilence() {
+        maxSilence -= 0.5;
+        if (maxSilence < 0.0) {
+            maxSilence = 0.0;
+        }
+        for (auto* s : sources) s->setMaxSilenceTo(maxSilence);
+        return maxSilence;
     }
 
     ~SoundSources() {
@@ -164,7 +180,7 @@ public:
             return false;
         }
         if (Pa_StartStream(audioStream) == paNoError) {
-            std::cout << "Playing audio. Press p to pause, r to resume or q to stop." << std::endl;
+            std::cout << "Playing audio. Press d for more dense sound, s for more space, p to pause, r to resume or q to stop" << std::endl;
             while (true) {
 	            const char input(getch());
                 if (input == 'q') {
@@ -179,6 +195,14 @@ public:
 	            if (input == 'r' && soundSources.canResume()) {
                     std::cout << "Resuming" << std::endl;
                     soundSources.resume();
+                }
+                if (input == 'd') {
+                    const float s(soundSources.decrementMaxSilence());
+                    std::cout << "Up to " << (0.5 + s) << " seconds between sounds" << std::endl;
+                }
+                if (input == 's') {
+                    const float s(soundSources.incrementMaxSilence());
+                    std::cout << "Up to " << (0.5 + s) << " seconds between sounds" << std::endl;
                 }
             }
         }

@@ -103,6 +103,7 @@ private:
     OptionsProvider& hosts;
     SoundPlayListener listener;
     bool isSilent;
+    float maxSilence;
 
     static size_t write(void* ptr, size_t size, size_t nmemb, void* stream) {
         t_buffer& out(*reinterpret_cast<t_buffer*>(stream));
@@ -114,7 +115,7 @@ private:
     }
 
     void silence() {
-        const float dur(0.5 + (1.0 * rand() / RAND_MAX));
+        const float dur(0.5 + (maxSilence * rand() / RAND_MAX));
         std::cout << idx << " silence for " << dur << "s\n";
         const unsigned int len(dur * 44100 * sizeof(float));
         buffer.assign(len, 0);
@@ -171,6 +172,7 @@ public:
         listener(i),
         pos(0),
         isSilent(false),
+        maxSilence(1.0),
         key {57, 59, 60, 62, 64, 65, 67, 69} {}
 
     void readInto(float* out, const unsigned long sampleLength) {
@@ -186,6 +188,13 @@ public:
         if (!ready) {
             listener.off();
         }
+    }
+
+    void setMaxSilenceTo(const float& m) {
+        if (m < 0.0) {
+            return;
+        }
+        maxSilence = m;
     }
 };
 

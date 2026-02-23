@@ -39,6 +39,7 @@ public:
     }
 
     virtual void readInto(float* out, const unsigned long sampleLength) = 0;
+    virtual void setMaxSilenceTo(const float&) {}
 
     void setPaused(const bool p) {
         paused = p;
