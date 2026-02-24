@@ -136,7 +136,7 @@ procedure Server is
     procedure report(note: integer; freq: float; durSecs: float) is
         package F_IO is new Ada.Text_IO.Float_IO (float);
     begin
-        Ada.Text_IO.Put ("generating" & note'Img & " at ");
+        Ada.Text_IO.Put ("Ada" & note'Img & " at ");
         F_IO.Put(Item => freq, Fore => 1, Aft => 4, Exp => 0);
         Ada.Text_IO.Put ("Hz for ");
         F_IO.Put(Item => durSecs, Fore => 1, Aft => 4, Exp => 0);

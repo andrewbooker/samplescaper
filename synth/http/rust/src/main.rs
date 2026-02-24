@@ -209,7 +209,7 @@ fn main() {
             let freq = f32::powf(2.0, (note as i8 - 69) as f32 / 12.0) * 440.0;
 
             let synth_buffer = synth.generate(freq);
-            println!("generating {} at {}Hz for {}s", note, freq, synth_buffer.len() as f32 / SAMPLE_RATE as f32);
+            println!("Rust {} at {}Hz for {}s", note, freq, synth_buffer.len() as f32 / SAMPLE_RATE as f32);
 
             let status_line = "HTTP/1.1 200 OK";
             let length = synth_buffer.len() * std::mem::size_of::<f32>();

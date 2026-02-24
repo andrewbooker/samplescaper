@@ -148,7 +148,7 @@ begin
     freq := frequencyOf(note);
 
     sampleTime := anythingBetween(8.0, 20.0);
-    writeLn('Generating note ', note, ' at ', freq:0:2, 'Hz for ', sampleTime:0:2, 's');
+    writeLn('Pascal ', note, ' at ', freq:0:2, 'Hz for ', sampleTime:0:2, 's');
     sampleLength := round(sampleTime * sampleRate);
     sampleByteLength := sampleLength * sizeOf(single);
     response := responseCode + crlf + contentType + crlf + 'Content-Length: ' + intToStr(sampleByteLength) + crlf + crlf;
