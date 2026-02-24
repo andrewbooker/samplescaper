@@ -115,7 +115,7 @@ private:
     }
 
     void silence() {
-        const float dur(0.5 + (maxSilence * rand() / RAND_MAX));
+        const float dur((0.5 * (1.0 + maxSilence)) + (maxSilence * rand() / RAND_MAX));
         std::cout << idx << " silence for " << dur << "s\n";
         const unsigned int len(dur * 44100 * sizeof(float));
         buffer.assign(len, 0);
