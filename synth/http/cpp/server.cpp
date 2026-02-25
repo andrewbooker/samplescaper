@@ -92,7 +92,7 @@ class Lfo : public Envelope {
     const float freq;
 
 public:
-    Lfo() : freq(anywhereBetween(0.05, 5.5)) {}
+    Lfo() : freq(anywhereBetween(0.05, 3.1)) {}
 
     const float at(const unsigned long i) const {
         return sin(2 * M_PI * freq * i / SAMPLE_RATE);
@@ -139,7 +139,7 @@ public:
 
         const Lfo amLfo;
         const AsPositive amLfoP(amLfo);
-        const float amDepth(anywhereBetween(0.0, 1.0));
+        const float amDepth(anywhereBetween(0.0, 0.4));
         const Scaled am(amLfo, amDepth, 1.0 - amDepth);
 
         const RampUpDown amplitude(size);
