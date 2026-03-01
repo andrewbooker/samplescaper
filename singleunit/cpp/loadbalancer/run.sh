@@ -1,4 +1,4 @@
 set -e
 mkdir -p bin
-g++ server.cpp -o ./bin/server
+g++ server.cpp -l curl -o ./bin/server
 bin/server $1
