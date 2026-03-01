@@ -18,7 +18,9 @@ class Server {
     struct sockaddr_in address;
     socklen_t addrlen;
     typedef std::vector<unsigned char> t_buffer;
-    bool toggle;
+    typedef std::vector<unsigned int> t_ports;
+    t_ports ports;
+    unsigned int lastPort;
 
     static size_t write(void* ptr, size_t size, size_t nmemb, void* stream) {
         t_buffer& out(*reinterpret_cast<t_buffer*>(stream));
@@ -37,7 +39,7 @@ class Server {
             std::cout << "fetching from " << uri.str() << std::endl;
             const auto start(high_resolution_clock::now());
             curl_easy_setopt(curl, CURLOPT_URL, uri.str().c_str());
-            curl_easy_setopt(curl, CURLOPT_USERAGENT, "Randomatone");
+            curl_easy_setopt(curl, CURLOPT_USERAGENT, "Randomatone Distributor");
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
 
@@ -59,12 +61,17 @@ class Server {
     }
     
     const unsigned int nextPort() {
-        toggle = !toggle;
-        return toggle ? 9961 : 9962;
+        lastPort += 1;
+        if (lastPort >= ports.size()) {
+            lastPort = 0;
+        }
+        return ports.at(lastPort);
     } 
 
 public:
-    Server(const unsigned int port) : addrlen(sizeof(address)), server_fd(socket(AF_INET, SOCK_STREAM, 0)), toggle(false) {
+    Server(const unsigned int port) : lastPort(0), addrlen(sizeof(address)), server_fd(socket(AF_INET, SOCK_STREAM, 0)) {
+        ports.push_back(9961);
+        ports.push_back(9962);
         if (server_fd == 0) {
             perror("Failed to create socket");
             exit(EXIT_FAILURE);
