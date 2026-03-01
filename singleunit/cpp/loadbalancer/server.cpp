@@ -18,6 +18,7 @@ class Server {
     struct sockaddr_in address;
     socklen_t addrlen;
     typedef std::vector<unsigned char> t_buffer;
+    bool toggle;
 
     static size_t write(void* ptr, size_t size, size_t nmemb, void* stream) {
         t_buffer& out(*reinterpret_cast<t_buffer*>(stream));
@@ -28,7 +29,7 @@ class Server {
         return read;
     }
 
-    void fetchInto(t_buffer& buffer, const unsigned short port, const unsigned short note) {
+    void fetchInto(t_buffer& buffer, const unsigned int port, const unsigned short note) {
         std::stringstream uri;
         uri << "http://localhost:" << port << "/?note=" << note;
         CURL* curl(curl_easy_init());
@@ -56,9 +57,14 @@ class Server {
             std::cerr << "Failed to initialize curl\n";
         }
     }
+    
+    const unsigned int nextPort() {
+        toggle = !toggle;
+        return toggle ? 9961 : 9962;
+    } 
 
 public:
-    Server(const unsigned int port) : addrlen(sizeof(address)), server_fd(socket(AF_INET, SOCK_STREAM, 0)) {
+    Server(const unsigned int port) : addrlen(sizeof(address)), server_fd(socket(AF_INET, SOCK_STREAM, 0)), toggle(false) {
         if (server_fd == 0) {
             perror("Failed to create socket");
             exit(EXIT_FAILURE);
@@ -112,7 +118,7 @@ public:
         }
         if (last == std::string("die")) return true;
         const unsigned short note(atoi(last.c_str()));
-        const unsigned short port(9961);
+        const unsigned int port(nextPort());
         t_buffer sound;
         fetchInto(sound, port, note);
         std::cout << "Received " << note << ". Sending request to to " << port << "\n";
