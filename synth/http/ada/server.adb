@@ -191,6 +191,7 @@ procedure Server is
         headerLength := add_to (buffer, baseResponseHeader & "Content-Length:" & contentLength'Img & ASCII.CR & ASCII.LF & ASCII.CR & ASCII.LF);
         Write (stream.all, buffer (1 .. Stream_Element_Offset (headerLength)));
         Write (stream.all, data (1 .. Stream_Element_Offset (contentLength)));
+        delay 0.2;
     end;
 
 begin
@@ -208,15 +209,14 @@ begin
 
     loop
         Accept_Socket (serverSocket, clientSocket, addr);
-
         declare
             clientStream : Stream_Access := Stream (clientSocket);
         begin
             note := read_note_from (read_request (clientStream));
             respond_to (note, clientStream);
         end;
+        Close_Socket (clientSocket);
     end loop;
-    Close_Socket (clientSocket);
     Close_Socket (serverSocket);
     Ada.Text_IO.Put_Line ("Finished");
 end Server;
