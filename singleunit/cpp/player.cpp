@@ -10,6 +10,7 @@
 #include <termios.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <iomanip>
 
 
 class SoundSources {
@@ -240,7 +241,7 @@ int main(int argc, char *argv[]) {
         std::cout << p << std::endl;
         hosts.add(p.find(':') == std::string::npos ? (localhost + ":" + p) : p);
     }
-
+    std::cout << std::setprecision(4) << std::fixed;
     AudioPlayer audioPlayer(hosts, channels, deviceNumber);
     if (audioPlayer.start()) {
         audioPlayer.stop();

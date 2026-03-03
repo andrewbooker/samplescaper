@@ -14,6 +14,9 @@ using std::chrono::duration_cast;
 using std::chrono::milliseconds;
 
 
+#define MB (1024.0 * 1024.0)
+
+
 
 class OptionsProvider {
     typedef std::vector<std::string> t_options;
@@ -150,11 +153,12 @@ protected:
                 isSilent = true;
             }
             curl_easy_cleanup(curl);
+
             if (success) {
                 const auto fetchTime(duration_cast<milliseconds>(high_resolution_clock::now() - start));
-                std::cout << idx << " read " << buffer.size() << " bytes ("
+                std::cout << idx << " read " << buffer.size() / MB << " MB ("
                         << buffer.size() / (4 * 44100) << "s) in " << fetchTime.count()
-                        << "ms at " << buffer.size() / (1024.0 * fetchTime.count()) << " MB/ms" << std::endl;
+                        << "ms at " << buffer.size() / (1024.0 * fetchTime.count()) << " KB/ms" << std::endl;
                 listener.on();
                 isSilent = !isSilent;
             }
