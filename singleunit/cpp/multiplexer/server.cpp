@@ -71,6 +71,10 @@ class Server {
     }
 
     void whatPorts() const {
+        if (ports.empty()) {
+            std::cout << "All ports removed" << std::endl;
+            return;
+        }
         std::cout << "Sourcing from ports";
         for (auto p : ports) std::cout << " " << p;
         std::cout << std::endl;
@@ -90,10 +94,12 @@ class Server {
     void removePort(const unsigned int p) {
         for (unsigned int i(0); i != ports.size(); ++i) {
             if (ports.at(i) == p) {
+                lastPort = 0;
                 ports.erase(ports.begin() + i);
+                whatPorts();
+                return;
             }
         }
-        whatPorts();
     }
 
 public:
