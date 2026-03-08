@@ -91,6 +91,15 @@ func (c *Const) at(i int) float32 {
 }
 
 
+func vol_coeff(note int) float32 {
+    vol_threshold := 70
+    if note < vol_threshold {
+        return 1.0
+    }
+    return 1.0 - (0.5 * float32(note - vol_threshold) / 35.0)
+}
+
+
 func server(w http.ResponseWriter, r *http.Request) {
     t := anywhereBetween(8.0, 20.0)
     size := int(SampleRate * t)
@@ -98,6 +107,7 @@ func server(w http.ResponseWriter, r *http.Request) {
     note, _ := strconv.Atoi(r.URL.Query()["note"][0])
 
     zero := Const { 0.0 }
+    vol := vol_coeff(note)
     lfo_phase := Scaled { anywhereBetween(0.1, math.Pi), &SineOscillator { anywhereBetween(0.1, 5.8), &zero } }
     osc := SineOscillator { frequencyOf(note), &lfo_phase }
     lfo_am := RangeDepth { anywhereBetween(0.1, 1.0), &AsPositive { &SineOscillator { anywhereBetween(0.001, 4.9), &zero } } }
@@ -105,7 +115,7 @@ func server(w http.ResponseWriter, r *http.Request) {
     down := int(SampleRate * t * anywhereBetween(0.2, 0.5))
     ramp := RampUpDown { int(up), down, size - down }
     for i := 0; i != size; i++ {
-        buffer[i] = ramp.at(i) * lfo_am.at(i) * osc.at(i)
+        buffer[i] = vol * ramp.at(i) * lfo_am.at(i) * osc.at(i)
     }
     contentLength := size * 4
     fmt.Printf("Go %d at %.4fHz for %.4fs\n", note, osc.freq, t)
