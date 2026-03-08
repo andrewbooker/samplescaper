@@ -1,5 +1,9 @@
 set -e
-links=("-l sndfile" "-l portaudio" "-l curl")
+links=()
+links+=("-l sndfile")
+links+=("-l asound")
+links+=("-l portaudio")
+links+=("-l curl")
 if [[ ! -v $(uname -a | grep raspberry) ]]; then
     links+=("-pthread")
 fi
