@@ -7,6 +7,8 @@
 #include <regex>
 #include <curl/curl.h>
 #include <chrono>
+#include <iomanip>
+
 
 using std::chrono::high_resolution_clock;
 using std::chrono::duration_cast;
@@ -51,8 +53,8 @@ class Server {
             curl_easy_cleanup(curl);
             if (success) {
                 const auto fetchTime(duration_cast<milliseconds>(high_resolution_clock::now() - start));
-                std::cout << "read " << buffer.size() << " bytes ("
-                        << buffer.size() / (4 * 44100) << "s) in " << fetchTime.count()
+                std::cout << "read " << buffer.size() / (1024 * 1024.0) << " MB ("
+                        << buffer.size() / (4 * 44100.0) << "s) in " << fetchTime.count()
                         << "ms at " << buffer.size() / (1024.0 * fetchTime.count()) << " MB/ms" << std::endl;
             }
         } else {
@@ -128,7 +130,7 @@ public:
         const unsigned int port(nextPort());
         t_buffer sound;
         fetchInto(sound, port, note);
-        std::cout << "Received " << note << ". Sending request to to " << port << "\n";
+        std::cout << "Sending request for " << note << " to " << port << "\n";
         std::stringstream responseHeader;
         responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << sound.size() << "\r\n";
         responseHeader << "\r\n";
@@ -154,6 +156,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     std::cout << "Load balancer listening on port " << port << "...\n";
+    std::cout << std::setprecision(4) << std::fixed;
     bool done(false);
     while (!done) {
         done = server.listenLoop();
