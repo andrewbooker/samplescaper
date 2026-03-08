@@ -68,12 +68,37 @@ class Server {
             lastPort = 0;
         }
         return ports.at(lastPort);
-    } 
+    }
+
+    void whatPorts() const {
+        std::cout << "Sourcing from ports";
+        for (auto p : ports) std::cout << " " << p;
+        std::cout << std::endl;
+    }
+
+    void addPort(const unsigned int p) {
+        for (unsigned int i(0); i != ports.size(); ++i) {
+            if (ports.at(i) == p) {
+                return;
+            }
+        }
+        ports.push_back(p);
+        whatPorts();
+    }
+
+    void removePort(const unsigned int p) {
+        for (unsigned int i(0); i != ports.size(); ++i) {
+            if (ports.at(i) == p) {
+                ports.erase(ports.begin() + i);
+            }
+        }
+        whatPorts();
+    }
 
 public:
     Server(const unsigned int port) : lastPort(0), addrlen(sizeof(address)), server_fd(socket(AF_INET, SOCK_STREAM, 0)) {
-        ports.push_back(9961);
-        ports.push_back(9962);
+        addPort(9961);
+        addPort(9962);
         if (server_fd == 0) {
             perror("Failed to create socket");
             exit(EXIT_FAILURE);
