@@ -68,10 +68,10 @@ procedure Server is
 
         if x < sw then
             sc := 4.0 * 0.5 / sw;
-            return Sqrt(1.0 - (((sc * x) - 1.0) ** 2));
+            return 0.5 * Sqrt(1.0 - (((sc * x) - 1.0) ** 2));
         end if;
         g := 1.0 / (1.0 - sw);
-        return (g * (x - sw)) - 1.0;
+        return 0.5 * ((g * (x - sw)) - 1.0);
     end;
 
 
