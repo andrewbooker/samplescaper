@@ -92,7 +92,7 @@ class Lfo : public Envelope {
     const float freq;
 
 public:
-    Lfo() : freq(anywhereBetween(0.05, 3.1)) {}
+    Lfo() : freq(anywhereBetween(0.05, 2.1)) {}
 
     const float at(const unsigned long i) const {
         return sin(2 * M_PI * freq * i / SAMPLE_RATE);
