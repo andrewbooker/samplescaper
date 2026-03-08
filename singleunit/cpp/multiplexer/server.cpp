@@ -79,6 +79,7 @@ class Server {
     void addPort(const unsigned int p) {
         for (unsigned int i(0); i != ports.size(); ++i) {
             if (ports.at(i) == p) {
+                whatPorts();
                 return;
             }
         }
@@ -139,29 +140,53 @@ public:
         if (client_fd < 0) {
             return true;
         }
-        char request[1024] {};
-        read(client_fd, request, sizeof(request));
+        std::regex rx("^GET /(\\?)?([a-z]+)=?([0-9]*)");
+        char request[128] {};
+        memset(request, 0, 128);
+        const int r(read(client_fd, request, sizeof(request)));
         const std::string req(request);
-
-        std::regex rx("^([A-Z]+) /(\\?)?([a-z]+)=?([0-9]*)");
+        const unsigned int e(req.find("\n", 0));
+        const std::string rs(req.substr(0, e));
         std::smatch m;
-        bool found(std::regex_search(req, m, rx));
-        std::string last;
-        for (std::string s : m) {
-            if (!s.empty()) last = s;
+        bool found(std::regex_search(rs, m, rx));
+        if (!found) {
+            close(client_fd);
+            return true;
         }
-        if (last == std::string("die")) return true;
-        const unsigned short note(atoi(last.c_str()));
-        const unsigned int port(nextPort());
-        t_buffer sound;
-        fetchInto(sound, port, note);
-        std::cout << "Sending request for " << note << " to " << port << "\n";
-        std::stringstream responseHeader;
-        responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << sound.size() << "\r\n";
-        responseHeader << "\r\n";
-        const std::string& resp(responseHeader.str());
-        send(client_fd, resp.c_str(), resp.size(), 0);
-        send(client_fd, sound.data(), sound.size(), 0);
+        std::vector<std::string> reqs;
+        for (std::string s : m) {
+            if (!s.empty()) {
+                reqs.push_back(s);
+            }
+        }
+        if (reqs.back() == std::string("die")) {
+            close(client_fd);
+            return true;
+        }
+        const std::string ctx(reqs.at(reqs.size() - 2));
+        const unsigned int v(atoi(reqs.back().c_str()));
+        std::cout << ctx << " " << v << std::endl;
+        if (ctx == std::string("add")) {
+            addPort(v);
+        } else if (ctx == std::string("remove")) {
+            removePort(v);
+        } else if (ctx == std::string("note")) {
+            if (!ports.empty()) {
+                const unsigned short note(v);
+                const unsigned int port(nextPort());
+                t_buffer sound;
+                fetchInto(sound, port, note);
+                std::cout << "Sending request for " << note << " to " << port << std::endl;
+                std::stringstream responseHeader;
+                responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << sound.size() << "\r\n";
+                responseHeader << "\r\n";
+                const std::string& resp(responseHeader.str());
+                send(client_fd, resp.c_str(), resp.size(), 0);
+                send(client_fd, sound.data(), sound.size(), 0);
+            } else {
+                std::cout << "No ports available" << std::endl;
+            }
+        }
 
         close(client_fd);
         return false;
