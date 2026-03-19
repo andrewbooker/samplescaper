@@ -4,19 +4,47 @@ import Network.Wai (responseLBS)
 import Network.Wai.Handler.Warp (run)
 import Network.HTTP.Types (status200)
 import Network.HTTP.Types.Header (hContentType, hContentLength)
-
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
+import Data.Word (Word32)
 import qualified Data.ByteString.Lazy as BL
-import Data.Maybe (fromMaybe)
+import qualified Data.ByteString.Char8 as BS
+import GHC.Float (castFloatToWord32)
+import Data.Binary.Put (runPut, putWord32le)
+import System.Random
+
+sampleRate = 44100
+
+frequencyOf :: Int -> Float
+frequencyOf note = (2.0 ** (fromIntegral(note - 69) / 12.0)) * 440.0;
+
+sineOscillator :: Float -> Int -> Float
+sineOscillator f i = sin (f * 2 * pi * fromIntegral (i) / 44100)
+
+wave :: Float -> Int -> [Float]
+wave f n = map (\x -> sineOscillator f x) [0..n]
+
+valueOf :: Int -> Int
+valueOf x = x
 
 
-sineOscillator :: Float -> Float -> Float
-sineOscillator f i = sin (f * 2 * pi * i / 44100)
+encodeFloats :: [Float] -> BL.ByteString
+encodeFloats fs = runPut $ mapM_ (putWord32le . castFloatToWord32) fs
+
 
 app req respond = do
-    let body = BL.fromStrict . TE.encodeUtf8 $ T.concat ["Generating ", "57", "\n"]
-    respond $ responseLBS status200 [(hContentType, "text/plain"), (hContentLength, "14")] body
+    gen <- randomIO :: IO Float
+    v <- randomRIO (sampleRate * 6, sampleRate * 14)
+
+    let note = 57
+        samples = valueOf v
+        f = frequencyOf note
+        msg = "Generating " ++ show samples ++ " samples for note " ++ show note ++ " (" ++ show f ++ "Hz)"
+        w = wave f samples
+        body = encodeFloats w
+        len = BL.length body
+        lenBs = BS.pack (show len)
+
+    putStrLn (msg)
+    respond $ responseLBS status200 [(hContentType, "text/plain"), (hContentLength, lenBs)] body
 
 main :: IO ()
 main = run 9964 app
