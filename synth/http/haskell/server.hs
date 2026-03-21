@@ -5,11 +5,14 @@ import Network.Wai.Handler.Warp (run)
 import Network.HTTP.Types (status200)
 import Network.HTTP.Types.Header (hContentType, hContentLength)
 import Data.Word (Word32)
+import Data.Function
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BS
 import GHC.Float (castFloatToWord32)
 import Data.Binary.Put (runPut, putWord32le)
 import System.Random
+
+
 
 sampleRate = 44100
 
@@ -25,6 +28,9 @@ wave f n = map (\x -> sineOscillator f x) [0..n]
 valueOf :: Int -> Int
 valueOf x = x
 
+quotientOf :: Int -> Int -> Float
+quotientOf a b = (fromIntegral a) / (fromIntegral b)
+
 
 encodeFloats :: [Float] -> BL.ByteString
 encodeFloats fs = runPut $ mapM_ (putWord32le . castFloatToWord32) fs
@@ -37,7 +43,8 @@ app req respond = do
     let note = 57
         samples = valueOf v
         f = frequencyOf note
-        msg = "Generating " ++ show samples ++ " samples for note " ++ show note ++ " (" ++ show f ++ "Hz)"
+        t = quotientOf samples sampleRate
+        msg = "Haskell " ++ show note ++ " at " ++ show f ++ "Hz for " ++ show t ++ "s"
         w = wave f samples
         body = encodeFloats w
         len = BL.length body
