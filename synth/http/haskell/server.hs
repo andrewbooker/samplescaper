@@ -18,20 +18,30 @@ import System.Random
 port = 9964
 sampleRate = 44100
 
+quotientOf :: Int -> Int -> Float
+quotientOf a b = (fromIntegral a) / (fromIntegral b)
+
 frequencyOf :: Int -> Float
 frequencyOf note = (2.0 ** (fromIntegral(note - 69) / 12.0)) * 440.0;
+
+
+amplitude :: Float -> Float -> Float
+amplitude s i =
+    if i < (s * 0.2) then i / (s * 0.2)
+    else if i > (0.7 * s) then 1.0 - (i - (0.7 * s)) / ((1.0 - 0.7) * s)
+    else 1.0
 
 sineOscillator :: Float -> Int -> Float
 sineOscillator f i = sin (f * 2 * pi * fromIntegral (i) / 44100)
 
 wave :: Float -> Int -> [Float]
-wave f n = map (\x -> sineOscillator f x) [0..n]
+wave f n = map (\x -> (sineOscillator f x) * (amplitude (fromIntegral n) (fromIntegral x))) [0..n]
+
 
 valueOf :: Int -> Int
 valueOf x = x
 
-quotientOf :: Int -> Int -> Float
-quotientOf a b = (fromIntegral a) / (fromIntegral b)
+
 
 encodeFloats :: [Float] -> BL.ByteString
 encodeFloats fs = runPut $ mapM_ (putWord32le . castFloatToWord32) fs
