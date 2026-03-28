@@ -22,7 +22,7 @@ quotientOf :: Int -> Int -> Float
 quotientOf a b = (fromIntegral a) / (fromIntegral b)
 
 frequencyOf :: Int -> Float
-frequencyOf note = (2.0 ** (fromIntegral(note - 69) / 12.0)) * 440.0;
+frequencyOf note = (2.0 ** (fromIntegral (note - 69) / 12.0)) * 440.0;
 
 
 amplitude :: Float -> Float -> Float
@@ -31,16 +31,15 @@ amplitude s i =
     else if i > (0.7 * s) then 1.0 - (i - (0.7 * s)) / ((1.0 - 0.7) * s)
     else 1.0
 
-sineOscillator :: Float -> Int -> Float
-sineOscillator f i = sin (f * 2 * pi * fromIntegral (i) / 44100)
+sineOscillator :: Float -> Float -> Float
+sineOscillator f i = sin (f * 2 * pi * i / 44100)
 
-wave :: Float -> Int -> [Float]
-wave f n = map (\x -> (sineOscillator f x) * (amplitude (fromIntegral n) (fromIntegral x))) [0..n]
+am :: Float -> Float -> Float
+am f i = 0.5 * (1.0 + sin (f * 2 * pi * i / 44100))
 
 
 valueOf :: Int -> Int
 valueOf x = x
-
 
 
 encodeFloats :: [Float] -> BL.ByteString
@@ -64,13 +63,18 @@ app req respond = do
         f = frequencyOf note
         t = quotientOf samples sampleRate
         msg = "Haskell " ++ show note ++ " at " ++ show f ++ "Hz for " ++ show t ++ "s"
-        w = wave f samples
+        waveFunctions = [sineOscillator f]
+        amplitudeFunctions = [amplitude (fromIntegral samples)]
+        wb = foldl (.) (1.0*) waveFunctions
+        ab = foldl (.) (1.0*) amplitudeFunctions
+        sf = map fromIntegral [0..samples]
+        w = map (\x -> wb (x) * ab (x) * (am 2.0) x) sf
         body = encodeFloats w
         len = BL.length body
         lenBs = BS.pack (show len)
 
     putStrLn (msg)
-    respond $ responseLBS status200 [(hContentType, "text/plain"), (hContentLength, lenBs)] body
+    respond $ responseLBS status200 [(hContentType, "/plain"), (hContentLength, lenBs)] body
 
 
 main :: IO ()
