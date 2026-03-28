@@ -63,12 +63,10 @@ app req respond = do
         f = frequencyOf note
         t = quotientOf samples sampleRate
         msg = "Haskell " ++ show note ++ " at " ++ show f ++ "Hz for " ++ show t ++ "s"
-        waveFunctions = [sineOscillator f]
-        amplitudeFunctions = [amplitude (fromIntegral samples)]
-        wb = foldl (.) (1.0*) waveFunctions
-        ab = foldl (.) (1.0*) amplitudeFunctions
-        sf = map fromIntegral [0..samples]
-        w = map (\x -> wb (x) * ab (x) * (am 2.0) x) sf
+        waveFunctions = [sineOscillator f, sineOscillator (2.01 * f), sineOscillator (0.499 * f), amplitude (fromIntegral samples), sineOscillator 2.0]
+
+        w = map (\s -> foldl (*) 1.0 (map ($ s) waveFunctions)) (map fromIntegral [0..samples])
+
         body = encodeFloats w
         len = BL.length body
         lenBs = BS.pack (show len)
