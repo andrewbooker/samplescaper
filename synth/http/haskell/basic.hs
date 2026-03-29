@@ -15,13 +15,28 @@ valueOf :: Int -> Int
 valueOf x = x
 
 
+times_n :: Int -> Int -> Int
+times_n n x = x * n
+
+
+
 main = do
     gen <- randomIO :: IO Float
     v <- randomRIO (sampleRate * 6, sampleRate * 14)
     let samples = valueOf v
     let note = 57
     let f = frequencyOf note
-    putStrLn ("generating " ++ show samples ++ " samples for note " ++ show note ++ " (" ++ show f ++ "Hz)")
+    let str = "generating " ++ show samples ++ " samples for note " ++ show note ++ " (" ++ show f ++ "Hz)"
+    putStrLn (str)
     let w = wave f samples
     print(w)
+    
+    
+    let v = [0..4]
+    print (map ((7*).(4*)) v)
+    
+    let f = [times_n 2, times_n 3]
+        ff = foldl (.) (1*) f
+    
+    print(ff 1)
 
