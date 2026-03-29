@@ -1,3 +1,4 @@
+set -E
 port=9964
 host=localhost
 url=$host:$port
