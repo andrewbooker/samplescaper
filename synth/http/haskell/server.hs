@@ -13,9 +13,9 @@ import qualified Data.ByteString.Char8 as BS
 import GHC.Float (castFloatToWord32)
 import Data.Binary.Put (runPut, putWord32le)
 import System.Random (randomRIO)
+import System.Environment (getArgs)
 
 
-port = 9962
 sampleRate = 44100
 
 quotientOf :: Int -> Int -> Float
@@ -76,5 +76,10 @@ app req respond = do
     respond $ responseLBS status200 [(hContentType, "/plain"), (hContentLength, lenBs)] body
 
 
+
 main :: IO ()
-main = run port app
+main = do
+    [portStr] <- getArgs
+    let port = read portStr :: Int
+    putStrLn ("Haskell listening on port " ++ show port)
+    run port app
