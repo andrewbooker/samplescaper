@@ -12,10 +12,10 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BS
 import GHC.Float (castFloatToWord32)
 import Data.Binary.Put (runPut, putWord32le)
-import System.Random
+import System.Random (randomRIO)
 
 
-port = 9964
+port = 9962
 sampleRate = 44100
 
 quotientOf :: Int -> Int -> Float
@@ -47,8 +47,10 @@ encodeFloats fs = runPut $ mapM_ (putWord32le . castFloatToWord32) fs
 
 
 app req respond = do
-    gen <- randomIO :: IO Float
-    v <- randomRIO (sampleRate * 6, sampleRate * 14)
+    let lower = sampleRate * 6
+        upper = sampleRate * 20
+
+    v <- randomRIO (lower, upper)
 
     let qText = queryToQueryText (queryString req)
         mNText :: Maybe T.Text
@@ -61,9 +63,8 @@ app req respond = do
             Nothing -> 0
         samples = valueOf v
         f = frequencyOf note
-        t = quotientOf samples sampleRate
-        msg = "Haskell " ++ show note ++ " at " ++ show f ++ "Hz for " ++ show t ++ "s"
-        waveFunctions = [sineOscillator f, sineOscillator (2.01 * f), sineOscillator (0.499 * f), amplitude (fromIntegral samples), sineOscillator 2.0]
+        msg = "Haskell " ++ show note ++ " at " ++ show f ++ "Hz for " ++ show (quotientOf samples sampleRate) ++ "s"
+        waveFunctions = [sineOscillator f, amplitude (fromIntegral samples), sineOscillator 2.0]
 
         w = map (\s -> foldl (*) 1.0 (map ($ s) waveFunctions)) (map fromIntegral [0..samples])
 
