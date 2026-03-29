@@ -55,6 +55,7 @@ app req respond = do
 
     someSampleLength <- randomRIO (lower, upper)
     someAmFreq <- randomRIO (0.01, 3.0)
+    someNearOctave <- randomRIO (1.98, 2.02)
 
     let qText = queryToQueryText (queryString req)
         mNText :: Maybe T.Text
@@ -67,9 +68,10 @@ app req respond = do
             Nothing -> 0
         samples = intValueOf someSampleLength
         amFreq = floatValueOf someAmFreq
+        nearOctave = floatValueOf someNearOctave
         f = frequencyOf note
         msg = "Haskell " ++ show note ++ " at " ++ show f ++ "Hz for " ++ show (quotientOf samples sampleRate) ++ "s"
-        waveFunctions = [sineOscillator f, amplitude (fromIntegral samples), sineOscillator amFreq]
+        waveFunctions = [sineOscillator f, sineOscillator (f * nearOctave), amplitude (fromIntegral samples), sineOscillator amFreq]
 
         w = map (\s -> foldl (*) 1.0 (map ($ s) waveFunctions)) (map fromIntegral [0..samples])
 
@@ -78,7 +80,7 @@ app req respond = do
         lenBs = BS.pack (show len)
 
     putStrLn (msg)
-    respond $ responseLBS status200 [(hContentType, "/plain"), (hContentLength, lenBs)] body
+    respond $ responseLBS status200 [(hContentType, "application/octet-stream"), (hContentLength, lenBs)] body
 
 
 
