@@ -164,7 +164,7 @@ public:
         bool found(std::regex_search(rs, m, rx));
         if (!found) {
             close(client_fd);
-            return true;
+            return false;
         }
         std::vector<std::string> reqs;
         for (std::string s : m) {

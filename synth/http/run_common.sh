@@ -1,4 +1,14 @@
-set -e
-multiplexer_port=9964
-curl localhost:$multiplexer_port/add=$1
-trap "curl localhost:$multiplexer_port/remove=$1" EXIT
+port=9964
+host=localhost
+url=$host:$port
+
+register_port() {
+    nc -z $host $port && curl $url?add=$1
+}
+
+deregister_port() {
+    nc -z $host $port && curl $url?remove=$1
+}
+
+register_port $1
+trap "deregister_port $1" EXIT
