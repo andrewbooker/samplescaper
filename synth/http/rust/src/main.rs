@@ -121,7 +121,7 @@ impl Oscillator {
 
 impl ValueAt for Oscillator {
     fn at(&self, i: usize) -> f32 {
-        0.75 * self.am.at(i) * (self.phase.at(i) + (2.0 * std::f32::consts::PI * i as f32 * self.freq / SAMPLE_RATE as f32)).sin()
+        self.am.at(i) * (self.phase.at(i) + (2.0 * std::f32::consts::PI * i as f32 * self.freq / SAMPLE_RATE as f32)).sin()
     }
 }
 

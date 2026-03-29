@@ -77,14 +77,14 @@ begin
     if pos < sw then
         begin
             sc := 4.0 * 0.5 / sw;
-            at := 0.5 * sqrt(1.0 - power((sc * pos) - 1.0, 2))
+            at := sqrt(1.0 - power((sc * pos) - 1.0, 2))
         end
     else
         begin
             sc := 4.0 * (0.5 / (1.0 - sw));
             v := sqrt(1.0 - power((sc * (pos - sw)) - 1.0, 2));
             sh := 0.5 + (shapeDepth * shape.at(i));
-            at := 0.5 * (-sh - ((1.0 - sh) * v));
+            at := -sh - ((1.0 - sh) * v);
         end
 end;
 
