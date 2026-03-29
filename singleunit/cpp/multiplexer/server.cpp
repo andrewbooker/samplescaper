@@ -102,6 +102,13 @@ class Server {
         }
     }
 
+    void emptyResponse(const int client_fd) {
+        std::stringstream responseHeader;
+        responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: 0\r\n";
+        const std::string& resp(responseHeader.str());
+        send(client_fd, resp.c_str(), resp.size(), 0);
+    }
+
 public:
     Server(const unsigned int port) : lastPort(0), addrlen(sizeof(address)), server_fd(socket(AF_INET, SOCK_STREAM, 0)) {
         addPort(9961);
@@ -174,8 +181,10 @@ public:
         std::cout << ctx << " " << v << std::endl;
         if (ctx == std::string("add")) {
             addPort(v);
+            emptyResponse(client_fd);
         } else if (ctx == std::string("remove")) {
             removePort(v);
+            emptyResponse(client_fd);
         } else if (ctx == std::string("note")) {
             if (!ports.empty()) {
                 const unsigned short note(v);
