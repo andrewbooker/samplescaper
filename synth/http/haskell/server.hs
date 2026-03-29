@@ -38,8 +38,11 @@ am :: Float -> Float -> Float
 am f i = 0.5 * (1.0 + sin (f * 2 * pi * i / 44100))
 
 
-valueOf :: Int -> Int
-valueOf x = x
+intValueOf :: Int -> Int
+intValueOf x = x
+
+floatValueOf :: Float -> Float
+floatValueOf x = x
 
 
 encodeFloats :: [Float] -> BL.ByteString
@@ -50,7 +53,8 @@ app req respond = do
     let lower = sampleRate * 6
         upper = sampleRate * 20
 
-    v <- randomRIO (lower, upper)
+    someSampleLength <- randomRIO (lower, upper)
+    someAmFreq <- randomRIO (0.01, 3.0)
 
     let qText = queryToQueryText (queryString req)
         mNText :: Maybe T.Text
@@ -61,10 +65,11 @@ app req respond = do
           case mNInt of
             Just n -> n
             Nothing -> 0
-        samples = valueOf v
+        samples = intValueOf someSampleLength
+        amFreq = floatValueOf someAmFreq
         f = frequencyOf note
         msg = "Haskell " ++ show note ++ " at " ++ show f ++ "Hz for " ++ show (quotientOf samples sampleRate) ++ "s"
-        waveFunctions = [sineOscillator f, amplitude (fromIntegral samples), sineOscillator 2.0]
+        waveFunctions = [sineOscillator f, amplitude (fromIntegral samples), sineOscillator amFreq]
 
         w = map (\s -> foldl (*) 1.0 (map ($ s) waveFunctions)) (map fromIntegral [0..samples])
 
