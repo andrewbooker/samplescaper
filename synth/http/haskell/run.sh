@@ -1,1 +1,7 @@
-rm -f server; ghc -O2 --make server.hs -o server && ./server "$@"
+set -e
+rm -rf bin
+mkdir -p bin
+ghc -O2 --make server.hs -o bin/server
+rm *.hi
+rm *o
+bin/server "$@"
