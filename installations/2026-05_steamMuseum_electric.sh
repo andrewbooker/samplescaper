@@ -5,7 +5,7 @@ if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
     echo 'setting up loopback (requires sudo)'
     sudo modprobe snd-aloop
 fi
-synths=(go rust)
+synths=(go rust ada pascal)
 basePort=9960
 device=21
 base="/home/$USER/Documents/samplescaper"
@@ -33,8 +33,10 @@ do
     tmuxCmds+=("select-pane -t $topRightPane \; split-window -v -l '20%' \"cd $synthBase/$s; bash\" \;")
 done
 
-idx=1
-tmuxCmds+=("select-pane -t $((topRightPane+idx)) \; send-keys \"./run.sh $((9961+idx))\" ENTER \;")
+for ((i=1; i <= ${#synths[@]}; ++i))
+do
+    tmuxCmds+=("select-pane -t $((topRightPane+i)) \; send-keys \"sleep $((10+i)); ./run.sh $((basePort+1+i))\" ENTER \;")
+done
 tmuxCmds+=("select-pane -t 1")
 
 cmdf=gen_inst.sh
