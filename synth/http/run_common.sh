@@ -1,5 +1,5 @@
 set -E
-port=9964
+port=9960
 host=localhost
 url=$host:$port
 

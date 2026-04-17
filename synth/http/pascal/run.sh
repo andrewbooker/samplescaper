@@ -1,4 +1,4 @@
-. ../run_common.sh
+. $(dirname $(pwd))/run_common.sh
 rm -rf bin
 mkdir -p bin
 fpc server.pas

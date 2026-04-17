@@ -218,7 +218,7 @@ begin
 
     if fpBind(socket, @sockAddr, sizeOf(sockAddr)) <> 0 then
     begin
-        writeLn('Could bind server socket');
+        writeLn('Could not bind server socket');
         Halt(1);
     end;
 
