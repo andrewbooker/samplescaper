@@ -7,11 +7,12 @@ if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
 fi
 synths=(go rust)
 basePort=9960
+device=21
 base="/home/$USER/Documents/samplescaper"
 synthBase="$base/synth/http"
 playerBase="$base/singleunit/cpp"
 
-playerCmd="./run_player.sh 6 23 $basePort"
+playerCmd="./run_player.sh 6 $device $basePort"
 mpxCmd="./run.sh $basePort"
 
 synthCmd () {
@@ -27,7 +28,13 @@ tmuxCmds+=("select-pane -t 0 \; split-window -v -l '82%' \"cd $playerBase; $play
 tmuxCmds+=("select-pane -t 1 \; split-window -v -l '33%' \"cd $playerBase/multiplexer; $mpxCmd\" \;")
 
 topRightPane=$((${#tmuxCmds[@]}-1))
-tmuxCmds+=("select-pane -t $topRightPane \; split-window -v -l '50%' \"$(synthCmd go 9962)\" \;")
+for s in ${synths[@]}
+do
+    tmuxCmds+=("select-pane -t $topRightPane \; split-window -v -l '20%' \"cd $synthBase/$s; bash\" \;")
+done
+
+idx=1
+tmuxCmds+=("select-pane -t $((topRightPane+idx)) \; send-keys \"./run.sh $((9961+idx))\" ENTER \;")
 tmuxCmds+=("select-pane -t 1")
 
 cmdf=gen_inst.sh
