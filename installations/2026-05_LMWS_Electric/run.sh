@@ -7,12 +7,13 @@ if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
 fi
 synths=(go rust ada pascal)
 basePort=9960
-device=21
+device=23
+channels=4
 base="/home/$USER/Documents/samplescaper"
 synthBase="$base/synth/http"
 playerBase="$base/singleunit/cpp"
 
-playerCmd="./run_player.sh 6 $device $basePort"
+playerCmd="./run_player.sh $channels $device $basePort"
 mpxCmd="./run.sh $basePort"
 
 synthCmd () {
