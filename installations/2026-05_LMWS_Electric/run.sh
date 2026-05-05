@@ -29,9 +29,13 @@ tmuxCmds+=("select-pane -t 0 \; split-window -v -l '82%' \"cd $playerBase; $play
 tmuxCmds+=("select-pane -t 1 \; split-window -v -l '33%' \"cd $playerBase/multiplexer; $mpxCmd\" \;")
 
 topRightPane=$((${#tmuxCmds[@]}-1))
-for s in ${synths[@]}
+for ((i=0; i < ${#synths[@]}; ++i))
 do
-    tmuxCmds+=("select-pane -t $topRightPane \; split-window -v -l '20%' \"cd $synthBase/$s; bash\" \;")
+    s=${synths[i]}
+    calc="100 * (1.0 / (${#synths[@]} - ($i - 1)))"
+    pc=$(awk "BEGIN {print int(0.5 + ($calc))}")
+    echo "$pc $s"
+    tmuxCmds+=("select-pane -t $topRightPane \; split-window -v -l '$pc%' \"cd $synthBase/$s; bash\" \;")
 done
 
 for ((i=1; i <= ${#synths[@]}; ++i))
