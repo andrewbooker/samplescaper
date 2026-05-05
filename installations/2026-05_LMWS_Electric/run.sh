@@ -36,8 +36,10 @@ done
 
 for ((i=1; i <= ${#synths[@]}; ++i))
 do
-    tmuxCmds+=("select-pane -t $((topRightPane+i)) \; send-keys \"sleep $((10+i)); ./run.sh $((basePort+1+i))\" ENTER \;")
+    tmuxCmds+=("select-pane -t $((topRightPane+i)) \; send-keys \"sleep $((2+i)); ./run.sh $((basePort+1+i))\" ENTER \;")
 done
+cmdAuto="sleep 10; watch -n30 '$base/singleunit/auto_start_stop 10:03 15:57'"
+tmuxCmds+=("select-pane -t 1 \; split-window -v -l '12%' \"$cmdAuto\"\;")
 tmuxCmds+=("select-pane -t 1")
 
 cmdf=gen_inst.sh
