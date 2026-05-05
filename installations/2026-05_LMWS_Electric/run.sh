@@ -1,15 +1,15 @@
 #!/bin/bash
 set -e
 
-if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
-    echo 'setting up loopback (requires sudo)'
-    sudo modprobe snd-aloop
-fi
 synths=(go rust ada pascal)
 basePort=9960
-device=23
-channels=4
 base="/home/$USER/Documents/samplescaper"
+device=$($base/singleunit/play.py | grep randomatones | sed -E 's/\s+([0-9]+).*/\1/')
+if [ -z $device ]; then
+    echo 'no randomatones audio device found'
+    exit 1
+fi
+channels=6
 synthBase="$base/synth/http"
 playerBase="$base/singleunit/cpp"
 
