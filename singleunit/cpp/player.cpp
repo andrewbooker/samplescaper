@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <iomanip>
-#include <alsa/asoundlib.h>
 
 
 class SoundSources {
@@ -204,16 +203,6 @@ public:
                 if (input == 's') {
                     const float s(soundSources.incrementMaxSilence());
                     std::cout << "Up to " << (0.5 + s) << " seconds between sounds" << std::endl;
-                }
-                if (input == 'v') {
-                    while (!soundSources.canPause()) {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                    }
-                    std::cout << "Pausing for ALSA reset" << std::endl;
-                    soundSources.pause();
-                    snd_config_update(); // does nothing
-                    std::cout << "Resuming after update" << std::endl;
-                    soundSources.resume();
                 }
             }
         }
