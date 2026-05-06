@@ -9,7 +9,7 @@ die() {
 
 args=( "$@" )
 synths=( "${args[@]:1}" )
-baseDir="~/Documents/samplescaper"
+baseDir="/home/$USER/Documents/samplescaper"
 synthDir="$baseDir/synth/http"
 playDir="$baseDir/singleunit/cpp"
 device=$(~/Documents/samplescaper/singleunit/play.py | sed -nE 's/\s*([0-9]+) randomatones, ALSA.*/\1/p')
@@ -39,12 +39,12 @@ done
 playSize=80
 
 cmdPlay="cd $playDir; ./player 8 $device ${ports[@]} 2>/dev/null"
-cmdAuto="sleep 10; watch -n30 './auto_start_stop 09:32 15:27'"
+cmdAuto="sleep 10; watch -n30 './auto_start_stop 09:03 15:57'"
 tmuxCmds+=("select-pane -t 0 \; split-window -v -l '${playSize}%' \"$cmdPlay\"\;")
 tmuxCmds+=("select-pane -t 1 \; split-window -v -l '12%' \"$cmdAuto\"\;")
 tmuxCmds+=("select-pane -t 1 \;")
 echo 'compiling player...'
-cd "../singleunit/cpp"
+cd "$playDir"
 g++ player.cpp -o player -l sndfile -l portaudio -l curl
 cd ..
 echo "${tmuxCmds[@]}" > _gen.sh
