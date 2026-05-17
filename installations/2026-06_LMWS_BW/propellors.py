@@ -52,15 +52,19 @@ class SingleUnit:
         GPIO.output(self.fwd, 0)
         GPIO.output(self.rev, 0)
 
-    def _up(self):
-        GPIO.output(self.fwd, 1)
+    def _move(self, out, back):
+        GPIO.output(out, 1)
         time.sleep(self.interval)
-        GPIO.output(self.fwd, 0)
+        GPIO.output(out, 0)
         time.sleep(0.1)
-        GPIO.output(self.rev, 1)
+        GPIO.output(back, 1)
         time.sleep(self.interval)
-        GPIO.output(self.rev, 0)
+        GPIO.output(back, 0)
         time.sleep(0.1)
+
+    def oneCycle(self):
+        self._move(self.fwd, self.rev)
+        self._move(self.rev, self.fwd)
 
 
 
@@ -71,5 +75,5 @@ threads = []
 [t.join() for t in threads]
 
 print("starting")
-SingleUnit(26, 20)._up()
+SingleUnit(*controlPorts[0]).oneCycle()
 print("done")
