@@ -2,12 +2,10 @@
 
 import RPi.GPIO as GPIO
 import random
-import math
-import json
 import threading
 import sys
 import time
-
+import readchar
 
 class Ports():
     def __init__(self):
@@ -24,30 +22,12 @@ class Ports():
         GPIO.setup(channel, GPIO.OUT, initial=0)
 
 
-class Motors():
-    def __init__(self, pins):
-        self.ports = Ports()
-        self.pins = {p: 0 for p in pins}
-        for p in pins:
-            self.ports.newOutput(p)
-
-    def on(self, pin):
-        GPIO.output(pin, 1)
-        self.pins[pin] = 1
-
-    def off(self, pin):
-        GPIO.output(pin, 0)
-        self.pins[pin] = 0
-
-
-controlPorts = [(26, 20)]
-motors = [Motors(c) for c in controlPorts]
-
-
 class SingleUnit:
-    def __init__(self, fwd, rev):
+    def __init__(self, fwd, rev, ports):
         self.fwd = fwd
         self.rev = rev
+        ports.newOutput(fwd)
+        ports.newOutput(rev)
         self.interval = 1
         GPIO.output(self.fwd, 0)
         GPIO.output(self.rev, 0)
@@ -66,14 +46,26 @@ class SingleUnit:
         self._move(self.fwd, self.rev)
         self._move(self.rev, self.fwd)
 
+    def run(self, shouldStop):
+        while not shouldStop.is_set():
+            self.oneCycle()
+            time.sleep(3.0 * random.random())
 
 
-threads = []
-#threads.append(threading.Thread(target=startServer, args=(), daemon=True))
+ports = Ports()
+controlPorts = [(26, 20)]
+units = [SingleUnit(*c, ports) for c in controlPorts]
+shouldStop = threading.Event()
 
+threads = [threading.Thread(target=u.run, args=(shouldStop,), daemon=True) for u in units]
+
+print("starting (press 'q' to exit)")
 [t.start() for t in threads]
-[t.join() for t in threads]
+while not shouldStop.is_set():
+    c = readchar.readchar()
+    if c == "q":
+        shouldStop.set()
 
-print("starting")
-SingleUnit(*controlPorts[0]).oneCycle()
+print("stopping")
+[t.join() for t in threads]
 print("done")
