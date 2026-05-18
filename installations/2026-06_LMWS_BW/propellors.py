@@ -52,9 +52,41 @@ class SingleUnit:
             time.sleep(3.0 * random.random())
 
 
+class OnOffDir:
+    def __init__(self, onOff, direction, ports):
+        self.onOff = onOff
+        self.direction = direction
+        ports.newOutput(onOff)
+        ports.newOutput(direction)
+        self.interval = 1.0
+        GPIO.output(self.onOff, 0)
+        GPIO.output(self.direction, 0)
+
+    def oneCycle(self):
+        print("starting cycle")
+        GPIO.output(self.onOff, 1)
+        GPIO.output(self.direction, 1)
+        time.sleep(self.interval)
+        GPIO.output(self.direction, 0)
+        time.sleep(self.interval * 2)
+        GPIO.output(self.direction, 1)
+        time.sleep(self.interval)
+        GPIO.output(self.onOff, 0)
+        time.sleep(0.1)
+        print("cycle done")
+
+
+    def run(self, shouldStop):
+        while not shouldStop.is_set():
+            self.oneCycle()
+            time.sleep(3.0 * random.random())
+
+
+
+
 ports = Ports()
 controlPorts = [(26, 20)]
-units = [SingleUnit(*c, ports) for c in controlPorts]
+units = [OnOffDir(*c, ports) for c in controlPorts]
 shouldStop = threading.Event()
 
 threads = [threading.Thread(target=u.run, args=(shouldStop,), daemon=True) for u in units]
