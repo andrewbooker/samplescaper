@@ -33,7 +33,7 @@ class Server {
         return read;
     }
 
-    void fetchInto(t_buffer& buffer, const unsigned int port, const unsigned short note) {
+    static void fetchInto(t_buffer& buffer, const unsigned int port, const unsigned short note) {
         std::stringstream uri;
         uri << "http://localhost:" << port << "/?note=" << note;
         CURL* curl(curl_easy_init());
@@ -102,11 +102,22 @@ class Server {
         }
     }
 
-    void emptyResponse(const int client_fd) {
+    static void emptyResponse(const int client_fd) {
         std::stringstream responseHeader;
         responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: 0\r\n";
         const std::string& resp(responseHeader.str());
         send(client_fd, resp.c_str(), resp.size(), 0);
+    }
+
+    static void adjustVolume(t_buffer& raw, const unsigned int note) {
+        const unsigned int sampleSize(raw.size() / 4);
+        const unsigned int noteFloor(57);
+        const float volCoeff(note < noteFloor ? 1.0 : 1.0 - (0.5 * (note - noteFloor) / 35));
+        float* sample(reinterpret_cast<float*>(raw.data()));
+
+        for (unsigned int i(0); i != sampleSize; ++i) {
+            sample[i] *= volCoeff;
+        }
     }
 
 public:
@@ -191,6 +202,7 @@ public:
                 const unsigned int port(nextPort());
                 t_buffer sound;
                 fetchInto(sound, port, note);
+                adjustVolume(sound, note);
                 std::cout << "Sending request for " << note << " to " << port << std::endl;
                 std::stringstream responseHeader;
                 responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << sound.size() << "\r\n";
