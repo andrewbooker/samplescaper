@@ -113,6 +113,7 @@ class Server {
         const unsigned int sampleSize(raw.size() / 4);
         const unsigned int noteFloor(57);
         const float volCoeff(note < noteFloor ? 1.0 : 1.0 - (0.5 * (note - noteFloor) / 35));
+        std::cout << "volume " << volCoeff << std::endl;
         float* sample(reinterpret_cast<float*>(raw.data()));
 
         for (unsigned int i(0); i != sampleSize; ++i) {
