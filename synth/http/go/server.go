@@ -100,7 +100,7 @@ func vol_coeff(note int) float32 {
 }
 
 
-func server(w http.ResponseWriter, r *http.Request) {
+func serve(w http.ResponseWriter, r *http.Request) {
     t := anywhereBetween(8.0, 20.0)
     size := int(SampleRate * t)
     buffer := make([]float32, size)
@@ -134,10 +134,14 @@ func main() {
     }
     port, err := strconv.Atoi(vals[0])
     if err != nil {
-        fmt.Printf("Invalid port number\n", err, "\n\n")
+        fmt.Printf("Invalid port\n%s\n", err)
         return
     }
     rand.Seed(time.Now().UnixNano())
-    http.HandleFunc("/", server)
-    http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+    fmt.Printf("Listening on port %d\n", port)
+    http.HandleFunc("/", serve)
+    lerr := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+    if lerr != nil {
+        fmt.Printf("Listen failed\n%s\n", lerr)
+    }
 }
