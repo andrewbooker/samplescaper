@@ -16,13 +16,12 @@ device=$(~/Documents/samplescaper/singleunit/play.py | sed -nE 's/\s*([0-9]+) ra
 [ -n "$device" ] || die "no randomatones audio device"
 
 basePort=9960
+synthPort=$basePort
 delay=5
-ports=()
 synthCmds=()
 for s in ${synths[@]}; do
-    ((++basePort))
-    ports+=($basePort)
-    synthCmds+=("cd $synthDir/$s; echo '$s on $basePort'; sleep $delay; ./run.sh $basePort")
+    ((++synthPort))
+    synthCmds+=("cd $synthDir/$s; echo '$s on $synthPort'; sleep $delay; ./run.sh $synthPort")
     ((++delay))
 done
 
