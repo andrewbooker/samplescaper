@@ -204,7 +204,6 @@ public:
                 t_buffer sound;
                 fetchInto(sound, port, note);
                 adjustVolume(sound, note);
-                std::cout << "Sending request for " << note << " to " << port << std::endl;
                 std::stringstream responseHeader;
                 responseHeader << "HTTP/1.1 200 OK\r\n" << "Content-Type: application/octet-stream\r\n" << "Content-Length: " << sound.size() << "\r\n";
                 responseHeader << "\r\n";
