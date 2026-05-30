@@ -1,5 +1,8 @@
 #!/bin/bash
 set -e
+
+device=$(~/Documents/samplescaper/singleunit/play.py | sed -nE 's/\s*([0-9]+) front, ALSA.*/\1/p')
+[ -n "$device" ] || die "no front audio device"
 basePort=9960
 base="/home/$USER/Documents/samplescaper"
 synth="cd $base/synth/http/ada; ./run.sh $((basePort + 1))"
