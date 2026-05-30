@@ -2,7 +2,9 @@
 set -e
 startAt="$1"
 stopAt="$2"
-
+args=($@)
+avoidDays=(${args[@]:2})
+today=$(date +%u)
 
 as_mins() {
     hs=${1%:*}
@@ -32,11 +34,45 @@ as_time() {
     echo "${ts[*]}"
 }
 
+as_weekday() {
+    local d=$1
+    local days=(Mon Tues Wednes Thurs Fri Satur Sun)
+    echo "${days[$((d - 1))]}day"
+}
+
 time_diff() {
     from=$(as_mins "$1")
     to=$(as_mins "$2")
     d=$((to-from))
     echo $(as_time $d)
+}
+
+
+runs_on() {
+    if [[ ${avoidDays[@]} =~ $1 ]]
+    then
+        echo 0
+    else
+        echo 1
+    fi
+}
+
+
+next_run_day_after() {
+    d=$((($1 % 7) + 1))
+    r=$(runs_on $d)
+    if [ $r = 0 ]
+    then
+        echo $(next_run_day_after $d)
+    else
+        echo $d
+    fi
+}
+
+
+next_run_day() {
+    n=$(next_run_day_after $today)
+    echo $(as_weekday $n)
 }
 
 
@@ -46,13 +82,21 @@ instruct_player() {
 }
 
 
+for ad in ${avoidDays[@]}
+do
+    if [ $today = $ad ]
+    then
+        echo "does not run today ($(as_weekday $today))"
+        echo "resumes $(next_run_day) at $startAt"
+        exit
+    fi
+done
+
 timeNow=$(date +%H:%M)
-
-
 if [ ! "$timeNow" \< "$stopAt" ]
 then
     echo "stopped at $stopAt ($(time_diff $stopAt $timeNow) ago)"
-    echo "resumes at $startAt tomorrow"
+    echo "resumes at $startAt $(next_run_day)"
     instruct_player 'p'
 fi
 
