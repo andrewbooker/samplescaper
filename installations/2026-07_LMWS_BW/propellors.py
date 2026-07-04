@@ -22,36 +22,6 @@ class Ports():
         GPIO.setup(channel, GPIO.OUT, initial=0)
 
 
-class SingleUnit:
-    def __init__(self, fwd, rev, ports):
-        self.fwd = fwd
-        self.rev = rev
-        ports.newOutput(fwd)
-        ports.newOutput(rev)
-        self.interval = 1
-        GPIO.output(self.fwd, 0)
-        GPIO.output(self.rev, 0)
-
-    def _move(self, out, back):
-        GPIO.output(out, 1)
-        time.sleep(self.interval)
-        GPIO.output(out, 0)
-        time.sleep(0.1)
-        GPIO.output(back, 1)
-        time.sleep(self.interval)
-        GPIO.output(back, 0)
-        time.sleep(0.1)
-
-    def oneCycle(self):
-        self._move(self.fwd, self.rev)
-        self._move(self.rev, self.fwd)
-
-    def run(self, shouldStop):
-        while not shouldStop.is_set():
-            self.oneCycle()
-            time.sleep(3.0 * random.random())
-
-
 class OnOffDir:
     def __init__(self, onOff, direction, ports):
         self.onOff = onOff
@@ -80,7 +50,6 @@ class OnOffDir:
         while not shouldStop.is_set():
             self.oneCycle()
             time.sleep(3.0 * random.random())
-
 
 
 
