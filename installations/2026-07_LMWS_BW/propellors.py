@@ -46,19 +46,21 @@ class OnOffDir:
         print("cycle done")
 
 
-    def run(self, shouldStop):
+    def run(self, shouldStop, shouldPause):
         while not shouldStop.is_set():
-            self.oneCycle()
-            time.sleep(3.0 * random.random())
-
+            if shouldPause.is_set():
+                time.sleep(1)
+            else:
+                self.oneCycle()
+                time.sleep(3.0 * random.random())
 
 
 ports = Ports()
 controlPorts = [(26, 20)]
 units = [OnOffDir(*c, ports) for c in controlPorts]
 shouldStop = threading.Event()
-
-threads = [threading.Thread(target=u.run, args=(shouldStop,), daemon=True) for u in units]
+shouldPause = threading.Event()
+threads = [threading.Thread(target=u.run, args=(shouldStop, shouldPause), daemon=True) for u in units]
 
 print("starting (press 'q' to exit)")
 [t.start() for t in threads]
@@ -66,6 +68,12 @@ while not shouldStop.is_set():
     c = readchar.readchar()
     if c == "q":
         shouldStop.set()
+    if c == "p":
+        shouldPause.set()
+        print("paused")
+    if c == "r":
+        shouldPause.clear()
+        print("resuming")
 
 print("stopping")
 [t.join() for t in threads]
