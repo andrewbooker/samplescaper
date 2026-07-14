@@ -4,7 +4,6 @@ __pycache__
 gen_asound
 singleunit/cpp/*/bin
 singleunit/cpp/multiplexer/server
-singleunit/cpp/player/player
 synth/http/*/bin
 synth/http/rust/Cargo.lock
 synth/http/rust/target

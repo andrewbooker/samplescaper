@@ -9,20 +9,21 @@ synths=(haskell go ada pascal)
 
 echo 'checking synths are compiled'
 for synth in ${synths[@]}; do
+    echo "compiling $synth"
     cd $base/synth/http/$synth
     if [ ! -f server ]; then
         ./compile.sh
     fi
-    cd -
+    cd - >/dev/null
 done
 echo 'compiling player'
 cd $base/singleunit/cpp/player
 ./compile.sh
-cd -
+cd - >/dev/null
 echo 'compiling multiplexer'
 cd $base/singleunit/cpp/multiplexer
 ./compile.sh
-cd -
+cd - >/dev/null
 
 player="cd $base/singleunit/cpp; ./run_player.sh 6 $device $basePort"
 multiplexer="cd $base/singleunit/cpp/multiplexer; ./run.sh $basePort"

@@ -8,7 +8,7 @@
 #include <curl/curl.h>
 #include <chrono>
 #include <iomanip>
-
+#include <cstring>
 
 using std::chrono::high_resolution_clock;
 using std::chrono::duration_cast;
