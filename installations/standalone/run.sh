@@ -1,5 +1,9 @@
 #!/bin/bash
 set -e
+if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
+    echo 'setting up loopback (requires sudo)'
+    sudo modprobe snd-aloop
+fi
 
 base="/home/$USER/Documents/samplescaper"
 device=$($base/singleunit/play.py | sed -nE 's/[\*|<]\s*([0-9]+) default, ALSA.*/\1/p')
@@ -18,11 +22,11 @@ for synth in ${synths[@]}; do
 done
 echo 'compiling player'
 cd $base/singleunit/cpp/player
-./compile.sh
+[ -f ./player ] || ./compile.sh
 cd - >/dev/null
 echo 'compiling multiplexer'
 cd $base/singleunit/cpp/multiplexer
-./compile.sh
+[ -f ./server ] || ./compile.sh
 cd - >/dev/null
 
 player="cd $base/singleunit/cpp; ./run_player.sh 6 $device $basePort"
