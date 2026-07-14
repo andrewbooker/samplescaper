@@ -1,6 +1,5 @@
 . $(dirname $(pwd))/run_common.sh
-rm -rf bin
-mkdir -p bin
-fpc server.pas
-mv server.o bin
+if [ ! -f server ] || [ '-r' = "$2" ]; then
+    ./compile.sh
+fi
 ./server $1

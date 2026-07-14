@@ -1,4 +1,5 @@
-. ../run_common.sh
-mkdir -p bin
-g++ server.cpp -o ./bin/server
-bin/server $1
+. $(dirname $(pwd))/run_common.sh
+if [ ! -f server ] || [ '-r' = "$2" ]; then
+    ./compile.sh
+fi
+./server $1

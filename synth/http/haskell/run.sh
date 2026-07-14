@@ -1,7 +1,5 @@
 . $(dirname $(pwd))/run_common.sh
-rm -rf bin
-mkdir -p bin
-ghc -O2 --make server.hs -o bin/server
-rm *.hi
-rm *o
-bin/server $1
+if [ ! -f server ] || [ '-r' = "$2" ]; then
+    ./compile.sh
+fi
+./server $1

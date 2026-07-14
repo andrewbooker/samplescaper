@@ -1,3 +1,5 @@
 . $(dirname $(pwd))/run_common.sh
-go build server.go
+if [ ! -f server ] || [ '-r' = "$2" ]; then
+    ./compile.sh
+fi
 ./server $1
