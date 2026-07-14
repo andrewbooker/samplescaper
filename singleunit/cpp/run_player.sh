@@ -1,11 +1,7 @@
 set -e
-links=()
-links+=("-l sndfile")
-links+=("-l asound")
-links+=("-l portaudio")
-links+=("-l curl")
-if [[ ! -v $(uname -a | grep raspberry) ]]; then
-    links+=("-pthread")
+if [ ! -f player/player ]; then
+    cd player
+    ./compile.sh
+    cd -
 fi
-g++ player.cpp -o player ${links[@]}
-./player "$@"
+player/player "$@"
