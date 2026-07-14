@@ -15,10 +15,17 @@ for synth in ${synths[@]}; do
     fi
     cd -
 done
+echo 'compiling player'
+cd $base/singleunit/cpp/player
+./compile.sh
+cd -
+echo 'compiling multiplexer'
+cd $base/singleunit/cpp/multiplexer
+./compile.sh
+cd -
 
 player="cd $base/singleunit/cpp; ./run_player.sh 6 $device $basePort"
 multiplexer="cd $base/singleunit/cpp/multiplexer; ./run.sh $basePort"
-
 
 tmuxCmds=("tmux")
 tmuxCmds+=("new-session \"htop\"\;")
