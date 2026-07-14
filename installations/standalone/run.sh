@@ -2,10 +2,19 @@
 set -e
 
 base="/home/$USER/Documents/samplescaper"
-device=$($base/singleunit/play.py | sed -nE 's/<\s*([0-9]+) default, ALSA.*/\1/p')
+device=$($base/singleunit/play.py | sed -nE 's/[\*|<]\s*([0-9]+) default, ALSA.*/\1/p')
 [ -n "$device" ] || die "default audio device not available"
 basePort=9960
-synths=(haskell rust ada pascal)
+synths=(haskell go ada pascal)
+
+echo 'checking synths are compiled'
+for synth in ${synths[@]}; do
+    cd $base/synth/http/$synth
+    if [ ! -f server ]; then
+        ./compile.sh
+    fi
+    cd -
+done
 
 player="cd $base/singleunit/cpp; ./run_player.sh 6 $device $basePort"
 multiplexer="cd $base/singleunit/cpp/multiplexer; ./run.sh $basePort"
