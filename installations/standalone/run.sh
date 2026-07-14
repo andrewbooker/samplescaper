@@ -2,7 +2,7 @@
 set -e
 
 base="/home/$USER/Documents/samplescaper"
-device=$($base/singleunit/play.py | sed -nE 's/\*\s*([0-9]+) default, ALSA.*/\1/p')
+device=$($base/singleunit/play.py | sed -nE 's/<\s*([0-9]+) default, ALSA.*/\1/p')
 [ -n "$device" ] || die "default audio device not available"
 basePort=9960
 synths=(haskell rust ada pascal)
