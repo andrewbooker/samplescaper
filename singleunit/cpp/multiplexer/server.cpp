@@ -80,17 +80,6 @@ class Server {
         std::cout << std::endl;
     }
 
-    void addPort(const unsigned int p) {
-        for (unsigned int i(0); i != ports.size(); ++i) {
-            if (ports.at(i) == p) {
-                whatPorts();
-                return;
-            }
-        }
-        ports.push_back(p);
-        whatPorts();
-    }
-
     void removePort(const unsigned int p) {
         for (unsigned int i(0); i != ports.size(); ++i) {
             if (ports.at(i) == p) {
@@ -123,8 +112,6 @@ class Server {
 
 public:
     Server(const unsigned int port) : lastPort(0), addrlen(sizeof(address)), server_fd(socket(AF_INET, SOCK_STREAM, 0)) {
-        addPort(9961);
-        addPort(9962);
         if (server_fd == 0) {
             perror("Failed to create socket");
             exit(EXIT_FAILURE);
@@ -158,6 +145,17 @@ public:
 
     const bool isAlive() const {
         return server_fd != 0;
+    }
+
+    void addPort(const unsigned int p) {
+        for (unsigned int i(0); i != ports.size(); ++i) {
+            if (ports.at(i) == p) {
+                whatPorts();
+                return;
+            }
+        }
+        ports.push_back(p);
+        whatPorts();
     }
 
     bool listenLoop() {
@@ -224,13 +222,21 @@ public:
 int main(int argc, char* argv[]) {
     srand(time(0));
     if (argc < 2) {
-        std::cout << "Must supply port number" << std::endl;
+        std::cout << "Must supply base port number" << std::endl;
         return 0;
     }
     const unsigned int port(atoi(argv[1]));
     Server server(port);
     if (!server.isAlive()) {
         return 1;
+    }
+    if (argc > 2) {
+        for (int i(2); i != argc; ++i) {
+            server.addPort(atoi(argv[i]));
+        }
+    } else {
+        server.addPort(port + 1);
+        server.addPort(port + 2);
     }
     std::cout << "Load balancer listening on port " << port << "...\n";
     std::cout << std::setprecision(4) << std::fixed;
