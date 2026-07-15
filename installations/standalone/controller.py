@@ -6,7 +6,12 @@ import json
 import re
 import sys
 import datetime
-from volume import SystemVolume, log
+
+class Log:
+    def info(self, what):
+        print(what)
+
+log = Log()
 
 
 class Player():
@@ -39,38 +44,7 @@ class Player():
             self.state = "playing"
 
 
-maxVol = 95
-
-class Volume():
-    def __init__(self, leftRelativeToRight):
-        self.systemVolume = SystemVolume()
-        self.lr = leftRelativeToRight
-        volume_dev = self.systemVolume.device()
-        self.volumeCoeff = 0.7 if volume_dev is not None and "Master" in volume_dev else 1.0
-        self._update()
-        if volume_dev is not None:
-            log.info(f"using audio device {volume_dev} volume coeff {self.volumeCoeff} current vol {self.volume}")
-        else:
-            log.info("Volume device not known at startup")
-
-    def _update(self):
-        vols = [v for v in self.systemVolume.get()]
-        vols.sort(reverse=True)
-        self.volume = vols[0] / self.volumeCoeff
-
-    def setTo(self, v):
-        vl = v if self.lr > 1 else int(v * self.lr)
-        vr = v if self.lr < 1 else int(v / self.lr)
-
-        self.systemVolume.set(int(vl * self.volumeCoeff), int(vr * self.volumeCoeff))
-        self._update()
-
-
-
 player = Player()
-leftRelativeToRight = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
-volume = Volume(leftRelativeToRight)
-
 
 class Controller(BaseHTTPRequestHandler):
     def _shutdown(self):
@@ -91,16 +65,16 @@ class Controller(BaseHTTPRequestHandler):
             player.resume()
 
     def _volMin(self):
-        volume.setTo(40)
+        log.info("ignoring vol min")
 
     def _volDown(self):
-        volume.setTo(max(volume.volume - 5, 0))
+        log.info("ignoring vol down")
 
     def _volUp(self):
-        volume.setTo(min(volume.volume + 5, maxVol))
+        log.info("ignoring vol up")
 
     def _volMax(self):
-        volume.setTo(maxVol)
+        log.info("ignoring vol max")
 
     def _setTime(self):
         os.system("sudo date --set %s" % self.headers.get("Current-Time"))
