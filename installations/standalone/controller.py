@@ -93,7 +93,7 @@ class Controller(BaseHTTPRequestHandler):
 
     def _writeState(self):
         self.wfile.write(json.dumps({
-            "volume": int(volume.volume),
+            "volume": 0,
             "state": player.getState(),
             "time": datetime.datetime.now().strftime("%d %b %Y %H:%M"),
             "tonic": 57,
