@@ -6,7 +6,7 @@ if [[ "$(aplay -l | grep Loopback)" != *'Loopback'* ]]; then
 fi
 
 base="/home/$USER/Documents/samplescaper"
-device=$($base/singleunit/play.py | sed -nE 's/\*\s*([0-9]+) default, ALSA.*/\1/p')
+device=$($base/singleunit/play.py | sed -nE 's/\s*([0-9]+) randomatones, ALSA.*/\1/p')
 [ -n "$device" ] || die "default audio device not available"
 basePort=9960
 synths=(haskell go ada pascal)
@@ -40,10 +40,10 @@ for ((i=1; i < ${#synths[@]}; ++i)); do
     tmuxCmds+=("select-pane -t 1 \; split-window -v -l '$pc%' \"bash\"\;")
 done
 
-tmuxCmds+=("select-pane -t 0 \; split-window -v -l '85%' \"bash\"\;") #player
-tmuxCmds+=("select-pane -t 1 \; split-window -v -l '66%' \"bash\"\;") #multiplexer
-tmuxCmds+=("select-pane -t 2 \; split-window -v -l '66%' \"bash\"\;") #http controller
-tmuxCmds+=("select-pane -t 3 \; split-window -v -l '50%' \"bash\"\;") #rotation
+tmuxCmds+=("select-pane -t 0 \; split-window -v -l '85%' \"bash\"\;") # player
+tmuxCmds+=("select-pane -t 1 \; split-window -v -l '66%' \"bash\"\;") # multiplexer
+tmuxCmds+=("select-pane -t 2 \; split-window -v -l '66%' \"bash\"\;") # http controller
+tmuxCmds+=("select-pane -t 3 \; split-window -v -l '50%' \"bash\"\;") # rotation
 
 rightPaneStart=$((${#tmuxCmds[@]} - ${#synths[@]} - 1))
 synthPane=0
@@ -57,12 +57,13 @@ for synth in ${synths[@]}; do
     ((synthPane+=1))
 done
 
-player="cd $base/singleunit/cpp; ./run_player.sh 2 $device $basePort"
+player="cd $base/singleunit/cpp; ./run_player.sh 6 $device $basePort"
 multiplexer="cd $base/singleunit/cpp/multiplexer; sleep 1; ./run.sh ${muxPorts[@]}"
 
 tmuxCmds+=("send-keys -t 1 \"$player\" ENTER \;")
 tmuxCmds+=("send-keys -t 2 \"$multiplexer\" ENTER \;")
 tmuxCmds+=("send-keys -t 3 \"./controller.py\" ENTER \;")
+tmuxCmds+=("send-keys -t 4 \"./rotation.sh\" ENTER \;")
 tmuxCmds+=("select-pane -t 1")
 
 script=_gen_tmux.sh
