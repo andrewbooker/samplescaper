@@ -51,6 +51,7 @@ class OnOffDir:
             if shouldPause.is_set():
                 time.sleep(1)
             else:
+                time.sleep(1.5 * random.random())
                 self.oneCycle()
                 time.sleep(3.0 * random.random())
 
@@ -68,10 +69,10 @@ while not shouldStop.is_set():
     c = readchar.readchar()
     if c == "q":
         shouldStop.set()
-    if c == "p":
+    if c == "p" and not shouldPause.is_set():
         shouldPause.set()
         print("paused")
-    if c == "r":
+    if c == "r" and shouldPause.is_set():
         shouldPause.clear()
         print("resuming")
 
