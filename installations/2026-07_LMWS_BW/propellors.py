@@ -56,7 +56,7 @@ class OnOffDir:
 
 
 ports = Ports()
-controlPorts = [(26, 20)]
+controlPorts = [(26, 20), (19, 16), (6, 12)]
 units = [OnOffDir(*c, ports) for c in controlPorts]
 shouldStop = threading.Event()
 shouldPause = threading.Event()
