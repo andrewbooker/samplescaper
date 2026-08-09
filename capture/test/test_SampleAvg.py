@@ -72,9 +72,12 @@ def test_handles_a_sinewave():
     savg = SampleAvg(SMPL, 10)
     avgVals = []
     peaks = []
-    f = 5.0
+    f = 10.0
+    durCycles = 5
     for s in range(SMPL):
-        d = math.sin(f * 2 * math.pi * s/SMPL)
+        d = 0.0
+        if s < (SMPL * durCycles / f):
+            d = math.sin(f * 2 * math.pi * s/SMPL)
         data.append(d)
         savg.add(d)
         avgVals.append(savg.val())
