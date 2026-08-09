@@ -1,4 +1,18 @@
 from lib.sampleAvg import SampleAvg
+from PIL import Image, ImageDraw
+import math
+
+
+WIDTH = 882
+SMPL = 44100
+
+def _draw(data):
+    out = Image.new("RGB", (WIDTH, 200), (0, 0, 0))
+    d = ImageDraw.Draw(out)
+    for i in range(0, SMPL):
+        d.point((i * 1.0 * WIDTH / SMPL, 100 + (-100 * data[i])), fill="red")
+
+    out.show()
 
 
 def test_handles_no_values():
@@ -43,3 +57,24 @@ def test_avgs_a_simple_longer_wave_exactly_symmetrical_above_and_below_zero():
     assert s2.val() == 0.25
     assert s4.val() == 0.5
     assert s8.val() == 0.5
+
+
+def test_handles_a_sinewave():
+    data = []
+    savg = SampleAvg(SMPL, 10)
+    avgVals = []
+    peaks = []
+    for s in range(SMPL):
+        d = math.sin(2 * math.pi * s/SMPL)
+        data.append(d)
+        savg.add(d)
+        avgVals.append(savg.val())
+        peaks.append(savg.peak())
+    
+    _draw(data)
+    _draw(avgVals)
+    _draw(peaks)
+    
+    
+    
+    
