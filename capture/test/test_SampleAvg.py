@@ -37,6 +37,24 @@ def test_handles_zero_values():
     assert s.peak() == 0.0
 
 
+def test_keeps_moving_snapshot_of_values():
+    s = SampleAvg(2, 1)
+    s.add(0.25)
+    assert s.total == 0.25
+    assert s.buffer == [0.25]
+    assert s.val() == 0.25
+
+    s.add(0.75)
+    assert s.total == 1.0
+    assert s.buffer == [0.25, 0.75]
+    assert s.val() == 0.5
+
+    s.add(0.45)
+    assert s.total == 1.2
+    assert s.buffer == [0.75, 0.45]
+    assert s.val() == 0.6
+
+
 def test_avgs_a_simple_wave_exactly_symmetrical_above_and_below_zero():
     wave = [0,1,0,-1]
     s2 = SampleAvg(2, 10)
@@ -62,18 +80,18 @@ def test_avgs_a_simple_longer_wave_exactly_symmetrical_above_and_below_zero():
         s4.add(w)
         s8.add(w)
 
-    assert s2.val() == 0.25
+    assert s2.val() == 0.75
     assert s4.val() == 0.5
     assert s8.val() == 0.5
 
 
 def test_handles_a_sinewave():
     data = []
-    savg = SampleAvg(SMPL, 10)
+    savg = SampleAvg(22050, 5)
     avgVals = []
     peaks = []
-    f = 10.0
-    durCycles = 5
+    f = 20.0
+    durCycles = f / 2
     for s in range(SMPL):
         d = 0.0
         if s < (SMPL * durCycles / f):
@@ -88,6 +106,4 @@ def test_handles_a_sinewave():
     renderer.add(avgVals, "yellow")
     renderer.add(peaks, "blue")
     renderer.draw()
-    
-    
-    
+

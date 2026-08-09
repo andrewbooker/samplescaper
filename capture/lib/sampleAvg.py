@@ -12,6 +12,11 @@ class SampleAvg:
     def add(self, v):
         s = abs(v)
         self.buffer.append(s)
+        self.total += s
+        if len(self.buffer) > self.avgLen:
+            self.total -= self.buffer[0]
+            del self.buffer[0]
+
         if self.up == False and s > self.val():
             self.up = True
         if self.up == True and s < self.val():
@@ -21,10 +26,6 @@ class SampleAvg:
             if len(self.peaks) > self.peakLen:
                 self.peakTotal -= self.peaks.pop()
             self.up = False
-        
-        self.total += s
-        if len(self.buffer) > self.avgLen:
-            self.total -= self.buffer.pop()
 
     def clear(self):
         self.total = 0.0
