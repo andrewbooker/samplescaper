@@ -27,7 +27,7 @@ class State(Enum):
 inFile = sys.argv[1]
 outDir = sys.argv[2]
 writer = Writer(outDir)
-sampleAvg = SampleAvg(4410, 0)
+sampleAvg = SampleAvg(4410)
 state = State.SILENT
 lastStatePos = 0
 
