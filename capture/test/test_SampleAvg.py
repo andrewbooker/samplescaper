@@ -6,13 +6,21 @@ import math
 WIDTH = 882
 SMPL = 44100
 
-def _draw(data):
-    out = Image.new("RGB", (WIDTH, 200), (0, 0, 0))
-    d = ImageDraw.Draw(out)
-    for i in range(0, SMPL):
-        d.point((i * 1.0 * WIDTH / SMPL, 100 + (-100 * data[i])), fill="red")
 
-    out.show()
+class Renderer:
+    def __init__(self):
+        self.datasets = []
+
+    def add(self, d, col):
+        self.datasets.append((d, col))
+
+    def draw(self):
+        out = Image.new("RGB", (WIDTH, 200), (0, 0, 0))
+        d = ImageDraw.Draw(out)
+        for (data, fill) in self.datasets:
+            for i in range(0, SMPL):
+                d.point((i * 1.0 * WIDTH / SMPL, 100 + (-100 * data[i])), fill=fill)
+        out.show()
 
 
 def test_handles_no_values():
@@ -64,17 +72,19 @@ def test_handles_a_sinewave():
     savg = SampleAvg(SMPL, 10)
     avgVals = []
     peaks = []
+    f = 5.0
     for s in range(SMPL):
-        d = math.sin(2 * math.pi * s/SMPL)
+        d = math.sin(f * 2 * math.pi * s/SMPL)
         data.append(d)
         savg.add(d)
         avgVals.append(savg.val())
         peaks.append(savg.peak())
     
-    _draw(data)
-    _draw(avgVals)
-    _draw(peaks)
-    
+    renderer = Renderer()
+    renderer.add(data, "red")
+    renderer.add(avgVals, "yellow")
+    renderer.add(peaks, "blue")
+    renderer.draw()
     
     
     
