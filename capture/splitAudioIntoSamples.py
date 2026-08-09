@@ -27,26 +27,29 @@ class State(Enum):
 inFile = sys.argv[1]
 outDir = sys.argv[2]
 writer = Writer(outDir)
-sampleAvg = SampleAvg(44100, 10)
+sampleAvg = SampleAvg(4410, 0)
 state = State.SILENT
+lastStatePos = 0
 
 sample = []
 print("splitting", inFile)
 (data, sampleRate) = sf.read(inFile)
 for d in range(len(data)):
     val = abs(data[d])
+    sampleAvg.add(val)
     if state == State.IN_SAMPLE:
-        sampleAvg.add(val)
-        if val < 0.1 and sampleAvg.canAssess() and sampleAvg.peak() < 0.1:
+        if sampleAvg.val() < 0.05 and (d - lastStatePos) > sampleRate:
+            print("exit at", 1.0 * d / sampleRate)
             state = State.SILENT
-            sampleAvg.clear()
+            lastStatePos = d
             if len(sample) > sampleAvg.avgLen:
                 writer.write(sample[:-sampleAvg.avgLen])
                 sample = []
         else:
             sample.append(data[d])
-    if state == State.SILENT and val > 0.2:
-        print("first rise at", 1.0 * d / sampleRate)
+    if state == State.SILENT and sampleAvg.val() > 0.1 and (d - lastStatePos) > sampleRate:
+        print("entry at", 1.0 * d / sampleRate)
         state = State.IN_SAMPLE
+        lastStatePos = d
     
 

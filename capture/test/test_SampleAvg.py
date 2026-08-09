@@ -87,7 +87,7 @@ def test_avgs_a_simple_longer_wave_exactly_symmetrical_above_and_below_zero():
 
 def test_handles_a_sinewave():
     data = []
-    savg = SampleAvg(22050, 5)
+    savg = SampleAvg(2205, 5)
     avgVals = []
     peaks = []
     f = 20.0
