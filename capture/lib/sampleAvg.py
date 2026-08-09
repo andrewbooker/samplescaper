@@ -9,7 +9,8 @@ class SampleAvg:
         self.total = 0.0
         self.peakTotal = 0.0
 
-    def add(self, s):
+    def add(self, v):
+        s = abs(v)
         self.buffer.append(s)
         if self.up == False and s > self.val():
             self.up = True
@@ -27,6 +28,7 @@ class SampleAvg:
 
     def clear(self):
         self.total = 0.0
+        self.peakTotal = 0.0
         self.buffer = []
 
     def canAssess(self):

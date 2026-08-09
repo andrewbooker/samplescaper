@@ -4,7 +4,7 @@ import sys
 import os
 import soundfile as sf
 from enum import Enum
-from lib.sampleReader import SampleAvg
+from lib.sampleAvg import SampleAvg
 
 class Writer:
     def __init__(self, outDir):
