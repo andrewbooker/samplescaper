@@ -19,6 +19,7 @@ sudo apt -y install alsa-utils
 sudo apt install -y alsa-base
 sudo apt install -y libcurl4-openssl-dev
 sudo apt install -y ffmpeg
+sudo apt install -y netcat-traditional
 
 sudo mkdir /var/log/samplescaper
 sudo chown $USER /var/log/samplescaper
