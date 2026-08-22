@@ -8,7 +8,6 @@ sudo apt install -y libsdl2-mixer-2.0-0 libsdl2-2.0-0 libportaudio2
 sudo apt -y install vim
 sudo apt -y install zip
 sudo apt -y install jq
-sudo apt -y install git
 sudo apt -y install tig
 sudo apt -y install curl
 sudo apt -y install htop
