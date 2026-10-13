@@ -19,11 +19,8 @@ sudo apt -y install alsa-utils
 sudo apt install -y alsa-base
 sudo apt install -y libcurl4-openssl-dev
 sudo apt install -y ffmpeg
-<<<<<<< HEAD
 sudo apt install -y netcat-traditional
-=======
 sudo apt -y install python-rpi.gpio
->>>>>>> a1ea521 (rpi gpio in setup script)
 
 sudo mkdir /var/log/samplescaper
 sudo chown $USER /var/log/samplescaper
