@@ -1,6 +1,8 @@
 {
     "tremolo_max": 0.01,
     "reverse": 0.5,
-    "octave_up": 0.2,
-    "octave_down": 0.2
+    "lower_octave": 0.2,
+    "raise_octave": 0.2,
+    "detune_upper": 3.0,
+    "detune_lower": 0.3
 }

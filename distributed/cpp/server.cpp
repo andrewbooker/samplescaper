@@ -176,6 +176,23 @@ private:
         return r < v;
     }
 
+    const float detune() const {
+        return settings["detune_lower"] + (rand() * settings["detune_upper"] / RAND_MAX);
+    }
+
+    void repitch(t_sound& fileBuffer, const float& tune) {
+        t_sound newBuffer(long(fileBuffer.size() * tune), 0.0);
+        for (unsigned long i(0); i != newBuffer.size(); ++i) {
+            const unsigned long origIdx(i / tune);
+            const float v0(fileBuffer.at(origIdx));
+            const float v1((origIdx + 1) >= fileBuffer.size() ? 0.0 : fileBuffer.at(origIdx + 1));
+            const float p((i / tune) - origIdx);
+            newBuffer[i] = ((1.0 - p) * v0) + (v1 * p);
+        }
+        std::cout << "repitched to " << tune << std::endl;
+        fileBuffer.swap(newBuffer);
+    }
+
 public:
     SampleFetcher(const char* loc, t_settings& s) : location(loc), settings(s), latest(""), hasContent(false) {}
 
@@ -193,14 +210,18 @@ public:
             std::reverse(fileBuffer.begin(), fileBuffer.end());
         }
 
-        if (should("octave_up")) {
+        const float tune(detune());
+        if (tune != 1.0) {
+            repitch(fileBuffer, tune);
+            return;
+        } else if (should("raise_octave")) {
             std::cout << "octave increase" << std::endl;
             t_sound newBuffer(fileBuffer.size() / 2, 0.0);
             for (unsigned int i(0); i != newBuffer.size(); ++i) {
                 newBuffer[i] = fileBuffer.at(2 * i);
             }
             fileBuffer.swap(newBuffer);
-        } else if (should("octave_down")) {
+        } else if (should("lower_octave")) {
             std::cout << "lowering octave" << std::endl;
             t_sound newBuffer(fileBuffer.size() * 2, 0.0);
             float previous(0.0);
