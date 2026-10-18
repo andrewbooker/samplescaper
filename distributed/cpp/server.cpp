@@ -11,6 +11,13 @@
 #include <filesystem>
 #include <sndfile.h>
 #include <algorithm>
+#include <nlohmann/json.hpp>
+#include <fstream>
+#include <iostream>
+#include <map>
+
+using json = nlohmann::json;
+typedef std::map<std::string, float> t_settings;
 
 
 #define SAMPLE_RATE 44100
@@ -103,7 +110,7 @@ class Lfo : public Envelope {
     const float freq;
 
 public:
-    Lfo() : freq(anywhereBetween(0.05, 5.5)) {}
+    Lfo() : freq(anywhereBetween(0.05, 1.5)) {}
 
     const float at(const unsigned long i) const {
         return sin(2 * M_PI * freq * i / SAMPLE_RATE);
@@ -151,6 +158,7 @@ private:
     const std::string location;
     std::string latest;
     bool hasContent;
+    t_settings& settings;
 
     void loadFileInto(t_sound& fileBuffer, const std::string& f) const {
         SF_INFO info;
@@ -162,8 +170,14 @@ private:
         sf_close(soundFile);
     }
 
+    const bool should(const char* s) const {
+        const float r(rand() * 1.0 / RAND_MAX);
+        const float v(settings[s]);
+        return r < v;
+    }
+
 public:
-    SampleFetcher(const char* loc) : location(loc), latest(""), hasContent(false) {}
+    SampleFetcher(const char* loc, t_settings& s) : location(loc), settings(s), latest(""), hasContent(false) {}
 
     const std::string& describeLatest() const {
         return latest;
@@ -174,17 +188,31 @@ public:
     }
 
     void potentiallyModify(t_sound& fileBuffer) {
-        if ((rand() * 1.0 / RAND_MAX) > 0.5) {
+        if (should("reverse")) {
             std::cout << "reversing" << std::endl;
             std::reverse(fileBuffer.begin(), fileBuffer.end());
         }
-        if ((rand() * 1.0 / RAND_MAX) < 0.2) {
+
+        if (should("octave_up")) {
             std::cout << "octave increase" << std::endl;
             t_sound newBuffer(fileBuffer.size() / 2, 0.0);
             for (unsigned int i(0); i != newBuffer.size(); ++i) {
                 newBuffer[i] = fileBuffer.at(2 * i);
             }
             fileBuffer.swap(newBuffer);
+        } else if (should("octave_down")) {
+            std::cout << "lowering octave" << std::endl;
+            t_sound newBuffer(fileBuffer.size() * 2, 0.0);
+            float previous(0.0);
+            for (unsigned int i(0); i != fileBuffer.size(); ++i) {
+                const int newIdx(i * 2);
+                const float v(fileBuffer.at(i));
+                newBuffer[newIdx] = (v + previous) / 2.0;
+                newBuffer[newIdx + 1] = v;
+                previous = v;
+            }
+            fileBuffer.swap(newBuffer);
+            return;
         }
     }
 
@@ -208,10 +236,10 @@ public:
 
         const Lfo amLfo;
         const AsPositive amLfoP(amLfo);
-        const float amDepth(anywhereBetween(0.0, 1.0));
+        const float amDepth(anywhereBetween(0.0, settings["tremolo_max"]));
         const Scaled am(amLfo, amDepth, 1.0 - amDepth);
-        const RampUpDown ramp(size);
-        const Merged amplitude(am, ramp);
+        const RampUpDown amplitude(size);
+        //const Merged amplitude(am, ramp);
 
         const unsigned int selection(rand() % fileNames.size());
         t_sound fileBuffer;
@@ -229,9 +257,10 @@ class Server {
     const char* fileLoc;
     struct sockaddr_in address;
     socklen_t addrlen;
+    t_settings& settings;
 
 public:
-    Server(const unsigned int port, const char* fl) : fileLoc(fl), addrlen(sizeof(address)), server_fd(socket(AF_INET, SOCK_STREAM, 0)) {
+    Server(const unsigned int port, const char* fl, t_settings& s) : settings(s), fileLoc(fl), addrlen(sizeof(address)), server_fd(socket(AF_INET, SOCK_STREAM, 0)) {
         if (server_fd == 0) {
             perror("Failed to create socket");
             exit(EXIT_FAILURE);
@@ -275,7 +304,7 @@ public:
         char ignore[1024] {};
         read(client_fd, ignore, sizeof(ignore));
 
-        SampleFetcher fetcher(fileLoc);
+        SampleFetcher fetcher(fileLoc, settings);
         const t_sound& sound(fetcher.fetch());
         const unsigned long binarySize(sound.size() * sizeof(float));
         std::cout << "sending " << fetcher.describeLatest() << " for " << sound.size() * 1.0 / SAMPLE_RATE << "s (" << binarySize << " bytes)\n";
@@ -293,6 +322,12 @@ public:
 
 
 int main(int argc, char* argv[]) {
+    std::ifstream file("config.json");
+    json data = json::parse(file);
+    t_settings settings = data.get<std::map<std::string, float>>();
+    for (const auto& [key, value] : settings) {
+        std::cout << key << " = " << value << '\n';
+    }
     srand(time(0));
     if (argc < 2) {
         std::cout << "Must supply port number" << std::endl;
@@ -300,7 +335,7 @@ int main(int argc, char* argv[]) {
     }
     const unsigned int port(atoi(argv[1]));
     const char* fileLoc(argv[2]);
-    Server server(port, fileLoc);
+    Server server(port, fileLoc, settings);
     if (!server.isAlive()) {
         return 1;
     }

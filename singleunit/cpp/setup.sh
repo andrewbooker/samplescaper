@@ -3,6 +3,7 @@ sudo apt install -y portaudio19-dev
 sudo apt install -y libgtest-dev
 sudo apt install -y cmake
 sudo apt install -y libcurl4-openssl-dev
+sudo apt install -y nlohmann-json3-dev
 cd /usr/src/gtest
 sudo cmake .
 sudo make
