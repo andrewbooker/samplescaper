@@ -216,24 +216,10 @@ public:
             return;
         } else if (should("raise_octave")) {
             std::cout << "octave increase" << std::endl;
-            t_sound newBuffer(fileBuffer.size() / 2, 0.0);
-            for (unsigned int i(0); i != newBuffer.size(); ++i) {
-                newBuffer[i] = fileBuffer.at(2 * i);
-            }
-            fileBuffer.swap(newBuffer);
+            repitch(fileBuffer, 0.5);
         } else if (should("lower_octave")) {
             std::cout << "lowering octave" << std::endl;
-            t_sound newBuffer(fileBuffer.size() * 2, 0.0);
-            float previous(0.0);
-            for (unsigned int i(0); i != fileBuffer.size(); ++i) {
-                const int newIdx(i * 2);
-                const float v(fileBuffer.at(i));
-                newBuffer[newIdx] = (v + previous) / 2.0;
-                newBuffer[newIdx + 1] = v;
-                previous = v;
-            }
-            fileBuffer.swap(newBuffer);
-            return;
+            repitch(fileBuffer, 2.0);
         }
     }
 
