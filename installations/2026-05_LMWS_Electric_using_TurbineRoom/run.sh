@@ -7,7 +7,7 @@ die() {
 }
 
 here=$(pwd)
-synths=(rust)
+synths=(rust go pascal)
 baseDir="/home/$USER/Documents/samplescaper"
 synthDir="$baseDir/synth/http"
 playDir="$baseDir/singleunit/cpp/player"
@@ -42,8 +42,8 @@ mkdir -p $captureLoc
 converterCmd+="cd $baseDir/distributed/cpp; ./run.sh $converterPort $captureLoc"
 fetchCmd+="cd $here; watch -n10 './fetch.sh $captureLoc'"
 fileListCmd+="sleep 13; curl http://localhost:$basePort?add=$converterPort"
-tmuxCmds+=("select-pane -t 1 \; split-window -v -l '30%' \"$converterCmd\"\;")
-tmuxCmds+=("select-pane -t 2 \; split-window -v -l '50%' \"$fileListCmd\"\;")
+#tmuxCmds+=("select-pane -t 1 \; split-window -v -l '30%' \"$converterCmd\"\;")
+#tmuxCmds+=("select-pane -t 2 \; split-window -v -l '50%' \"$fileListCmd\"\;")
 
 playSize=85
 
