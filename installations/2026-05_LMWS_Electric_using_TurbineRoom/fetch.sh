@@ -8,6 +8,7 @@ if [ -f $f ]; then
 fi
 curl http://chorusflow.com/randomatones/samples/$f --output $f
 echo 'extracting samples'
+rm *.wav
 unzip $f
 rm *.zip
 ls -lth

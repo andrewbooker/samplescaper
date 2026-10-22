@@ -6,7 +6,7 @@ die() {
     exit
 }
 
-
+here=$(pwd)
 synths=(rust)
 baseDir="/home/$USER/Documents/samplescaper"
 synthDir="$baseDir/synth/http"
@@ -26,8 +26,6 @@ for s in ${synths[@]}; do
 done
 
 
-
-
 tmuxCmds=()
 tmuxCmds+=("tmux new-session \"htop\"\;")
 tmuxCmds+=("split-window -h \"${synthCmds[0]}\"\;")
@@ -41,10 +39,11 @@ done
 converterPort=$((synthPort+1))
 captureLoc=/home/$USER/Music/pool/live
 mkdir -p $captureLoc
-converterCmd+=("cd $baseDir/distributed/cpp; ./run.sh $converterPort $captureLoc")
-fileListCmd+=("sleep 16; curl http://localhost:$basePort?add=$converterPort; watch -n1 'ls -lth $captureLoc'")
+converterCmd+="cd $baseDir/distributed/cpp; ./run.sh $converterPort $captureLoc"
+fetchCmd+="cd $here; watch -n10 './fetch.sh $captureLoc'"
+fileListCmd+="sleep 13; curl http://localhost:$basePort?add=$converterPort"
 tmuxCmds+=("select-pane -t 1 \; split-window -v -l '30%' \"$converterCmd\"\;")
-tmuxCmds+=("select-pane -t 1 \; split-window -v -l '50%' \"$fileListCmd\"\;")
+tmuxCmds+=("select-pane -t 2 \; split-window -v -l '50%' \"$fileListCmd\"\;")
 
 playSize=85
 
@@ -59,6 +58,7 @@ echo 'compiling player...'
 cd "$playDir"
 g++ player.cpp -o player -l sndfile -l portaudio -l curl
 cd ..
+
 echo "${tmuxCmds[@]}" > _gen.sh
 chmod +x _gen.sh
 ./_gen.sh
